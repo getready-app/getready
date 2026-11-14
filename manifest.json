@@ -1,12 +1,12 @@
 {
-  "name": "Cap Commun — organisez vos séjours",
-  "short_name": "Cap Commun",
+  "name": "GetReady — organisez vos séjours",
+  "short_name": "GetReady",
   "description": "Un espace simple pour préparer vos vacances, escapades, voyages professionnels et événements, en solo ou à plusieurs.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f6f7f1",
-  "theme_color": "#28594f",
+  "background_color": "#f3f6fb",
+  "theme_color": "#f3f6fb",
   "lang": "fr",
   "icons": [
     { "src": "images/cap-commun.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },

@@ -8,6 +8,7 @@ import {
     fetchExchangeRate,
     populateCurrencySelectors
 } from './currency.js';
+import './firebase-sync.js';
 
 /**
  * Cap Commun — client application module.
@@ -567,6 +568,11 @@ function saveToLocalStorage() {
     const serialized = JSON.stringify(appData);
     localStorage.setItem(STORAGE_KEY, serialized);
     if (!DEMO_PREVIEW) localStorage.setItem('voyage_japon_data', serialized); // compatibilité avec l'ancienne version
+    if (!DEMO_PREVIEW && typeof window.saveToCloud === 'function') {
+        // Send a point-in-time snapshot matching the local copy, never the
+        // mutable appData object that later edits may continue to change.
+        window.saveToCloud(JSON.parse(serialized));
+    }
 }
 
 const TRAVEL_BACKGROUNDS = {
@@ -600,11 +606,11 @@ function applyAppearancePreferences() {
 
     document.documentElement.dataset.theme = theme;
     const themeMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeMeta) themeMeta.content = theme === 'ocean' ? '#347f98' : theme === 'lavender' ? '#7962a2' : '#28594f';
+    if (themeMeta) themeMeta.content = theme === 'ocean' ? '#eef7fa' : theme === 'lavender' ? '#f6f2fb' : '#f3f6fb';
     document.body.classList.toggle('reduce-motion', motion === 'reduced');
     document.body.dataset.travelBackground = backgroundKey;
     if (hero) {
-        hero.style.backgroundImage = `linear-gradient(90deg, rgba(16, 39, 35, .74) 0%, rgba(16, 39, 35, .5) 48%, rgba(16, 39, 35, .13) 100%), linear-gradient(0deg, rgba(16, 39, 35, .34), transparent 62%), url("${background.image}")`;
+        hero.style.backgroundImage = `linear-gradient(90deg, rgba(16, 39, 35, .48) 0%, rgba(16, 39, 35, .22) 48%, rgba(16, 39, 35, .04) 100%), url("${background.image}")`;
     }
 
     document.querySelectorAll('[data-background]').forEach(button => {
@@ -753,7 +759,6 @@ function importTripBackup(fileInput) {
 function refreshAllUI() {
     applyAppearancePreferences();
     buildChecklistSelector();
-    updateChecklistAddFloat();
     updateCountdown();
     renderTodayCard();
     renderVols();
@@ -782,24 +787,64 @@ function renderDashboardSummary() {
     document.getElementById('dashboard-checklist').textContent = `${remainingTasks} à faire`;
 }
 
-function switchDashboardTab(tabId) {
+function switchDashboardTab(tabId, itineraryFocus = null) {
     const navItem = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
     if (navItem) switchTab(tabId, navItem);
-    window.scrollTo({ top: 0, behavior: shouldReduceMotion() ? 'auto' : 'smooth' });
+    const behavior = shouldReduceMotion() ? 'auto' : 'smooth';
+    if (tabId === 'programme' && ['city', 'day'].includes(itineraryFocus)) {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            const targetId = itineraryFocus === 'day' ? 'itinerary-day-choice' : 'itinerary-city-choice';
+            const target = document.getElementById(targetId) || document.querySelector('#programme-list .empty-state');
+            if (!target) return;
+            target.scrollIntoView({ block: 'start', behavior });
+            target.classList.remove('shortcut-arrival');
+            void target.offsetWidth;
+            target.classList.add('shortcut-arrival');
+            window.setTimeout(() => target.classList.remove('shortcut-arrival'), 1100);
+        }));
+        return;
+    }
+    window.scrollTo({ top: 0, behavior });
+}
+
+const pageEntranceTimers = new WeakMap();
+
+function animatePageEntrance(page) {
+    if (!page || shouldReduceMotion()) return;
+    const previousTimer = pageEntranceTimers.get(page);
+    if (previousTimer) clearTimeout(previousTimer);
+    page.classList.remove('page-entering');
+    void page.offsetWidth;
+    page.classList.add('page-entering');
+    pageEntranceTimers.set(page, window.setTimeout(() => {
+        page.classList.remove('page-entering');
+        pageEntranceTimers.delete(page);
+    }, 900));
 }
 
 function switchTab(tabId, el) {
-    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+    const nextPage = document.getElementById('page-' + tabId);
+    if (!nextPage) return;
+    const wasActive = nextPage.classList.contains('active');
+
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+        if (page !== nextPage) {
+            page.classList.remove('page-entering');
+            const timer = pageEntranceTimers.get(page);
+            if (timer) clearTimeout(timer);
+            pageEntranceTimers.delete(page);
+        }
+    });
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
         item.removeAttribute('aria-current');
     });
 
-    const nextPage = document.getElementById('page-' + tabId);
-    if (!nextPage) return;
     nextPage.classList.add('active');
     if (el) { el.classList.add('active'); el.setAttribute('aria-current', 'page'); }
     document.body.dataset.page = tabId;
+    if (!wasActive) animatePageEntrance(nextPage);
 
     if (tabId === 'programme') {
         requestAnimationFrame(() => {
@@ -830,7 +875,7 @@ function updateCountdown() {
     const startDate = appData.tripStart ? new Date(appData.tripStart + 'T00:00:00').toLocaleDateString('fr-FR', startOpt) : '';
     const endDate = appData.tripEnd ? new Date(appData.tripEnd + 'T00:00:00').toLocaleDateString('fr-FR', endOpt) : '';
 
-    document.getElementById('display-trip-title').innerHTML = `${esc(appData.tripTitle)} <i class="fa-solid fa-pen-to-square" style="font-size: 0.9rem; opacity: 0.5; margin-left: 5px;"></i>`;
+    document.getElementById('display-trip-title').textContent = appData.tripTitle;
     document.getElementById('display-trip-dates').innerText = startDate && endDate ? `${startDate} — ${endDate}` : 'Dates à définir';
     document.getElementById('trip-context-label').innerText = `${appData.tripType || 'Séjour'} · ${appData.tripGroup === 'Solo' ? 'En solo' : appData.tripGroup === 'Couple' ? 'En couple' : appData.tripGroup === 'Amis' ? 'Entre amis' : appData.tripGroup === 'Famille' ? 'En famille' : appData.tripGroup === 'Équipe' ? 'En équipe' : 'En groupe'}`;
 
@@ -882,8 +927,19 @@ function saveTripDates() {
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
-    modal.classList.remove('active');
-    modal.returnFocusElement?.focus?.();
+    if (!modal.classList.contains('active') || modal.classList.contains('is-closing')) return;
+    const finishClose = () => {
+        window.clearTimeout(modal.closeTimer);
+        modal.closeTimer = null;
+        modal.classList.remove('active', 'is-closing');
+        modal.returnFocusElement?.focus?.();
+    };
+    if (shouldReduceMotion()) {
+        finishClose();
+        return;
+    }
+    modal.classList.add('is-closing');
+    modal.closeTimer = window.setTimeout(finishClose, 220);
 }
 
 function populateChecklistScopeSelector() {
@@ -920,7 +976,6 @@ function saveChecklist() {
         appData.checklist.push({ id: Date.now(), categorie: cat, texte: texte, checked: false });
         saveToLocalStorage();
         renderChecklist();
-        updateChecklistAddFloat();
     } else {
         const progId = parseInt(scope);
         if (!appData.checklistsJour) appData.checklistsJour = {};
@@ -929,7 +984,6 @@ function saveChecklist() {
         saveToLocalStorage();
         if (currentChecklistScope === progId) renderChecklist();
         else updateChecklistSelectorState();
-        updateChecklistAddFloat();
     }
     document.getElementById('check-text').value = '';
     closeModal('modal-checklist');
@@ -938,14 +992,23 @@ function saveChecklist() {
 function openModal(modalId) {
     if (modalId === 'modal-checklist') {
         populateChecklistScopeSelector();
+        const scopeSelect = document.getElementById('check-scope');
+        if (scopeSelect && [...scopeSelect.options].some(option => option.value === String(currentChecklistScope))) {
+            scopeSelect.value = String(currentChecklistScope);
+            updateChecklistScopeVisibility();
+        }
     }
     const modal = document.getElementById(modalId);
     if (!modal) return;
+    window.clearTimeout(modal.closeTimer);
+    modal.closeTimer = null;
     modal.returnFocusElement = document.activeElement;
+    modal.classList.remove('is-closing');
     modal.classList.add('active');
     requestAnimationFrame(() => {
         syncPickerControls(modal);
-        modal.querySelector('input:not([type="hidden"]), select, textarea, button')?.focus();
+        const preferredControl = modalId === 'modal-checklist' ? modal.querySelector('#check-text') : null;
+        (preferredControl || modal.querySelector('input:not([type="hidden"]), select, textarea, button'))?.focus();
     });
 }
 
@@ -955,7 +1018,15 @@ const FLIGHT_STATUS_LABELS = { Expected: 'Programmé', EnRoute: 'En vol', CheckI
 
 function toggleVolExpand(index) {
     expandedVols[index] = !expandedVols[index];
-    renderVols();
+    const card = document.querySelector(`#vols-list [data-vol-index="${index}"]`);
+    const details = card?.querySelector('.travel-card-details');
+    if (!card || !details) return;
+    details.style.display = expandedVols[index] ? 'block' : 'none';
+    details.innerHTML = expandedVols[index] ? buildVolDetailHtml(appData.vols[index], index) : '';
+    details.classList.toggle('is-expanded', expandedVols[index]);
+    card.classList.toggle('is-expanded', expandedVols[index]);
+    const chevron = card.querySelector('.travel-card-chevron');
+    if (chevron) chevron.className = 'fa-solid fa-chevron-down travel-card-chevron';
 }
 
 function buildVolDetailHtml(vol, index) {
@@ -1038,8 +1109,8 @@ function buildVolDetailHtml(vol, index) {
         ${seatsHtml}
         ${ticketHtml}
         <div style="text-align:right; margin-top: 10px;">
-            <button ${actionAttrs('openEditVolModal', [index])} class="details-link" style="border: 1.5px solid var(--accent-primary); border-radius: 20px; padding: 6px 16px;">
-                <i class="fa-solid fa-pen-to-square"></i> Modifier
+            <button ${actionAttrs('openEditVolModal', [index])} class="edit-action" aria-label="Modifier ce vol" title="Modifier ce vol">
+                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
             </button>
         </div>
     `;
@@ -1489,7 +1560,7 @@ function renderVols() {
     appData.vols.forEach((vol, index) => {
         const isExpanded = !!expandedVols[index];
         list.innerHTML += `
-                <div class="card clickable" ${actionAttrs('toggleVolExpand', [index])}>
+                <div class="card clickable flight-card${isExpanded ? ' is-expanded' : ''}" data-vol-index="${index}" ${actionAttrs('toggleVolExpand', [index])}>
                     <button class="delete-btn-round" ${actionAttrs('deleteVol', [index])} aria-label="Supprimer ce vol"><i class="fa-solid fa-trash-can"></i></button>
                 <div class="card-header-row">
                     <div class="card-title-group">
@@ -1515,11 +1586,11 @@ function renderVols() {
                         <div class="airport-city">${esc(vol.arrCity)}</div>
                     </div>
                 </div>
-                <div style="display: ${isExpanded ? 'block' : 'none'}; margin-top: 16px; padding-top: 14px; border-top: 1.5px dashed #ddd;">
+                <div class="travel-card-details" style="display: ${isExpanded ? 'block' : 'none'}; margin-top: 16px; padding-top: 14px; border-top: 1.5px dashed #ddd;">
                     ${isExpanded ? buildVolDetailHtml(vol, index) : ''}
                 </div>
                 <div style="text-align: center; margin-top: 8px; color: #ccc;">
-                    <i class="fa-solid fa-chevron-${isExpanded ? 'up' : 'down'}"></i>
+                    <i class="fa-solid fa-chevron-down travel-card-chevron"></i>
                 </div>
             </div>
         `;
@@ -1543,7 +1614,15 @@ let expandedTransports = {};
 
 function toggleTransportExpand(index) {
     expandedTransports[index] = !expandedTransports[index];
-    renderTransports();
+    const card = document.querySelector(`#transports-list [data-transport-index="${index}"]`);
+    const details = card?.querySelector('.travel-card-details');
+    if (!card || !details) return;
+    details.style.display = expandedTransports[index] ? 'block' : 'none';
+    details.innerHTML = expandedTransports[index] ? buildTransportDetailHtml(appData.transports[index], index) : '';
+    details.classList.toggle('is-expanded', expandedTransports[index]);
+    card.classList.toggle('is-expanded', expandedTransports[index]);
+    const chevron = card.querySelector('.travel-card-chevron');
+    if (chevron) chevron.className = 'fa-solid fa-chevron-down travel-card-chevron';
 }
 
 function buildTransportDetailHtml(t, index) {
@@ -1572,8 +1651,8 @@ function buildTransportDetailHtml(t, index) {
         ${seatHtml}
         ${notesHtml}
         <div style="text-align:right; margin-top: 10px;">
-            <button ${actionAttrs('openEditTransportModal', [index])} class="details-link" style="border: 1.5px solid var(--accent-primary); border-radius: 20px; padding: 6px 16px;">
-                <i class="fa-solid fa-pen-to-square"></i> Modifier
+            <button ${actionAttrs('openEditTransportModal', [index])} class="edit-action" aria-label="Modifier ce transport" title="Modifier ce transport">
+                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
             </button>
         </div>
     `;
@@ -1593,7 +1672,7 @@ function renderTransports() {
         const icon = transportIcons[t.type] || 'fa-train';
         const isExpanded = !!expandedTransports[index];
         list.innerHTML += `
-                <div class="card clickable" ${actionAttrs('toggleTransportExpand', [index])}>
+                <div class="card clickable transport-card${isExpanded ? ' is-expanded' : ''}" data-transport-index="${index}" ${actionAttrs('toggleTransportExpand', [index])}>
                     <button class="delete-btn-round" ${actionAttrs('deleteTransport', [index])} aria-label="Supprimer ce transport"><i class="fa-solid fa-trash-can"></i></button>
                 <div class="card-header-row">
                     <div class="card-title-group">
@@ -1619,11 +1698,11 @@ function renderTransports() {
                         <div class="airport-city">${esc(t.arrTime || '')}</div>
                     </div>
                 </div>
-                <div style="display: ${isExpanded ? 'block' : 'none'}; margin-top: 16px; padding-top: 14px; border-top: 1.5px dashed #ddd;">
+                <div class="travel-card-details" style="display: ${isExpanded ? 'block' : 'none'}; margin-top: 16px; padding-top: 14px; border-top: 1.5px dashed #ddd;">
                     ${isExpanded ? buildTransportDetailHtml(t, index) : ''}
                 </div>
                 <div style="text-align: center; margin-top: 8px; color: #ccc;">
-                    <i class="fa-solid fa-chevron-${isExpanded ? 'up' : 'down'}"></i>
+                    <i class="fa-solid fa-chevron-down travel-card-chevron"></i>
                 </div>
             </div>
         `;
@@ -1818,6 +1897,157 @@ function selectItineraryDay(progId, date) {
     renderDestinationDayBar(progId);
 }
 
+function openItineraryEditor() {
+    if (!requireEditor()) return;
+    renderItineraryEditor();
+    openModal('modal-itinerary-editor');
+}
+
+function renderItineraryEditor() {
+    const content = document.getElementById('itinerary-editor-content');
+    if (!content) return;
+    const programmes = appData.programme || [];
+    const selectedProgramme = programmes.find(item => item.id === selectedItineraryProgrammeId) || programmes[0];
+    if (!selectedProgramme) {
+        content.innerHTML = `<div class="itinerary-editor-empty"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i><strong>Aucune destination pour le moment</strong><p>Ajoute une étape pour commencer à préparer tes journées.</p><button class="cloud-action-button is-primary" ${actionAttrs('openAddProgrammeFromEditor')}><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter une destination</button></div>`;
+        return;
+    }
+    selectedItineraryProgrammeId = selectedProgramme.id;
+    if (!(selectedProgramme.id in selectedItineraryDayByProgramme)) selectedItineraryDayByProgramme[selectedProgramme.id] = bestItineraryDay(selectedProgramme);
+    const selectedDate = selectedItineraryDayByProgramme[selectedProgramme.id] || '';
+    const days = sortedItineraryDays(selectedProgramme);
+    const activities = (selectedProgramme.activites || []).filter(item => item.date === selectedDate).slice().sort((a, b) => String(a.heure || '').localeCompare(String(b.heure || '')));
+    const destinationsHtml = programmes.map((item, index) => `
+        <article class="itinerary-editor-destination${item.id === selectedProgramme.id ? ' is-current' : ''}">
+            <button type="button" class="itinerary-editor-destination-select" ${actionAttrs('selectManagedDestination', [item.id])} aria-pressed="${item.id === selectedProgramme.id}">
+                <span class="itinerary-editor-destination-index">${String(index + 1).padStart(2, '0')}</span><span><strong>${esc(item.ville)}</strong><small>${esc(item.dateStart || 'Dates à définir')} · ${(item.jours || []).length} jour${(item.jours || []).length === 1 ? '' : 's'}</small></span>
+            </button>
+            <div class="itinerary-editor-row-actions">
+                <button type="button" ${actionAttrs('editManagedDestination', [item.id])} aria-label="Modifier ${esc(item.ville)}" title="Modifier"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
+                <button type="button" ${actionAttrs('deleteManagedDestination', [item.id])} aria-label="Supprimer ${esc(item.ville)}" title="Supprimer"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>
+            </div>
+        </article>
+    `).join('');
+    const daysHtml = days.length ? days.map(date => `
+        <div class="itinerary-editor-day${date === selectedDate ? ' is-current' : ''}">
+            <button type="button" class="itinerary-editor-day-select" ${actionAttrs('selectManagedDay', [selectedProgramme.id, date])} aria-pressed="${date === selectedDate}"><i class="fa-regular fa-calendar" aria-hidden="true"></i><span>${esc(date)}</span><small>${(selectedProgramme.activites || []).filter(item => item.date === date).length} activité(s)</small></button>
+            <button type="button" ${actionAttrs('editManagedDay', [selectedProgramme.id, date])} aria-label="Modifier la journée du ${esc(date)}" title="Modifier cette date"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
+            <button type="button" ${actionAttrs('deleteManagedDay', [selectedProgramme.id, date])} aria-label="Supprimer la journée du ${esc(date)}" title="Supprimer cette journée"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>
+        </div>
+    `).join('') : `<p class="itinerary-editor-note">Aucune journée prévue pour cette étape. Ajoute une date ci-dessous.</p>`;
+    const activitiesHtml = activities.length ? activities.map(item => `
+        <article class="itinerary-editor-activity"><div><time>${esc(item.heure || '—')}</time><strong>${esc(item.texte)}</strong>${item.lien ? `<small><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Lieu renseigné</small>` : ''}</div><div class="itinerary-editor-row-actions"><button type="button" ${actionAttrs('editManagedActivity', [selectedProgramme.id, item.id])} aria-label="Modifier ${esc(item.texte)}" title="Modifier"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button><button type="button" ${actionAttrs('deleteManagedActivity', [selectedProgramme.id, selectedDate, item.id])} aria-label="Supprimer ${esc(item.texte)}" title="Supprimer"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button></div></article>
+    `).join('') : `<p class="itinerary-editor-note">Aucune activité pour ${selectedDate ? `le ${esc(selectedDate)}` : 'cette étape'}.</p>`;
+    const activitySuffix = `${selectedProgramme.id}_${safeId(selectedDate || 'new')}`;
+    content.innerHTML = `
+        <section class="itinerary-editor-section"><div class="itinerary-editor-section-heading"><div><span>ÉTAPE 1</span><h4>Destinations</h4></div><button type="button" class="itinerary-editor-add" ${actionAttrs('openAddProgrammeFromEditor')}><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter une étape</button></div><div class="itinerary-editor-destination-list">${destinationsHtml}</div></section>
+        <section class="itinerary-editor-section"><div class="itinerary-editor-section-heading"><div><span>${esc(selectedProgramme.ville)}</span><h4>Journées</h4></div></div><div class="itinerary-editor-day-list">${daysHtml}</div><div class="itinerary-editor-add-row">${datePickerPairHtml(`managed-new-day-${selectedProgramme.id}`, '', 'Ajouter une date')}<button type="button" ${actionAttrs('addManagedDay', [selectedProgramme.id])}><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter</button></div></section>
+        <section class="itinerary-editor-section"><div class="itinerary-editor-section-heading"><div><span>${selectedDate ? esc(selectedDate) : 'CHOISIS UNE JOURNÉE'}</span><h4>Activités</h4></div></div><div class="itinerary-editor-activity-list">${activitiesHtml}</div>${selectedDate ? `<div class="itinerary-editor-add-activity">${timePickerPairHtml(`managed-activity-time-${activitySuffix}`, '', 'Heure')}<input type="text" id="managed-activity-name-${activitySuffix}" placeholder="Nom de l’activité" aria-label="Nom de l’activité"><input type="text" id="managed-activity-link-${activitySuffix}" placeholder="Lien Maps (facultatif)" aria-label="Lien Maps facultatif"><button type="button" ${actionAttrs('addManagedActivity', [selectedProgramme.id, selectedDate])}><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter l’activité</button></div>` : ''}</section>
+    `;
+    syncPickerControls(content);
+}
+
+function openAddProgrammeFromEditor() {
+    closeModal('modal-itinerary-editor');
+    window.setTimeout(openAddProgrammeModal, shouldReduceMotion() ? 0 : 230);
+}
+
+function selectManagedDestination(progId) {
+    selectItineraryDestination(progId);
+    renderItineraryEditor();
+}
+
+function selectManagedDay(progId, date) {
+    selectItineraryDay(progId, date);
+    renderItineraryEditor();
+}
+
+function editManagedDestination(progId) {
+    closeModal('modal-itinerary-editor');
+    window.setTimeout(() => openEditProgrammeModal(progId), shouldReduceMotion() ? 0 : 230);
+}
+
+function deleteManagedDestination(progId) {
+    const destination = (appData.programme || []).find(item => item.id === progId);
+    if (!destination || !confirm(`Supprimer l’étape « ${destination.ville} » et son planning ?`)) return;
+    appData.programme = appData.programme.filter(item => item.id !== progId);
+    if (selectedItineraryProgrammeId === progId) selectedItineraryProgrammeId = appData.programme[0]?.id || null;
+    delete selectedItineraryDayByProgramme[progId];
+    saveToLocalStorage();
+    renderProgramme();
+    renderItineraryEditor();
+}
+
+function addManagedDay(progId) {
+    if (!requireEditor()) return;
+    const input = document.getElementById(`managed-new-day-${progId}`);
+    const date = dateToStoredValue(input?.value || '');
+    const destination = (appData.programme || []).find(item => item.id === progId);
+    if (!destination || !date) return;
+    if (!destination.jours) destination.jours = [];
+    if (!destination.jours.includes(date)) destination.jours.push(date);
+    selectedItineraryProgrammeId = progId;
+    selectedItineraryDayByProgramme[progId] = date;
+    saveToLocalStorage();
+    renderProgramme();
+    renderItineraryEditor();
+}
+
+function editManagedDay(progId, date) {
+    closeModal('modal-itinerary-editor');
+    selectedItineraryProgrammeId = progId;
+    selectedItineraryDayByProgramme[progId] = date;
+    renderProgramme();
+    startEditDay(progId, date);
+    document.getElementById('itinerary-selected-stage')?.scrollIntoView({ behavior: shouldReduceMotion() ? 'auto' : 'smooth', block: 'center' });
+}
+
+function deleteManagedDay(progId, date) {
+    deleteDay(progId, date);
+    renderItineraryEditor();
+}
+
+function addManagedActivity(progId, date) {
+    if (!requireEditor()) return;
+    const suffix = `${progId}_${safeId(date)}`;
+    const heure = document.getElementById(`managed-activity-time-${suffix}`)?.value.trim();
+    const texte = document.getElementById(`managed-activity-name-${suffix}`)?.value.trim();
+    const lien = document.getElementById(`managed-activity-link-${suffix}`)?.value.trim() || '';
+    const destination = (appData.programme || []).find(item => item.id === progId);
+    if (!destination || !heure || !texte) return;
+    if (!destination.activites) destination.activites = [];
+    destination.activites.push({ id: Date.now() + Math.floor(Math.random() * 1000), date, heure, texte, lien });
+    selectedItineraryProgrammeId = progId;
+    selectedItineraryDayByProgramme[progId] = date;
+    saveToLocalStorage();
+    renderProgramme();
+    renderItineraryEditor();
+}
+
+function editManagedActivity(progId, activityId) {
+    const activity = (appData.programme || []).find(item => item.id === progId)?.activites?.find(item => item.id === activityId);
+    if (!activity) return;
+    closeModal('modal-itinerary-editor');
+    selectedItineraryProgrammeId = progId;
+    selectedItineraryDayByProgramme[progId] = activity.date;
+    renderProgramme();
+    editingActivite = activityId;
+    renderDestinationDayBar(progId);
+    document.getElementById('itinerary-selected-stage')?.scrollIntoView({ behavior: shouldReduceMotion() ? 'auto' : 'smooth', block: 'center' });
+}
+
+function deleteManagedActivity(progId, date, activityId) {
+    const destination = (appData.programme || []).find(item => item.id === progId);
+    const activity = destination?.activites?.find(item => item.id === activityId);
+    if (!destination || !activity || !confirm(`Supprimer l’activité « ${activity.texte} » ?`)) return;
+    destination.activites = destination.activites.filter(item => item.id !== activityId);
+    selectedItineraryProgrammeId = progId;
+    selectedItineraryDayByProgramme[progId] = date;
+    saveToLocalStorage();
+    renderProgramme();
+    renderItineraryEditor();
+}
+
 function safeId(str) {
     return String(str).replace(/[^a-zA-Z0-9]/g, '_');
 }
@@ -2008,16 +2238,12 @@ function renderDestinationDayBar(progId) {
             }
             const activityMapUrl = mapsOpenLink(activity.lien);
             const activityMapLink = activityMapUrl
-                ? `<a href="${activityMapUrl}" target="_blank" rel="noopener" class="activity-link-btn" aria-label="Ouvrir le lieu sur la carte"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i><span>Carte</span></a>`
+                ? `<a href="${activityMapUrl}" target="_blank" rel="noopener" class="activity-link-btn" aria-label="Ouvrir le lieu sur la carte" title="Ouvrir le lieu sur la carte"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i><span>Carte</span></a>`
                 : '';
             activitiesHtml += `
                 <article class="itinerary-activity">
                     <time class="itinerary-activity-time">${esc(activity.heure || '—')}</time>
                     <div class="itinerary-activity-copy"><span>${esc(activity.texte)}</span>${activityMapLink}</div>
-                    <div class="itinerary-activity-actions">
-                        <button ${actionAttrs('startEditActivite', [progId, activity.id])} aria-label="Modifier cette activité"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
-                        <button ${actionAttrs('deleteDayActivite', [progId, selectedDate, activity.id])} aria-label="Supprimer cette activité"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
-                    </div>
                 </article>
             `;
         });
@@ -2035,10 +2261,6 @@ function renderDestinationDayBar(progId) {
     ` : `
         <div class="itinerary-plan-heading">
             <div><span>PLANNING DE LA JOURNÉE</span><h3>${esc(selectedDate)}</h3></div>
-            <div class="itinerary-plan-actions">
-                <button ${actionAttrs('startEditDay', [progId, selectedDate])} aria-label="Modifier la date"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Modifier</span></button>
-                <button ${actionAttrs('deleteDay', [progId, selectedDate])} aria-label="Supprimer cette journée"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>
-            </div>
         </div>
     `) : '';
 
@@ -2051,23 +2273,13 @@ function renderDestinationDayBar(progId) {
             </div>
             ${progMapsUrl ? `<a class="itinerary-place-map" href="${progMapsUrl}" target="_blank" rel="noopener"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i><span>Carte</span></a>` : ''}
         </section>
-        <section class="itinerary-day-picker-section">
+        <section class="itinerary-day-picker-section" id="itinerary-day-choice">
             <div class="itinerary-section-title"><div><span>TES DATES</span><h3>Choisis ta journée</h3></div><span class="itinerary-day-total">${jours.length} jour${jours.length === 1 ? '' : 's'}</span></div>
             <div class="itinerary-date-rail" aria-label="Dates de cette étape">${daysHtml}</div>
-            <div class="jour-checklist-add-row itinerary-add-day">
-                ${datePickerPairHtml(`new-day-date-${prog.id}`, '', 'Ajouter une date')}
-                <button ${actionAttrs('addDayToDestination', [prog.id])}><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Ajouter</span></button>
-            </div>
         </section>
         <section class="itinerary-day-plan">
             ${dayTools}
             <div class="itinerary-activities">${activitiesHtml}</div>
-            ${selectedDate ? `<div class="inline-day-activite-add-row">
-                ${timePickerPairHtml(`inline-act-heure-${selectedSuffix}`, '', 'Heure')}
-                <input type="text" id="inline-act-texte-${selectedSuffix}" placeholder="Nom de l’activité">
-                <input type="text" id="inline-act-lien-${selectedSuffix}" placeholder="Lien Maps (facultatif)">
-                <button ${actionAttrs('addInlineDayActivite', [progId, selectedDate])} aria-label="Ajouter une activité"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
-            </div>` : ''}
         </section>
     `;
     syncPickerControls(container);
@@ -2111,8 +2323,6 @@ function renderProgramme() {
                 </button>
                 <div class="itinerary-city-actions">
                     <span>${(prog.jours || []).length} jour${(prog.jours || []).length === 1 ? '' : 's'} · ${activityCount} activité${activityCount === 1 ? '' : 's'}</span>
-                    <button ${actionAttrs('openEditProgrammeModal', [prog.id])} aria-label="Modifier ${esc(prog.ville)}"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
-                    <button ${actionAttrs('deleteItem', ['programme', prog.id])} aria-label="Supprimer ${esc(prog.ville)}"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>
                 </div>
             </article>
         `;
@@ -2120,9 +2330,8 @@ function renderProgramme() {
 
     list.innerHTML = `
         <div class="itinerary-planner">
-            <div class="itinerary-route-heading">
+            <div class="itinerary-route-heading" id="itinerary-city-choice">
                 <div><span>TON VOYAGE</span><h2>Choisis une ville</h2></div>
-                <button class="itinerary-add-city" ${actionAttrs('openAddProgrammeModal')}><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Ajouter une ville</span></button>
             </div>
             <p class="itinerary-route-hint">← Fais défiler les villes, puis les dates pour ouvrir le planning de ta journée →</p>
             <div class="itinerary-city-carousel" aria-label="Villes de l’itinéraire">${cityCards}</div>
@@ -2342,7 +2551,7 @@ function updateChecklistSelectorState() {
 }
 
 function switchChecklistScope(scope) {
-    currentChecklistScope = scope;
+    currentChecklistScope = scope === 'voyage' ? 'voyage' : Number(scope);
     currentChecklistSearch = '';
     renderChecklist();
 }
@@ -2493,7 +2702,7 @@ function updateBudgetUI() {
                 <div class="expense-card-footer">
                     <button class="expense-paid-pill ${exp.paid ? 'paid' : ''}" ${actionAttrs('toggleBudgetPaid', [exp.id])}>${exp.paid ? '✓ Payé' : 'À payer'}</button>
                     ${payeurHtml}
-                    <button ${actionAttrs('openEditBudgetModal', [exp.id])} aria-label="Modifier cette dépense" style="background:none; border:none; color:#bbb; cursor:pointer; font-size:0.95rem;"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="edit-action" ${actionAttrs('openEditBudgetModal', [exp.id])} aria-label="Modifier cette dépense" title="Modifier cette dépense"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
                 </div>
             </div>
         `;
@@ -2731,8 +2940,8 @@ function renderInfos() {
                 </div>
                 <div style="font-size: 0.95rem; line-height: 1.5; color: #444; white-space: pre-line; font-weight: 500;">${esc(info.desc)}</div>
                 <div style="text-align:right; margin-top: 10px;">
-                    <button ${actionAttrs('openEditInfoModal', [info.id])} class="details-link" style="border: 1.5px solid var(--accent-primary); border-radius: 20px; padding: 6px 16px;">
-                        <i class="fa-solid fa-pen-to-square"></i> Modifier
+                    <button ${actionAttrs('openEditInfoModal', [info.id])} class="edit-action" aria-label="Modifier cette information" title="Modifier cette information">
+                        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>
@@ -3005,7 +3214,7 @@ function renderBillets() {
                 ${billet.notes ? `<div style="font-size: 0.9rem; line-height: 1.5; color: #444; white-space: pre-line; margin-bottom: 8px;">${esc(billet.notes)}</div>` : ''}
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     ${lienHtml || '<span></span>'}
-                    <button ${actionAttrs('openEditBilletModal', [billet.id])} aria-label="Modifier cette réservation" style="background:none; border:none; color:#bbb; cursor:pointer; font-size:0.95rem;"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="edit-action" ${actionAttrs('openEditBilletModal', [billet.id])} aria-label="Modifier cette réservation" title="Modifier cette réservation"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
                 </div>
             </div>
         `;
@@ -3114,7 +3323,6 @@ function deleteItem(category, id) {
         }
         if (category === 'checklist') {
             renderChecklist();
-            updateChecklistAddFloat();
         }
         if (category === 'budget') updateBudgetUI();
         if (category === 'infos') renderInfos();
@@ -3209,18 +3417,10 @@ function initializeApp() {
     renderInfos();
     renderBillets();
     fetchExchangeRate();
-    // Affiche ou masque le bouton selon la portée de la checklist
-    updateChecklistAddFloat();
+    animatePageEntrance(document.getElementById('page-accueil'));
 }
 
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
-
-function updateChecklistAddFloat() {
-    const btn = document.getElementById('checklist-add-float');
-    if (btn) {
-        btn.style.display = currentChecklistScope === 'voyage' ? '' : 'none';
-    }
-}
 
 function actionAttrs(action, args = [], options = {}) {
     const attributes = [
@@ -3322,9 +3522,21 @@ const ACTIONS = {
     deleteTransport,
     // Itinerary and checklists
     openAddProgrammeModal,
+    openItineraryEditor,
+    openAddProgrammeFromEditor,
     openEditProgrammeModal,
     selectItineraryDestination,
     selectItineraryDay,
+    selectManagedDestination,
+    selectManagedDay,
+    editManagedDestination,
+    deleteManagedDestination,
+    addManagedDay,
+    editManagedDay,
+    deleteManagedDay,
+    addManagedActivity,
+    editManagedActivity,
+    deleteManagedActivity,
     addDayToDestination,
     deleteDay,
     startEditDay,

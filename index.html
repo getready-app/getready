@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Cap Commun — Organisez tout votre séjour</title>
+    <script>document.documentElement.classList.add('auth-required');</script>
+    <title>GetReady — Organisez votre prochain voyage</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Cap Commun">
-    <meta name="theme-color" content="#28594f">
+    <meta name="apple-mobile-web-app-title" content="GetReady">
+    <meta name="theme-color" content="#081116">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="images/icon-192.png">
     <link rel="icon" type="image/svg+xml" href="images/cap-commun.svg">
@@ -19,6 +20,21 @@
 </head>
 <body>
 
+    <section class="auth-gate" id="auth-gate" aria-labelledby="auth-gate-title">
+        <div class="auth-gate-card">
+            <a class="brand-lockup auth-gate-brand" href="#" aria-label="GetReady">
+                <span class="brand-mark"><i class="fa-solid fa-compass-drafting" aria-hidden="true"></i></span>
+                <span class="brand-type">GET<span>READY</span><small>PRÊT·E À PARTIR ?</small></span>
+            </a>
+            <span class="auth-gate-eyebrow"><i class="fa-solid fa-lock" aria-hidden="true"></i> ESPACE SÉCURISÉ</span>
+            <h1 id="auth-gate-title">Connecte-toi à GetReady</h1>
+            <p class="auth-gate-description">Tes séjours et tes informations sont réservés aux personnes connectées.</p>
+            <div id="auth-gate-loading" class="auth-gate-loading">Préparation de la connexion sécurisée…</div>
+            <div id="auth-gate-form-slot"></div>
+            <p class="auth-gate-status" id="auth-gate-status" role="status" aria-live="polite"></p>
+        </div>
+    </section>
+
     <a class="skip-link" href="#main-content">Aller au contenu</a>
 
     <main id="main-content">
@@ -27,10 +43,11 @@
         <div class="home-header">
             <div class="home-header-content">
                 <div class="dashboard-topline">
-                    <a class="brand-lockup" href="#" data-action="switchDashboardTab" data-action-args='["accueil"]' data-action-prevent-default aria-label="Cap Commun, accueil">
+                    <a class="brand-lockup" href="#" data-action="switchDashboardTab" data-action-args='["accueil"]' data-action-prevent-default aria-label="GetReady, accueil">
                         <span class="brand-mark"><i class="fa-solid fa-compass-drafting"></i></span>
-                        <span class="brand-type">CAP<span>COMMUN</span><small>VOTRE SÉJOUR, BIEN ORGANISÉ</small></span>
+                        <span class="brand-type">GET<span>READY</span><small>PRÊT·E À PARTIR ?</small></span>
                     </a>
+                    <button type="button" class="hero-edit-button" data-action="openEditTripModal" aria-label="Modifier les informations du séjour" title="Modifier les informations du séjour"><i class="fa-solid fa-sliders" aria-hidden="true"></i></button>
                 </div>
                 <div class="hero-main">
                     <div class="hero-copy">
@@ -40,6 +57,7 @@
                             <div class="trip-dates" id="display-trip-dates">16–20 avril 2027</div>
                         </div>
                         <div class="trip-context" id="trip-context-label">Vacances · Entre amis</div>
+                        <button type="button" class="hero-primary-cta" data-action="switchDashboardTab" data-action-args='["programme"]'><span>Explorer l’itinéraire</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
                     </div>
                     <div class="hero-countdown">
                             <span class="hero-countdown-label">LE GRAND DÉPART DANS</span>
@@ -49,9 +67,7 @@
                         </div>
                     </div>
                     <div class="hero-orbit" aria-hidden="true">
-                        <span class="orbit orbit-one"></span><span class="orbit orbit-two"></span>
                         <span class="orbit-core"><i class="fa-solid fa-location-arrow"></i></span>
-                        <span class="orbit-dot"></span>
                     </div>
                 </div>
             </div>
@@ -65,11 +81,10 @@
         <div class="content-container dashboard-content">
             <div class="dashboard-intro">
                 <div><span class="dashboard-overline" id="dashboard-overline">VOTRE CARNET DE SÉJOUR</span><h1 id="dashboard-intro-title">Tout votre séjour, au même endroit.</h1><p id="dashboard-intro-copy">Étapes, réservations, activités et dépenses réunies pour simplifier l’organisation.</p></div>
-                <button type="button" class="dashboard-edit-link" data-action="openEditTripModal"><i class="fa-solid fa-pen-to-square"></i> Modifier le séjour</button>
             </div>
             <div class="dashboard-stats">
-                <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["programme"]'><span class="stat-icon stat-violet"><i class="fa-solid fa-map-location-dot"></i></span><span class="stat-copy"><small>DESTINATIONS</small><strong id="dashboard-destinations">0</strong></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow"></i></button>
-                <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["programme"]'><span class="stat-icon stat-blue"><i class="fa-solid fa-sparkles"></i></span><span class="stat-copy"><small>ACTIVITÉS</small><strong id="dashboard-activities">0</strong></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow"></i></button>
+                <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["programme","city"]' aria-label="Ouvrir le choix des villes"><span class="stat-icon stat-violet"><i class="fa-solid fa-map-location-dot"></i></span><span class="stat-copy"><small>DESTINATIONS</small><strong id="dashboard-destinations">0</strong></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow"></i></button>
+                <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["programme","day"]' aria-label="Ouvrir le choix d’une journée"><span class="stat-icon stat-blue"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i></span><span class="stat-copy"><small>ACTIVITÉS</small><strong id="dashboard-activities">0</strong></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow"></i></button>
                 <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["budget"]'><span class="stat-icon stat-green"><i class="fa-solid fa-wallet"></i></span><span class="stat-copy"><small>BUDGET PRÉVU</small><strong id="dashboard-budget">0 €</strong></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow"></i></button>
                 <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["checklist"]'><span class="stat-icon stat-amber"><i class="fa-solid fa-list-check"></i></span><span class="stat-copy"><small>À PRÉPARER</small><strong id="dashboard-checklist">0 restant</strong></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow"></i></button>
             </div>
@@ -91,7 +106,7 @@
         <div class="content-container">
             <div class="timeline" id="programme-list"></div>
         </div>
-        <button type="button" class="btn-add-float" data-action="openAddProgrammeModal" aria-label="Ajouter une destination"><i class="fa-solid fa-plus"></i></button>
+        <button type="button" class="btn-add-float" data-action="openItineraryEditor" aria-label="Modifier l’itinéraire : ajouter une destination, journée ou activité" title="Modifier l’itinéraire"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
     </div>
 
     <!-- ================= CHECKLIST ================= -->
@@ -110,16 +125,17 @@
             <div class="checklist-selector-bar" id="checklist-selector-bar" aria-label="Choisir une liste"></div>
             <div class="prep-tools-row">
                 <label class="prep-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="checklist-search" placeholder="Rechercher un préparatif…" aria-label="Rechercher un préparatif" data-action="setChecklistSearch" data-action-event="input" data-action-target></label>
-                <div class="prep-filter-bar" role="group" aria-label="Filtrer les préparatifs">
-                    <button type="button" class="prep-filter-btn is-active" data-filter="all" data-action="switchChecklistFilter" data-action-args='["all"]' aria-pressed="true"><span>Tout</span><b id="checklist-count-all">0</b></button>
-                    <button type="button" class="prep-filter-btn" data-filter="todo" data-action="switchChecklistFilter" data-action-args='["todo"]' aria-pressed="false"><span>À faire</span><b id="checklist-count-todo">0</b></button>
-                    <button type="button" class="prep-filter-btn" data-filter="done" data-action="switchChecklistFilter" data-action-args='["done"]' aria-pressed="false"><span>Terminés</span><b id="checklist-count-done">0</b></button>
+                <div class="prep-tools-actions">
+                    <div class="prep-filter-bar" role="group" aria-label="Filtrer les préparatifs">
+                        <button type="button" class="prep-filter-btn is-active" data-filter="all" data-action="switchChecklistFilter" data-action-args='["all"]' aria-pressed="true"><span>Tout</span><b id="checklist-count-all">0</b></button>
+                        <button type="button" class="prep-filter-btn" data-filter="todo" data-action="switchChecklistFilter" data-action-args='["todo"]' aria-pressed="false"><span>À faire</span><b id="checklist-count-todo">0</b></button>
+                        <button type="button" class="prep-filter-btn" data-filter="done" data-action="switchChecklistFilter" data-action-args='["done"]' aria-pressed="false"><span>Terminés</span><b id="checklist-count-done">0</b></button>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="content-container prep-content" id="checklist-categories"></div>
-        <!-- Floating add button — shown only for voyage scope -->
-        <button type="button" class="btn-add-float" id="checklist-add-float" data-action="openModal" data-action-args='["modal-checklist"]' aria-label="Ajouter un élément à préparer"><i class="fa-solid fa-plus"></i></button>
+        <button type="button" class="btn-add-float" data-action="openModal" data-action-args='["modal-checklist"]' aria-label="Ajouter un préparatif" title="Ajouter un préparatif"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
     </div>
 
     <!-- ================= BUDGET ================= -->
@@ -179,7 +195,7 @@
 
             <div id="expenses-list"></div>
         </div>
-        <button type="button" class="btn-add-float" data-action="openAddBudgetModal" aria-label="Ajouter une dépense"><i class="fa-solid fa-plus"></i></button>
+        <button type="button" class="btn-add-float" data-action="openAddBudgetModal" aria-label="Ajouter une dépense" title="Ajouter une dépense"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
     </div>
 
     <!-- ================= INFOS ================= -->
@@ -189,22 +205,6 @@
             <p>Adresses, billets et informations utiles à garder sous la main.</p>
         </div>
         <div class="content-container">
-            <section class="card trip-backup-card" aria-labelledby="trip-backup-title">
-                <div class="trip-backup-copy">
-                    <span class="trip-backup-icon"><i class="fa-solid fa-box-archive" aria-hidden="true"></i></span>
-                    <div>
-                        <h2 id="trip-backup-title">Sauvegarder ou transférer le séjour</h2>
-                        <p>Les données restent dans ce navigateur. Exporte une copie pour les garder ou les importer sur un autre appareil.</p>
-                    </div>
-                </div>
-                <div class="trip-backup-actions">
-                    <button type="button" class="trip-backup-button primary" data-action="exportTripBackup"><i class="fa-solid fa-download" aria-hidden="true"></i> Télécharger une copie</button>
-                    <input class="trip-backup-file" type="file" id="trip-backup-file" accept=".json,application/json" data-action="importTripBackup" data-action-event="change" data-action-target>
-                    <label class="trip-backup-button secondary" for="trip-backup-file"><i class="fa-solid fa-upload" aria-hidden="true"></i> Importer une copie</label>
-                </div>
-                <p class="trip-backup-note">Le fichier contient les détails de ton séjour. Garde-le dans un espace privé.</p>
-                <p class="trip-backup-feedback" id="trip-backup-feedback" role="status" aria-live="polite"></p>
-            </section>
             <div class="card">
                 <div class="card-header-row">
                     <div class="card-title-group">
@@ -243,7 +243,7 @@
 
             <div id="infos-list"></div>
         </div>
-        <button type="button" class="btn-add-float" data-action="openModal" data-action-args='["modal-choose-info-type"]' aria-label="Ajouter une information ou réservation"><i class="fa-solid fa-plus"></i></button>
+        <button type="button" class="btn-add-float" data-action="openModal" data-action-args='["modal-choose-info-type"]' aria-label="Ajouter une information ou réservation" title="Ajouter une information ou réservation"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
     </div>
 
     <!-- ================= RÉGLAGES ================= -->
@@ -299,13 +299,29 @@
                     </section>
 
                     <section class="settings-panel settings-data-panel" aria-labelledby="settings-data-title">
-                        <span class="settings-panel-icon"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i></span><span class="settings-kicker">TES DONNÉES</span><h2 id="settings-data-title">Ton séjour reste à toi.</h2><p>Tes préférences visuelles sont mémorisées sur cet appareil. Pense à télécharger une copie de ton séjour avant de changer d’appareil.</p>
-                        <button type="button" class="settings-link-button" data-action="switchDashboardTab" data-action-args='["infos"]'>Gérer mes sauvegardes <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+                        <span class="settings-panel-icon"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i></span><span class="settings-kicker">TES DONNÉES</span><h2 id="settings-data-title">Ton séjour reste à toi.</h2><p>Sans compte connecté, ton séjour reste sur cet appareil. Connecte-toi et active la synchronisation pour le retrouver ailleurs.</p>
+                        <a href="#settings-backups" class="settings-link-button">Gérer mes sauvegardes <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                     </section>
 
                     <button type="button" class="settings-reset-button" data-action="resetAppearance"><i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i><span><strong>Réinitialiser l’apparence</strong><small>Revenir aux préférences par défaut</small></span></button>
                 </aside>
             </div>
+            <section class="card trip-backup-card settings-backup-card" id="settings-backups" aria-labelledby="trip-backup-title">
+                <div class="trip-backup-copy">
+                    <span class="trip-backup-icon"><i class="fa-solid fa-box-archive" aria-hidden="true"></i></span>
+                    <div>
+                        <h2 id="trip-backup-title">Sauvegarder ou transférer le séjour</h2>
+                        <p>Télécharge une copie de sécurité ou importe un séjour JSON sur cet appareil.</p>
+                    </div>
+                </div>
+                <div class="trip-backup-actions">
+                    <button type="button" class="trip-backup-button primary" data-action="exportTripBackup"><i class="fa-solid fa-download" aria-hidden="true"></i> Télécharger une copie</button>
+                    <input class="trip-backup-file" type="file" id="trip-backup-file" accept=".json,application/json" data-action="importTripBackup" data-action-event="change" data-action-target>
+                    <label class="trip-backup-button secondary" for="trip-backup-file"><i class="fa-solid fa-upload" aria-hidden="true"></i> Importer une copie</label>
+                </div>
+                <p class="trip-backup-note">Le fichier contient les détails de ton séjour. Garde-le dans un espace privé.</p>
+                <p class="trip-backup-feedback" id="trip-backup-feedback" role="status" aria-live="polite"></p>
+            </section>
             <p class="settings-local-note"><i class="fa-solid fa-lock" aria-hidden="true"></i> Modifications enregistrées automatiquement</p>
         </div>
     </div>
@@ -782,6 +798,17 @@
                 <button type="button" class="btn-modal cancel" data-action="closeModal" data-action-args='["modal-programme"]'>Annuler</button>
                 <button type="button" class="btn-modal save" data-action="saveProgramme">Enregistrer</button>
             </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-itinerary-editor" role="dialog" aria-modal="true" aria-labelledby="itinerary-editor-title">
+        <div class="modal-content itinerary-editor-modal">
+            <div class="itinerary-editor-heading">
+                <span class="itinerary-editor-icon"><i class="fa-solid fa-sliders" aria-hidden="true"></i></span>
+                <div><span class="settings-kicker">ESPACE DE MODIFICATION</span><h3 id="itinerary-editor-title">Gérer l’itinéraire</h3><p>Destinations, journées et activités réunies au même endroit.</p></div>
+                <button class="itinerary-editor-close" type="button" data-action="closeModal" data-action-args='["modal-itinerary-editor"]' aria-label="Fermer"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <div id="itinerary-editor-content"></div>
         </div>
     </div>
 

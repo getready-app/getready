@@ -7,7 +7,7 @@
 //    touche pas, laissé au réseau normal.
 // CACHE_VERSION doit être incrémenté à chaque modification de ce fichier pour
 // forcer le nettoyage de l'ancien cache.
-const CACHE_VERSION = 'v33';
+const CACHE_VERSION = 'v60';
 const CACHE_NAME = `cap-commun-cache-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -16,6 +16,7 @@ const PRECACHE_URLS = [
     './manifest.json',
     './css/styles.css',
     './js/app.js',
+    './js/firebase-sync.js',
     './js/flight-api-config.js',
     './js/currency.js',
     './js/pwa.js',

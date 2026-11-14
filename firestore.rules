@@ -1,0 +1,80 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isTripMember(ownerUid) {
+      return signedIn()
+        && (request.auth.uid == ownerUid
+          || exists(/databases/$(database)/documents/userTrips/$(ownerUid)/members/$(request.auth.uid)));
+    }
+
+    function hasValidInvite(ownerUid, inviteId) {
+      let invitePath = /databases/$(database)/documents/tripInvites/$(inviteId);
+      return signedIn()
+        && inviteId is string
+        && exists(invitePath)
+        && get(invitePath).data.ownerUid == ownerUid
+        && get(invitePath).data.inviteeEmail == request.auth.token.email
+        && get(invitePath).data.expiresAt is timestamp
+        && get(invitePath).data.expiresAt > request.time;
+    }
+
+    match /userTrips/{ownerUid} {
+      allow get: if isTripMember(ownerUid);
+      allow list: if false;
+      allow create: if signedIn()
+                    && request.auth.uid == ownerUid
+                    && request.resource.data.ownerUid == ownerUid;
+      allow update: if isTripMember(ownerUid)
+                    && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if signedIn() && request.auth.uid == ownerUid;
+
+      match /members/{memberUid} {
+        allow get: if signedIn()
+                   && (request.auth.uid == memberUid || request.auth.uid == ownerUid);
+        allow list: if signedIn() && request.auth.uid == ownerUid;
+        allow create: if signedIn()
+                      && request.auth.uid == memberUid
+                      && request.resource.data.uid == memberUid
+                      && request.resource.data.ownerUid == ownerUid
+                      && ((request.resource.data.role == 'owner' && ownerUid == memberUid)
+                        || (request.resource.data.role == 'editor'
+                          && hasValidInvite(ownerUid, request.resource.data.inviteId)));
+        allow update: if signedIn()
+                      && request.auth.uid == ownerUid
+                      && memberUid != ownerUid
+                      && request.resource.data.uid == resource.data.uid
+                      && request.resource.data.ownerUid == ownerUid;
+        allow delete: if signedIn() && request.auth.uid == ownerUid && memberUid != ownerUid;
+      }
+    }
+
+    // Permet à chaque membre de retrouver ses appartenances par collectionGroup,
+    // avec une requête filtrée sur son propre UID.
+    match /{path=**}/members/{memberUid} {
+      allow get, list: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    match /tripInvites/{inviteId} {
+      allow get: if signedIn()
+                 && resource.data.inviteeEmail == request.auth.token.email
+                 && resource.data.expiresAt is timestamp
+                 && resource.data.expiresAt > request.time;
+      allow list: if false;
+      allow create: if signedIn()
+                    && request.resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.createdBy == request.auth.uid
+                    && isTripMember(request.auth.uid)
+                    && request.resource.data.inviteeEmail is string
+                    && request.resource.data.tripTitle is string
+                    && request.resource.data.expiresAt is timestamp
+                    && request.resource.data.expiresAt > request.time;
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+  }
+}

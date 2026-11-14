@@ -4,7 +4,7 @@
 
 Une Progressive Web App pour organiser un séjour à plusieurs : itinéraire, transports, préparatifs, budget partagé, réservations et informations utiles. Cap Commun s'adapte aux vacances, week-ends, voyages professionnels, événements et groupes variés. Son scénario de démonstration suit quatre amies à Lisbonne et Sintra.
 
-**Édition :** aucun mot de passe n'est demandé. Les modifications sont enregistrées dans le stockage local du navigateur utilisé ; elles ne sont pas synchronisées automatiquement avec les autres appareils. La section « Carnet pratique » permet de télécharger une sauvegarde JSON et de la réimporter sur un autre appareil. Le connecteur Firebase historique n'est plus chargé par l'application. Une synchronisation partagée en direct nécessiterait un système de comptes et des règles Firestore adaptés.
+**Édition :** une connexion par adresse e-mail et mot de passe est requise pour accéder à GetReady. Le séjour se synchronise entre appareils via Firebase. Le propriétaire peut inviter une personne à l'aide d'un lien valable 7 jours, associé à l'adresse e-mail de son compte ; les membres invités peuvent consulter et modifier le séjour.
 
 **Aperçu du scénario :** ajoutez `?demo=lisbonne` à l'URL pour découvrir et modifier le séjour fictif de quatre amies entre Lisbonne et Sintra. L'aperçu est enregistré séparément dans le navigateur, ne contacte pas Firebase et précise que les horaires, vols et budgets sont des exemples. Pour repartir du scénario initial, ouvrez une fois `?demo=lisbonne&reset=1` ; le lien se nettoie ensuite automatiquement pour conserver les modifications suivantes.
 
@@ -18,10 +18,30 @@ Projet personnel développé avec l'assistance de l'IA (Claude), piloté, débog
 | `css/styles.css` | Identité visuelle, composants et adaptations mobile |
 | `js/app.js` | Données du séjour, affichage et interactions |
 | `js/currency.js` | Conversion multidevise et cache des taux |
-| `js/firebase-sync.js` | Ancien connecteur Firebase, conservé mais débranché |
+| `js/firebase-sync.js` | Authentification Firebase et synchronisation privée du séjour |
+| `firestore.rules` | Règles Firestore pour les propriétaires, membres et invitations par e-mail |
 | `js/pwa.js` | Enregistrement du service worker |
 | `sw.js` | Cache et fonctionnement hors ligne |
 | `flight-api/` | Relais Cloudflare Worker pour la recherche de vols par numéro (configuration facultative) |
+
+---
+
+## 📸 Captures d'écran
+
+### 1. Vue d'ensemble & Accueil
+<img width="215" height="466" alt="imagesscreen1" src="https://github.com/user-attachments/assets/54029b78-5ab1-41b1-9333-325c0cef3dc3" />
+
+### 2. Itinéraire du Voyage
+<img width="215" height="466" alt="imagesscreen2" src="https://github.com/user-attachments/assets/94d6ce0b-ff46-4e5b-a09b-30749fafc4b1" />
+
+### 3. Checklist de Voyage
+<img width="215" height="466" alt="imagesscreen3" src="https://github.com/user-attachments/assets/81614aa6-d63b-4e79-b508-ed1ecf95c8f8" />
+
+### 4. Budget & Convertisseur de Devises
+<img width="215" height="466" alt="imagesscreen4" src="https://github.com/user-attachments/assets/a81dd1aa-7506-4920-b3f7-920717efd6e7" />
+
+### 5. Infos utiles & Cartographie
+<img width="215" height="466" alt="imagesscreen5" src="https://github.com/user-attachments/assets/b6e7522d-4cae-4b56-9380-9a35d0e1a393" />
 
 ---
 
@@ -69,7 +89,8 @@ Projet personnel développé avec l'assistance de l'IA (Claude), piloté, débog
 Point sur lequel j'ai particulièrement travaillé :
 
 - **Audit du code initial** et suppression de code suspect
-- **Accès Firestore protégé** : le connecteur Firebase n'est pas chargé dans la version actuelle. Les règles Firestore existantes restent en place et ne sont pas assouplies pour autoriser des écritures publiques.
+- **Accès Firestore protégé** : les règles de `firestore.rules` limitent chaque séjour à son propriétaire et aux comptes nommés dans une invitation valide. Publie ces règles dans la console Firebase avant d'activer la synchronisation.
+- **Déploiement des règles** : le projet Firebase par défaut est configuré dans `.firebaserc`. Depuis ce dossier, lance `npx firebase-tools login`, puis `npx firebase-tools deploy --only firestore:rules` pour publier `firestore.rules` sur `getready-77e40`.
 - **Protection contre les injections XSS** : toutes les données utilisateur affichées passent par une fonction d'échappement (`esc()`) avant insertion dans le DOM, pour empêcher l'exécution de code arbitraire
 
 ---
@@ -79,7 +100,7 @@ Point sur lequel j'ai particulièrement travaillé :
 | Domaine | Techno |
 |---|---|
 | Front-end | HTML5, CSS3, JavaScript natif en modules ES (sans framework) |
-| Backend / temps réel | Firebase (Firestore + Authentication anonyme) |
+| Backend / temps réel | Firebase (Firestore + Authentication e-mail/mot de passe) |
 | App | PWA (Service Worker, manifest.json, mode hors-ligne) |
 | APIs gratuites | Géolocalisation navigateur, météo, taux de change, itinéraires à pied |
 | Hébergement | GitHub Pages |
@@ -99,7 +120,7 @@ Point sur lequel j'ai particulièrement travaillé :
 
 ## 📱 Essayer l'application
 
-Le site est accessible directement ici : **https://getready-app.github.io/getready/**
+Le site est accessible directement ici : **https://mohamedaiteur-portfolio.github.io/Japan_Sync/**
 
 Sur mobile, il peut être installé comme une application via "Ajouter à l'écran d'accueil".
 
