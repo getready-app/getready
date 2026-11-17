@@ -7,7 +7,7 @@
 //    touche pas, laissé au réseau normal.
 // CACHE_VERSION doit être incrémenté à chaque modification de ce fichier pour
 // forcer le nettoyage de l'ancien cache.
-const CACHE_VERSION = 'v128';
+const CACHE_VERSION = 'v129';
 const CACHE_NAME = `cap-commun-cache-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -22,8 +22,10 @@ const PRECACHE_URLS = [
     './js/currency.js',
     './js/pwa.js',
     './images/cap-commun.svg',
-    './images/icon-192.png',
-    './images/icon-512.png',
+    './images/getready-maskable.svg',
+    './images/icon-192.png?v=2',
+    './images/icon-512.png?v=2',
+    './images/icon-512-maskable.png?v=2',
     './images/travel/lisbon.jpg',
     './images/travel/tokyo.jpg',
     './images/travel/coast.jpg',

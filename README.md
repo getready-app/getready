@@ -6,18 +6,6 @@
 
 GetReady est une application web progressive (PWA) qui aide à planifier des vacances, un week-end, un déplacement professionnel ou un événement, seul·e ou à plusieurs. Le tableau de bord rassemble les dates, l’itinéraire, les préparatifs, le budget et les réservations.
 
-## Aperçu
-
-Les captures ci-dessous présentent les principaux espaces de l’application.
-
-<p align="center">
-  <img width="215" alt="Vue d’ensemble du séjour" src="https://github.com/user-attachments/assets/54029b78-5ab1-41b1-9333-325c0cef3dc3" />
-  <img width="215" alt="Planification de l’itinéraire" src="https://github.com/user-attachments/assets/94d6ce0b-ff46-4e5b-a09b-30749fafc4b1" />
-  <img width="215" alt="Liste des préparatifs" src="https://github.com/user-attachments/assets/81614aa6-d63b-4e79-b508-ed1ecf95c8f8" />
-  <img width="215" alt="Budget et convertisseur de devises" src="https://github.com/user-attachments/assets/a81dd1aa-7506-4920-b3f7-920717efd6e7" />
-  <img width="215" alt="Carnet pratique et carte du séjour" src="https://github.com/user-attachments/assets/b6e7522d-4cae-4b56-9380-9a35d0e1a393" />
-</p>
-
 ## Fonctionnalités
 
 | Espace | Ce qu’il permet de faire |
