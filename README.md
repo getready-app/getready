@@ -1,131 +1,97 @@
-# 🧭 Cap Commun
+# GetReady — Organisez votre prochain voyage
 
-**[➡️ Voir le site en ligne](https://getready-app.github.io/getready/)**
+**Un espace unique pour préparer un séjour, suivre son itinéraire et partager les informations utiles.**
 
-Une Progressive Web App pour organiser un séjour à plusieurs : itinéraire, transports, préparatifs, budget partagé, réservations et informations utiles. Cap Commun s'adapte aux vacances, week-ends, voyages professionnels, événements et groupes variés. Son scénario de démonstration suit quatre amies à Lisbonne et Sintra.
+[Découvrir la simulation New York](https://getready-app.github.io/getready/?demo=newyork) · [Voir le dépôt GitHub](https://github.com/getready-app/getready)
 
-**Édition :** une connexion par adresse e-mail et mot de passe est requise pour accéder à GetReady. Le séjour se synchronise entre appareils via Firebase. Le propriétaire peut inviter une personne à l'aide d'un lien valable 7 jours, associé à l'adresse e-mail de son compte ; les membres invités peuvent consulter et modifier le séjour.
+GetReady est une application web progressive (PWA) qui aide à planifier des vacances, un week-end, un déplacement professionnel ou un événement, seul·e ou à plusieurs. Le tableau de bord rassemble les dates, l’itinéraire, les préparatifs, le budget et les réservations.
 
-**Aperçu du scénario :** ajoutez `?demo=lisbonne` à l'URL pour découvrir et modifier le séjour fictif de quatre amies entre Lisbonne et Sintra. L'aperçu est enregistré séparément dans le navigateur, ne contacte pas Firebase et précise que les horaires, vols et budgets sont des exemples. Pour repartir du scénario initial, ouvrez une fois `?demo=lisbonne&reset=1` ; le lien se nettoie ensuite automatiquement pour conserver les modifications suivantes.
+## Aperçu
 
-Projet personnel développé avec l'assistance de l'IA (Claude), piloté, débogué et sécurisé par son auteur. L'application est maintenant organisée par responsabilité pour que l'interface, les styles, les fonctionnalités, la synchronisation et le mode hors ligne puissent évoluer séparément.
+Les captures ci-dessous présentent les principaux espaces de l’application.
 
-## 🗂️ Structure du projet
+<p align="center">
+  <img width="215" alt="Vue d’ensemble du séjour" src="https://github.com/user-attachments/assets/54029b78-5ab1-41b1-9333-325c0cef3dc3" />
+  <img width="215" alt="Planification de l’itinéraire" src="https://github.com/user-attachments/assets/94d6ce0b-ff46-4e5b-a09b-30749fafc4b1" />
+  <img width="215" alt="Liste des préparatifs" src="https://github.com/user-attachments/assets/81614aa6-d63b-4e79-b508-ed1ecf95c8f8" />
+  <img width="215" alt="Budget et convertisseur de devises" src="https://github.com/user-attachments/assets/a81dd1aa-7506-4920-b3f7-920717efd6e7" />
+  <img width="215" alt="Carnet pratique et carte du séjour" src="https://github.com/user-attachments/assets/b6e7522d-4cae-4b56-9380-9a35d0e1a393" />
+</p>
+
+## Fonctionnalités
+
+| Espace | Ce qu’il permet de faire |
+|---|---|
+| **Vue d’ensemble** | Retrouver les prochaines dates, l’avancement des préparatifs, les réservations à prévoir et le budget du séjour. |
+| **Itinéraire** | Organiser le voyage par étapes et par journées, planifier des activités, consulter une carte et exporter les éléments datés vers un calendrier `.ics`. |
+| **Préparatifs** | Gérer une liste générale et des listes par destination, puis filtrer les éléments à faire ou terminés. |
+| **Budget** | Suivre les dépenses par catégorie et participant, répartir les parts et convertir les montants dans différentes devises. Les taux sont indicatifs. |
+| **Carnet pratique** | Conserver les billets, lieux, horaires, références, notes et liens utiles ; filtrer, trier, partager ou exporter les réservations. |
+| **Réglages** | Choisir l’apparence, le mode clair ou sombre et les préférences de mouvement. |
+
+L’application comprend également un compte à rebours, des informations météo liées à l’étape en cours, la sauvegarde locale des données et une recherche de vols par numéro configurable en option.
+
+## Essayer la démo
+
+La démo principale présente une semaine de Noël à New York, du 23 au 30 décembre 2026, pour Mohamed et Mélissa :
+
+**[Lancer GetReady · New York à Noël](https://getready-app.github.io/getready/?demo=newyork)**
+
+Le parcours propose notamment Midtown et le sapin du Rockefeller Center, Central Park, Lower Manhattan, la Statue de la Liberté, Brooklyn et Chelsea. Il sert à parcourir les différentes pages avec des données concrètes. Les six enveloppes de budget totalisent **5 000 € pour deux**, à titre fictif : ce ne sont ni des prix en direct ni des devis. Aucun vol, hébergement, ferry ou billet n’est réservé. Les créneaux sont des suggestions ; les horaires spéciaux de Noël, tarifs et conditions d’accès doivent être revérifiés auprès des organismes officiels avant un vrai voyage. Les liens consultés sont disponibles dans le carnet de la simulation.
+
+La démo fonctionne sans compte, ne synchronise rien avec Firebase et conserve les modifications dans le navigateur utilisé. Pour retrouver les données de départ après modification, ajoutez `&reset=1` une fois à l’adresse de la démo. Une deuxième démonstration Lisbonne–Sintra reste accessible à l’adresse [getready-app.github.io/getready/?demo=lisbonne](https://getready-app.github.io/getready/?demo=lisbonne).
+
+
+## Démarrer en local
+
+Le front-end est statique et ne nécessite pas d’installation de dépendances pour découvrir la démo. Depuis la racine du dépôt, lancez un serveur HTTP local :
+
+```bash
+python3 -m http.server 8000
+```
+
+Puis ouvrez [http://localhost:8000/?demo=newyork](http://localhost:8000/?demo=newyork).
+
+Les tests automatisés utilisent le module intégré `node:test` de Node.js :
+
+```bash
+node --test tests/*.test.mjs
+```
+
+## Technologies et organisation
+
+- **Interface :** HTML, CSS et JavaScript natif avec modules ES.
+- **Synchronisation facultative des séjours personnels :** Firebase Authentication et Cloud Firestore, avec règles d’accès dans `firestore.rules`.
+- **Application installable :** manifest PWA et service worker pour la mise en cache et l’usage hors ligne.
+- **Fonctions complémentaires :** taux de change, météo, liens cartographiques et export de calendriers/réservations.
+- **Recherche de vols par numéro :** relais Cloudflare Worker optionnel ; configuration et prérequis dans [`flight-api/README.md`](flight-api/README.md).
 
 | Fichier | Rôle |
 |---|---|
-| `index.html` | Structure des pages, navigation et formulaires |
-| `css/styles.css` | Identité visuelle, composants et adaptations mobile |
-| `js/app.js` | Données du séjour, affichage et interactions |
-| `js/currency.js` | Conversion multidevise et cache des taux |
-| `js/firebase-sync.js` | Authentification Firebase et synchronisation privée du séjour |
-| `firestore.rules` | Règles Firestore pour les propriétaires, membres et invitations par e-mail |
-| `js/pwa.js` | Enregistrement du service worker |
-| `sw.js` | Cache et fonctionnement hors ligne |
-| `flight-api/` | Relais Cloudflare Worker pour la recherche de vols par numéro (configuration facultative) |
+| `index.html` | Pages, navigation et formulaires |
+| `css/styles.css`, `css/getready-shell.css` | Identité visuelle, composants et adaptation aux écrans |
+| `js/app.js` | Données locales, affichage et interactions |
+| `js/firebase-sync.js` | Connexion, synchronisation et invitations de séjour |
+| `js/currency.js` | Conversion et affichage des devises |
+| `js/pwa.js`, `sw.js`, `manifest.json` | Installation PWA et cache hors ligne |
+| `firestore.rules` | Règles d’accès Firestore |
+| `tests/` | Tests automatisés Node.js |
 
----
+## Synchronisation et sécurité
 
-## 📸 Captures d'écran
+La découverte en mode démo ne nécessite pas de compte et ne synchronise pas les données avec Firebase. Les séjours personnels peuvent être associés à un compte et synchronisés entre appareils ; le partage se fait par invitation à une adresse e-mail. Les règles Firestore fournies dans le dépôt doivent être publiées et vérifiées dans le projet Firebase utilisé.
 
-### 1. Vue d'ensemble & Accueil
-<img width="215" height="466" alt="imagesscreen1" src="https://github.com/user-attachments/assets/54029b78-5ab1-41b1-9333-325c0cef3dc3" />
+La recherche de vols est facultative et dépend d’un fournisseur externe, de sa couverture et de ses quotas. Gardez toute clé de fournisseur dans les secrets du relais serveur ; ne publiez jamais de clé privée ou de fichier de compte de service dans le dépôt.
 
-### 2. Itinéraire du Voyage
-<img width="215" height="466" alt="imagesscreen2" src="https://github.com/user-attachments/assets/94d6ce0b-ff46-4e5b-a09b-30749fafc4b1" />
+## Ce que le projet met en pratique
 
-### 3. Checklist de Voyage
-<img width="215" height="466" alt="imagesscreen3" src="https://github.com/user-attachments/assets/81614aa6-d63b-4e79-b508-ed1ecf95c8f8" />
+- Concevoir une interface responsive pour plusieurs parcours de préparation.
+- Structurer une application JavaScript native en modules.
+- Gérer des données locales et une synchronisation cloud avec contrôle d’accès.
+- Créer une PWA installable, avec prise en charge du mode hors ligne.
+- Intégrer des services complémentaires tout en documentant leurs limites.
+- Tester les principales interactions avec `node:test`.
 
-### 4. Budget & Convertisseur de Devises
-<img width="215" height="466" alt="imagesscreen4" src="https://github.com/user-attachments/assets/a81dd1aa-7506-4920-b3f7-920717efd6e7" />
+## Auteur
 
-### 5. Infos utiles & Cartographie
-<img width="215" height="466" alt="imagesscreen5" src="https://github.com/user-attachments/assets/b6e7522d-4cae-4b56-9380-9a35d0e1a393" />
-
----
-
-## 🚀 Fonctionnalités
-
-**Accueil**
-- Suivi des vols et des transports (train, métro, bus, voiture, bateau ou autre)
-- Préremplissage d'un vol à partir de son numéro et de sa date ; nécessite la configuration du relais Cloudflare et une clé fournisseur (voir [`flight-api/README.md`](flight-api/README.md))
-- Carte "Aujourd'hui" : affiche automatiquement le prochain vol/train/activité du jour, avec la météo en direct basée sur la position GPS
-- Compte à rebours avant le départ
-
-**Programme (itinéraire)**
-- Sélection horizontale des villes enregistrées, puis des dates de l'étape ; le planning de la journée choisie s'affiche directement
-- Les dates de début et de fin d'une nouvelle étape remplissent automatiquement les journées, que l'on peut ensuite modifier ou compléter
-- Activités par heure avec lien Maps, ajout et modification sur place
-- Tout est modifiable en place, sans supprimer/recréer
-
-**Checklist**
-- Checklist générale du voyage + une checklist par destination
-
-**Budget**
-- Convertisseur multidevise : devises source et cible sélectionnables, taux indicatifs mis à jour chaque jour
-- Dépenses saisies dans leur devise d'origine et totaux convertis dans une devise de référence au choix
-- Suivi par catégorie et par participant, statut payé/à payer et répartition des dépenses
-
-**Présentation**
-- Identité visuelle Cap Commun et accueil adapté au type de séjour et au groupe (solo, couple, amis, famille ou équipe)
-- Tableau de bord avec aperçu des étapes, activités, budget et préparatifs
-- Navigation mobile simplifiée et mise en page adaptée aux écrans larges
-
-**Infos utiles**
-- Cartes libres modifiables (adresses, transports, accès, contacts et notes de groupe…)
-- Sauvegarde locale exportable et importable pour transférer un séjour entre appareils
-- Visualisation de l'itinéraire à pied entre l'hôtel et l'activité sélectionnée, sans clé API Google payante
-- Dossier « Billets & Réservations » pour les visites, trajets et activités du séjour
-
-**Technique**
-- Installable comme une vraie app sur le téléphone (PWA, icône, écran d'accueil), fonctionne hors-ligne
-- Les fonctions existantes de change, météo et cartes n'exposent aucune clé API dans le navigateur. La recherche de vols est facultative et dépend des quotas et conditions du fournisseur choisi.
-
----
-
-## 🔒 Sécurité
-
-Point sur lequel j'ai particulièrement travaillé :
-
-- **Audit du code initial** et suppression de code suspect
-- **Accès Firestore protégé** : les règles de `firestore.rules` limitent chaque séjour à son propriétaire et aux comptes nommés dans une invitation valide. Publie ces règles dans la console Firebase avant d'activer la synchronisation.
-- **Déploiement des règles** : le projet Firebase par défaut est configuré dans `.firebaserc`. Depuis ce dossier, lance `npx firebase-tools login`, puis `npx firebase-tools deploy --only firestore:rules` pour publier `firestore.rules` sur `getready-77e40`.
-- **Protection contre les injections XSS** : toutes les données utilisateur affichées passent par une fonction d'échappement (`esc()`) avant insertion dans le DOM, pour empêcher l'exécution de code arbitraire
-
----
-
-## 🛠️ Stack technique
-
-| Domaine | Techno |
-|---|---|
-| Front-end | HTML5, CSS3, JavaScript natif en modules ES (sans framework) |
-| Backend / temps réel | Firebase (Firestore + Authentication e-mail/mot de passe) |
-| App | PWA (Service Worker, manifest.json, mode hors-ligne) |
-| APIs gratuites | Géolocalisation navigateur, météo, taux de change, itinéraires à pied |
-| Hébergement | GitHub Pages |
-
----
-
-## 💡 Ce que ce projet démontre
-
-- Capacité à **auditer et sécuriser** une base de données mal configurée (règles Firestore, authentification)
-- Compréhension et prévention des failles **XSS**
-- Développement front-end complet en JavaScript natif, sans dépendance à un framework
-- Intégration d'API tierces gratuites (météo, change, cartes) sans clé payante
-- Construction d'une **PWA** installable et fonctionnelle hors-ligne
-- Autonomie sur un projet réel, de bout en bout : cahier des charges personnel, développement, débogage, itérations sur plusieurs semaines (voir l'historique des commits)
-
----
-
-## 📱 Essayer l'application
-
-Le site est accessible directement ici : **https://mohamedaiteur-portfolio.github.io/Japan_Sync/**
-
-Sur mobile, il peut être installé comme une application via "Ajouter à l'écran d'accueil".
-
----
-
-## 👤 Auteur
-
-**Mohamed Aiteur** — Étudiant BTS SIO option SLAM (rentrée 2026), actuellement en recherche d'alternance.
+**Mohamed Aiteur** — projet personnel réalisé dans le cadre du BTS SIO, option SLAM.

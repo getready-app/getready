@@ -163,19 +163,34 @@ function collectScheduleItems() {
     (appData.programme || []).forEach(prog => {
         (prog.activites || []).forEach(act => {
             const d = parseFrenchShortDate(act.date, year);
-            if (d) items.push({ date: d, time: act.heure || '', sortKey: timeSortKey(act.heure), icon: 'fa-location-dot', label: act.texte || '', sub: prog.ville || '' });
+            if (d) items.push({ date: d, time: act.heure || '', sortKey: timeSortKey(act.heure), icon: 'fa-location-dot', label: act.texte || '', sub: prog.ville || '', type: 'activity', programmeId: prog.id, activityDate: act.date });
+        });
+    });
+    (appData.billets || []).forEach(billet => {
+        const status = getBilletStatus(billet);
+        if (status === 'annule') return;
+        const d = parseFrenchShortDate(billet.date, year);
+        if (!d) return;
+        const details = [getBilletStatusLabel(status), billet.lieu, billet.reference && `Réf. ${billet.reference}`].filter(Boolean);
+        items.push({
+            date: d,
+            time: timeToPickerValue(billet.heure),
+            sortKey: timeSortKey(billet.heure),
+            icon: 'fa-ticket',
+            label: billet.nom || 'Réservation',
+            sub: details.length ? `Billet · ${details.join(' · ')}` : 'Billet réservé'
         });
     });
     return items;
 }
 
-// Destination du Programme dont la plage de dates couvre aujourd'hui,
-// sinon la prochaine à venir — utilisée pour la météo locale.
-function getCurrentOrNextDestination() {
+// La température actuelle n'est utile que pendant une étape en cours.
+// Pour une destination future, mieux vaut ne pas afficher la météo du jour.
+function getCurrentDestination() {
     const year = tripYear();
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    let current = null, next = null, nextStart = null;
+    let current = null;
     (appData.programme || []).forEach(prog => {
         const start = parseFrenchShortDate(prog.dateStart, year);
         const end = parseFrenchShortDate(prog.dateEnd, year);
@@ -183,9 +198,8 @@ function getCurrentOrNextDestination() {
         const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
         const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
         if (today >= startDay && today <= endDay) current = prog;
-        else if (startDay > today && (!nextStart || startDay < nextStart)) { next = prog; nextStart = startDay; }
     });
-    return current || next;
+    return current;
 }
 
 function renderTodayCard() {
@@ -197,9 +211,10 @@ function renderTodayCard() {
     const now = new Date();
     const todayItems = items.filter(i => isSameDay(i.date, now)).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
 
-    let title, subtitle, showItems;
+    let title, subtitle, showItems, displayedDate;
     if (todayItems.length > 0) {
         title = "Aujourd'hui";
+        displayedDate = now;
         subtitle = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
         showItems = todayItems;
     } else {
@@ -207,25 +222,31 @@ function renderTodayCard() {
         const future = items.filter(i => i.date.getTime() > todayMidnight.getTime()).sort((a, b) => a.date - b.date || a.sortKey.localeCompare(b.sortKey));
         if (future.length === 0) { container.innerHTML = ''; return; }
         const nextDate = future[0].date;
+        displayedDate = nextDate;
         showItems = future.filter(i => isSameDay(i.date, nextDate)).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
         const diffDays = Math.round((new Date(nextDate.getFullYear(), nextDate.getMonth(), nextDate.getDate()) - todayMidnight) / 86400000);
         title = diffDays === 1 ? "Demain" : `Dans ${diffDays} jours`;
         subtitle = nextDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
     }
 
-    const itemsHtml = showItems.map(i => `
-        <div class="today-item">
-            <div class="today-item-icon"><i class="fa-solid ${i.icon}"></i></div>
+    const itemsHtml = showItems.map(i => {
+        const isActivity = i.type === 'activity';
+        const tag = isActivity ? 'button' : 'div';
+        const action = isActivity ? `${actionAttrs('openDashboardActivity', [i.programmeId, i.activityDate])} aria-label="Ouvrir ${esc(i.label)} dans l’itinéraire"` : '';
+        return `
+        <${tag} class="today-item${isActivity ? ' today-item-action' : ''}" ${action}>
+            <div class="today-item-icon" aria-hidden="true"><i class="fa-solid ${i.icon}"></i></div>
             <div class="today-item-body">
                 <div class="today-item-label">${esc(i.label)}</div>
                 ${i.sub ? `<div class="today-item-sub">${esc(i.sub)}</div>` : ''}
             </div>
             ${i.time ? `<div class="today-item-time">${esc(i.time)}</div>` : ''}
-        </div>
-    `).join('');
+        </${tag}>
+    `;
+    }).join('');
 
     container.innerHTML = `
-        <div class="card today-card">
+        <div class="card today-card" data-date="${dateToPickerValue(displayedDate)}">
             <div class="today-card-header">
                 <div>
                     <div class="today-card-title">${esc(title)}</div>
@@ -306,50 +327,39 @@ function findCityCoords(ville) {
     return found ? CITY_COORDS[found] : null;
 }
 
-function showWeatherBadge(badge, weather) {
-    if (!weather || !document.body.contains(badge)) return;
+function showWeatherBadge(badge, weather, city = '') {
+    if (!document.body.contains(badge)) return;
+    if (!weather) {
+        badge.innerHTML = `<span aria-hidden="true">🌤️</span><span>Météo indisponible${city ? ` à ${esc(city)}` : ''}</span>`;
+        badge.setAttribute('aria-label', `Météo de la destination indisponible${city ? ` à ${city}` : ''}`);
+        badge.style.display = '';
+        return;
+    }
     const icon = WEATHER_ICONS[weather.code] || '🌡️';
-    badge.innerHTML = `<span>${icon}</span><span class="today-card-weather-temp">${weather.temp}°C</span>`;
+    badge.innerHTML = `<span aria-hidden="true">${icon}</span><span>${city ? `${esc(city)} · ` : ''}<span class="today-card-weather-temp">${weather.temp}°C</span></span>`;
+    badge.setAttribute('aria-label', `Conditions météo actuelles${city ? ` à ${city}` : ''} : ${weather.temp} degrés`);
     badge.style.display = '';
-}
-
-// Position GPS de l'appareil (préférée) : plus fiable que de deviner via
-// le nom de la ville dans Programme. Repli sur la destination du
-// Programme si la géolocalisation est refusée/indisponible.
-function getDeviceLocation() {
-    return new Promise(resolve => {
-        if (!navigator.geolocation) { resolve(null); return; }
-        // Filet de sécurité : certains navigateurs/contextes ne déclenchent
-        // jamais le callback d'erreur (permission jamais accordée ni
-        // refusée), donc l'option "timeout" native ne suffit pas toujours.
-        let settled = false;
-        const done = (value) => { if (!settled) { settled = true; resolve(value); } };
-        setTimeout(() => done(null), 5000);
-        navigator.geolocation.getCurrentPosition(
-            pos => done([
-                Math.round(pos.coords.latitude * 100) / 100,
-                Math.round(pos.coords.longitude * 100) / 100
-            ]),
-            () => done(null),
-            { timeout: 5000, maximumAge: 15 * 60 * 1000 }
-        );
-    });
 }
 
 async function fetchAndShowWeather() {
     const badge = document.getElementById('today-card-weather');
     if (!badge) return;
-    let coords = await getDeviceLocation();
-    if (!coords) {
-        const dest = getCurrentOrNextDestination();
-        coords = dest ? findCityCoords(dest.ville) : null;
+    const dest = getCurrentDestination();
+    if (!dest) return;
+    const city = String(dest?.ville || '').trim();
+    const exactCoordinates = extractLatLng(dest?.maps || dest?.mapUrl || dest?.lienMaps || '');
+    const coords = exactCoordinates
+        ? exactCoordinates.split(',').map(Number)
+        : (city ? findCityCoords(city) : null);
+    if (!coords || coords.length !== 2 || !coords.every(Number.isFinite)) {
+        showWeatherBadge(badge, null, city);
+        return;
     }
-    if (!coords) return;
     if (!document.body.contains(badge)) return;
 
     const cacheKey = coords.join(',');
     if (cacheKey in weatherCache) {
-        showWeatherBadge(badge, weatherCache[cacheKey]);
+        showWeatherBadge(badge, weatherCache[cacheKey], city);
         return;
     }
     try {
@@ -364,66 +374,80 @@ async function fetchAndShowWeather() {
         if (!data.current) throw new Error('no data');
         const weather = { temp: Math.round(data.current.temperature_2m), code: data.current.weather_code };
         weatherCache[cacheKey] = weather;
-        showWeatherBadge(badge, weather);
+        if (getCurrentDestination()?.ville === dest.ville) showWeatherBadge(badge, weather, city);
     } catch (e) {
         weatherCache[cacheKey] = null;
+        if (getCurrentDestination()?.ville === dest.ville) showWeatherBadge(badge, null, city);
     }
 }
 
 const demoUrl = new URL(window.location.href);
-const DEMO_PREVIEW = demoUrl.searchParams.get('demo') === 'lisbonne';
+const DEMO_SCENARIO = demoUrl.searchParams.get('demo');
+const DEMO_PREVIEW = ['lisbonne', 'newyork'].includes(DEMO_SCENARIO);
+const DEMO_STORAGE_KEYS = {
+    lisbonne: 'cap_commun_demo_lisbonne_v2',
+    newyork: 'cap_commun_demo_newyork_v1'
+};
 const RESET_DEMO_PREVIEW = DEMO_PREVIEW && demoUrl.searchParams.get('reset') === '1';
 if (RESET_DEMO_PREVIEW) {
-    localStorage.removeItem('cap_commun_demo_lisbonne');
+    if (DEMO_SCENARIO === 'lisbonne') localStorage.removeItem('cap_commun_demo_lisbonne');
+    localStorage.removeItem(DEMO_STORAGE_KEYS[DEMO_SCENARIO]);
     demoUrl.searchParams.delete('reset');
     window.history.replaceState(window.history.state, '', demoUrl);
 }
 
-// Scénario fictif utilisé comme exemple sur une nouvelle installation.
+// Scénario fictif réservé à l'aperçu public du mode démonstration.
 const defaultData = {
-    tripTitle: "Lisbonne entre copines 🌞",
+    tripTitle: "Lisbonne & Sintra entre amies 🌞",
     tripStart: "2027-04-16",
     tripEnd: "2027-04-20",
     tripType: "Vacances",
     tripGroup: "Amis",
     budgetCurrency: "EUR",
     budgetPeople: ["Léa", "Inès", "Maya", "Zoé"],
-    vols: [
-        { id: 501, type: "Aller · EXEMPLE FICTIF", compagnie: "À choisir", date: "16 avr.", dep: "CDG", depCity: "Paris", depTerminal: "Terminal à confirmer", depTime: "08:10", num1: "DEMO 01", arr: "LIS", arrCity: "Lisbonne", arrTerminal: "Terminal à confirmer", arrTime: "10:00", num2: "DEMO 01" },
-        { id: 502, type: "Retour · EXEMPLE FICTIF", compagnie: "À choisir", date: "20 avr.", dep: "LIS", depCity: "Lisbonne", depTerminal: "Terminal à confirmer", depTime: "18:30", num1: "DEMO 02", arr: "CDG", arrCity: "Paris", arrTerminal: "Terminal à confirmer", arrTime: "22:10", num2: "DEMO 02" }
-    ],
+    // Aucun vol n’est inventé : les cartes de vols restent vides jusqu’à une vraie réservation.
+    vols: [],
     programme: [
         {
-            id: 701, ville: "Lisbonne", hotel: "Baixa · adresse à définir", dateStart: "16 avr.", dateEnd: "18 avr.",
+            id: 701, ville: "Lisbonne", hotel: "Baixa · hébergement à choisir", dateStart: "16 avr.", dateEnd: "18 avr.",
             maps: "https://maps.google.com/?q=Baixa+Lisbon+Portugal", jours: ["16 avr.", "17 avr.", "18 avr."],
             activites: [
-                { id: 7101, date: "16 avr.", heure: "12:00", texte: "Déjeuner gourmand au Time Out Market", lien: "https://maps.google.com/?q=Time+Out+Market+Lisbon" },
-                { id: 7102, date: "16 avr.", heure: "16:00", texte: "Première balade dans les ruelles de l’Alfama", lien: "https://maps.google.com/?q=Alfama+Lisbon" },
-                { id: 7103, date: "17 avr.", heure: "09:30", texte: "Tramway jusqu’au quartier de Belém", lien: "https://maps.google.com/?q=Belem+Lisbon" },
-                { id: 7104, date: "17 avr.", heure: "11:00", texte: "Pastéis et promenade au bord du Tage", lien: "https://maps.google.com/?q=Pasteis+de+Belem" },
-                { id: 7105, date: "18 avr.", heure: "10:00", texte: "Miradouro da Senhora do Monte · photos de groupe", lien: "https://maps.google.com/?q=Miradouro+da+Senhora+do+Monte" }
+                { id: 7101, date: "16 avr.", heure: "15:00", texte: "Poser ses affaires à Baixa · hébergement à réserver", lien: "https://maps.google.com/?q=Baixa+Lisbon+Portugal" },
+                { id: 7102, date: "16 avr.", heure: "17:00", texte: "Praça do Comércio et promenade au bord du Tage", lien: "https://maps.google.com/?q=Pra%C3%A7a+do+Com%C3%A9rcio+Lisbon" },
+                { id: 7103, date: "17 avr.", heure: "09:30", texte: "Belém · balade le long du Tage", lien: "https://maps.google.com/?q=Belem+Lisbon" },
+                { id: 7104, date: "17 avr.", heure: "10:30", texte: "Visiter le Padrão dos Descobrimentos", lien: "https://maps.google.com/?q=Padrao+dos+Descobrimentos+Lisbon" },
+                { id: 7105, date: "17 avr.", heure: "12:00", texte: "Pause chez Pastéis de Belém · Rua de Belém 84–92", lien: "https://maps.google.com/?q=Pasteis+de+Belem" },
+                { id: 7106, date: "18 avr.", heure: "09:30", texte: "Flâner dans les ruelles d’Alfama", lien: "https://maps.google.com/?q=Alfama+Lisbon" },
+                { id: 7107, date: "18 avr.", heure: "11:30", texte: "Miradouro de Santa Luzia · vue et azulejos", lien: "https://maps.google.com/?q=Miradouro+de+Santa+Luzia+Lisbon" },
+                { id: 7108, date: "18 avr.", heure: "17:30", texte: "Miradouro da Senhora do Monte · fin de journée", lien: "https://maps.google.com/?q=Miradouro+da+Senhora+do+Monte" }
             ]
         },
         {
-            id: 702, ville: "Sintra", hotel: "Retour à Lisbonne · hébergement à choisir", dateStart: "19 avr.", dateEnd: "20 avr.",
-            maps: "https://maps.google.com/?q=Sintra+Portugal", jours: ["19 avr.", "20 avr."],
+            id: 702, ville: "Sintra", hotel: "Excursion à la journée · retour à Lisbonne", dateStart: "19 avr.", dateEnd: "19 avr.",
+            maps: "https://maps.google.com/?q=Sintra+Portugal", jours: ["19 avr."],
             activites: [
-                { id: 7201, date: "19 avr.", heure: "09:00", texte: "Train de Lisbonne vers Sintra", lien: "https://maps.google.com/?q=Rossio+Station+Lisbon" },
-                { id: 7202, date: "19 avr.", heure: "11:00", texte: "Palais de Pena · billets à vérifier", lien: "https://maps.google.com/?q=Pena+Palace+Sintra" },
-                { id: 7203, date: "19 avr.", heure: "16:00", texte: "Pause goûter dans le centre historique", lien: "https://maps.google.com/?q=Sintra+historic+centre" },
-                { id: 7204, date: "20 avr.", heure: "10:00", texte: "Dernier café, souvenirs et retour à Lisbonne", lien: "https://maps.google.com/?q=Lisbon+Portugal" }
+                { id: 7201, date: "19 avr.", heure: "09:00", texte: "Train depuis Lisboa–Rossio · horaire à choisir", lien: "https://maps.google.com/?q=Rossio+Station+Lisbon" },
+                { id: 7202, date: "19 avr.", heure: "11:30", texte: "Palais national de Pena · créneau d’entrée à réserver", lien: "https://maps.google.com/?q=Pena+Palace+Sintra" },
+                { id: 7203, date: "19 avr.", heure: "15:30", texte: "Pause et balade dans le centre historique de Sintra", lien: "https://maps.google.com/?q=Sintra+historic+centre" }
+            ]
+        },
+        {
+            id: 703, ville: "Lisbonne", hotel: "Fin du séjour · départ à confirmer", dateStart: "20 avr.", dateEnd: "20 avr.",
+            maps: "https://maps.google.com/?q=Lisbon+Portugal", jours: ["20 avr."],
+            activites: [
+                { id: 7301, date: "20 avr.", heure: "09:30", texte: "Dernier café et temps libre avant le départ", lien: "https://maps.google.com/?q=Lisbon+Portugal" }
             ]
         }
     ],
     checklist: [
-        { id: 1, categorie: "PAPIERS & RÉSERVATIONS", texte: "Vérifier les cartes d’identité", checked: true },
-        { id: 2, categorie: "PAPIERS & RÉSERVATIONS", texte: "Choisir et réserver les vols (exemples fictifs)", checked: false },
-        { id: 3, categorie: "PAPIERS & RÉSERVATIONS", texte: "Comparer les hébergements à Baixa", checked: false },
-        { id: 4, categorie: "À GLISSER DANS LE SAC", texte: "Lunettes de soleil et crème solaire", checked: false },
-        { id: 5, categorie: "À GLISSER DANS LE SAC", texte: "Chaussures confortables pour les pavés", checked: false },
+        { id: 1, categorie: "PAPIERS & RÉSERVATIONS", texte: "Vérifier les documents de voyage selon sa nationalité", checked: false },
+        { id: 2, categorie: "PAPIERS & RÉSERVATIONS", texte: "Comparer puis réserver les vols aller-retour", checked: false },
+        { id: 3, categorie: "PAPIERS & RÉSERVATIONS", texte: "Choisir un hébergement à Lisbonne", checked: false },
+        { id: 4, categorie: "À GLISSER DANS LE SAC", texte: "Chapeau, lunettes et crème solaire", checked: false },
+        { id: 5, categorie: "À GLISSER DANS LE SAC", texte: "Chaussures confortables pour les pavés et Sintra", checked: false },
         { id: 6, categorie: "À GLISSER DANS LE SAC", texte: "Batterie externe et adaptateur", checked: false },
         { id: 7, categorie: "PETITS PLAISIRS", texte: "Créer une playlist pour le trajet", checked: true },
-        { id: 8, categorie: "PETITS PLAISIRS", texte: "Laisser de la place pour les pastéis 🍮", checked: false }
+        { id: 8, categorie: "PETITS PLAISIRS", texte: "Garder une place pour les pastéis 🍮", checked: false }
     ],
     checklistsJour: {
         701: [
@@ -436,31 +460,176 @@ const defaultData = {
         ]
     },
     budget: [
-        { id: 801, nom: "Vols · estimation pour 4", amount: 560, currency: "EUR", eur: 560, categorie: "Transport", payeurs: ["Léa"], methode: "Carte bleue", paid: false },
-        { id: 802, nom: "Hébergement · 4 nuits", amount: 640, currency: "EUR", eur: 640, categorie: "Hébergement", payeurs: ["Inès"], methode: "Carte bleue", paid: false },
+        { id: 801, nom: "Vols · enveloppe de démonstration pour 4", amount: 560, currency: "EUR", eur: 560, categorie: "Transport", payeurs: ["Léa"], methode: "Carte bleue", paid: false },
+        { id: 802, nom: "Hébergement · enveloppe pour 4 nuits", amount: 640, currency: "EUR", eur: 640, categorie: "Hébergement", payeurs: ["Inès"], methode: "Carte bleue", paid: false },
         { id: 803, nom: "Repas & pauses gourmandes", amount: 320, currency: "EUR", eur: 320, categorie: "Nourriture", payeurs: ["Maya"], methode: "Espèces", paid: false },
-        { id: 804, nom: "Train et visites à Sintra", amount: 180, currency: "EUR", eur: 180, categorie: "Activités & Billets", payeurs: ["Zoé"], methode: "Carte bleue", paid: false },
+        { id: 804, nom: "Transports et visites", amount: 180, currency: "EUR", eur: 180, categorie: "Activités & Billets", payeurs: ["Zoé"], methode: "Carte bleue", paid: false },
         { id: 805, nom: "Petits extras & souvenirs", amount: 160, currency: "EUR", eur: 160, categorie: "Shopping", payeurs: [], methode: "", paid: false }
     ],
     infos: [
-        { id: 901, titre: "À propos de cet itinéraire", desc: "Scénario de démonstration : adresses, horaires, vols et montants sont des exemples fictifs. Rien n’est réservé. Vérifiez chaque information avant votre vrai départ." },
-        { id: 902, titre: "Notre camp de base", desc: "Quartier visé : Baixa, Lisbonne. Hébergement à comparer et à réserver ensemble. Garder l’adresse finale dans cette fiche." },
-        { id: 903, titre: "Petite règle de groupe 💛", desc: "On partage les idées et les frais, on garde du temps libre, et chacune peut proposer une pause ou changer le programme." }
+        {
+            id: 901,
+            titre: "Repères publics · sources officielles",
+            desc: "Itinéraire proposé pour un séjour fictif du 16 au 20 avril 2027. Les lieux et repères ci-dessous ont été consultés le 16 novembre 2026. Les heures de l’itinéraire sont des suggestions, pas des horaires de rendez-vous ou de transport. Les horaires, tarifs et conditions d’accès peuvent évoluer avant le voyage : revalidez-les auprès des organismes officiels.",
+            sources: [
+                { label: "Métro de Lisbonne · depuis l’aéroport", url: "https://www.metrolisboa.pt/lisboa-de-metro-desde-o-aeroporto/" },
+                { label: "CP · trains vers Sintra", url: "https://www.cp.pt/info/documents/d/cp/completo-comboios-urbanos-lisboa" },
+                { label: "Padrão · adresse et horaires", url: "https://padraodosdescobrimentos.pt/en/contacts-schedules/" },
+                { label: "Pastéis de Belém · adresse et horaires", url: "https://pasteisdebelem.pt/en/contact/" },
+                { label: "Parques de Sintra · Pena", url: "https://www.parquesdesintra.pt/en/plan-your-visit/opening-times-and-prices/" },
+                { label: "Visit Lisboa · Alfama", url: "https://www.visitlisboa.com/en/places/alfama" }
+            ]
+        },
+        { id: 902, titre: "Hébergement · à choisir", desc: "Baixa est seulement un quartier repère pour la démonstration. Aucune adresse ni aucun hébergement ne sont renseignés ou réservés." },
+        { id: 903, titre: "Budget · enveloppe fictive", desc: "Les 1 860 € affichés sont un exemple de budget de groupe pour 4 personnes, sans devis ni tarifs vérifiés. Remplacez ces montants par les prix réellement trouvés avant de partager les dépenses." },
+        { id: 904, titre: "Organisation du groupe 💛", desc: "Léa, Inès, Maya et Zoé sont des profils fictifs. Chacune peut proposer une pause, signaler une contrainte ou ajuster le programme." }
     ],
     transports: [
-        { id: 1001, type: "Métro", train: "Trajet d’exemple · aéroport → Baixa", date: "16 avr.", depStation: "Aéroport de Lisbonne (LIS)", depTime: "11:00", depPlatform: "À vérifier", arrStation: "Baixa-Chiado", arrTime: "11:45", arrPlatform: "À vérifier", seat: "—", notes: "Exemple de trajet, vérifier la ligne et les horaires le jour du voyage." },
-        { id: 1002, type: "Train", train: "Excursion à Sintra · à planifier", date: "19 avr.", depStation: "Lisbonne · gare à choisir", depTime: "09:00", depPlatform: "À vérifier", arrStation: "Sintra", arrTime: "10:00", arrPlatform: "À vérifier", seat: "—", notes: "Horaires indicatifs fictifs. Acheter les billets après vérification." }
+        { id: 1001, type: "Métro", train: "Aéroport → Baixa-Chiado · trajet à planifier", date: "16 avr.", depStation: "Aéroport (ligne rouge)", depTime: "", depPlatform: "À confirmer", arrStation: "Baixa-Chiado", arrTime: "", arrPlatform: "À confirmer", seat: "—", notes: "La page officielle indique actuellement environ 31 min via Alameda et 1,92 € par trajet. Repères du 16/11/2026, à revalider en 2027." },
+        { id: 1002, type: "Train", train: "Lisboa–Rossio → Sintra · horaire à choisir", date: "19 avr.", depStation: "Lisboa–Rossio", depTime: "", depPlatform: "À vérifier", arrStation: "Sintra", arrTime: "", arrPlatform: "À vérifier", seat: "—", notes: "Ligne desservie par CP. Les horaires d’avril 2027 ne sont pas encore ajoutés : consulter le calendrier officiel avant le départ." }
     ],
     billets: [
-        { id: 1101, nom: "Palais de Pena · à réserver", date: "19 avr. 2027", reference: "EXEMPLE · NON RÉSERVÉ", lien: "", notes: "Vérifier les horaires, le transport jusqu’au palais et la disponibilité avant de réserver." },
-        { id: 1102, nom: "Vols aller-retour · à choisir", date: "16–20 avr. 2027", reference: "EXEMPLES FICTIFS", lien: "", notes: "Les cartes de vol affichées sont des données de démonstration, sans compagnie ni billet réels." }
+        { id: 1101, nom: "Palais & Parc de Pena · billet à choisir", date: "19 avr. 2027", statut: "a-reserver", reference: "À RÉSERVER · aucun billet", lien: "https://www.parquesdesintra.pt/en/plan-your-visit/opening-times-and-prices/", notes: "La visite de l’intérieur du palais se fait sur créneau choisi à l’avance. Horaires et tarifs affichés par le site officiel à revalider avant avril 2027." },
+        { id: 1102, nom: "Vols Paris–Lisbonne · aller-retour à choisir", date: "16 avr. 2027", statut: "a-reserver", reference: "À RÉSERVER · aucun vol choisi", lien: "", notes: "Dates prévues : aller le 16 avril, retour le 20 avril. Aucune compagnie, aucun horaire et aucun billet ne sont renseignés. Ajouter les vrais détails après réservation." }
     ]
 };
 
-const STORAGE_KEY = DEMO_PREVIEW ? 'cap_commun_demo_lisbonne' : 'voyage_data';
-let appData = DEMO_PREVIEW
-    ? JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || JSON.parse(JSON.stringify(defaultData))
-    : JSON.parse(localStorage.getItem('voyage_data') || localStorage.getItem('voyage_japon_data')) || defaultData;
+// Scénario de démonstration demandé : Mohamed et Mélissa à New York à Noël.
+// Les enveloppes sont des estimations fictives et aucune réservation n’est créée.
+const newYorkDemoData = {
+    tripTitle: "Noël à New York 🎄",
+    tripStart: "2026-12-23",
+    tripEnd: "2026-12-30",
+    tripType: "Vacances",
+    tripGroup: "Couple",
+    budgetCurrency: "EUR",
+    budgetPeople: ["Mohamed", "Mélissa"],
+    vols: [],
+    programme: [
+        {
+            id: 1301, ville: "New York", hotel: "Manhattan · hébergement à choisir", dateStart: "23 déc.", dateEnd: "25 déc.",
+            maps: "https://maps.google.com/?q=Manhattan+New+York", jours: ["23 déc.", "24 déc.", "25 déc."],
+            activites: [
+                { id: 13101, date: "23 déc.", heure: "16:00", texte: "Arrivée à New York · vol et transfert à organiser", lien: "https://maps.google.com/?q=Manhattan+New+York" },
+                { id: 13102, date: "23 déc.", heure: "18:00", texte: "Installation dans un hébergement à Manhattan · à réserver", lien: "https://maps.google.com/?q=Manhattan+New+York" },
+                { id: 13103, date: "24 déc.", heure: "10:00", texte: "Balade autour de Bryant Park et de la New York Public Library", lien: "https://maps.google.com/?q=Bryant+Park+New+York" },
+                { id: 13104, date: "24 déc.", heure: "15:00", texte: "Découvrir les décorations de la 5th Avenue et le sapin du Rockefeller Center · accès public gratuit", lien: "https://www.rockefellercenter.com/holidays/rockefeller-center-christmas-tree/" },
+                { id: 13105, date: "25 déc.", heure: "11:00", texte: "Promenade de Noël à Central Park · vérifier la météo et les accès le jour même", lien: "https://www.centralparknyc.org/visit" }
+            ]
+        },
+        {
+            id: 1302, ville: "New York", hotel: "Manhattan · hébergement à choisir", dateStart: "26 déc.", dateEnd: "27 déc.",
+            maps: "https://maps.google.com/?q=Lower+Manhattan+New+York", jours: ["26 déc.", "27 déc."],
+            activites: [
+                { id: 13201, date: "26 déc.", heure: "09:00", texte: "Statue de la Liberté et Ellis Island · ferry officiel à réserver, horaires à vérifier", lien: "https://www.nps.gov/stli/planyourvisit/index.htm" },
+                { id: 13202, date: "26 déc.", heure: "16:00", texte: "Retour à Battery Park et balade dans le sud de Manhattan", lien: "https://maps.google.com/?q=Battery+Park+New+York" },
+                { id: 13203, date: "27 déc.", heure: "10:00", texte: "Découvrir le Financial District et le mémorial du 11-Septembre · vérifier les conditions d’accès", lien: "https://maps.google.com/?q=9%2F11+Memorial+New+York" },
+                { id: 13204, date: "27 déc.", heure: "14:00", texte: "Temps libre à Chinatown et dans le Lower East Side", lien: "https://maps.google.com/?q=Chinatown+New+York" }
+            ]
+        },
+        {
+            id: 1303, ville: "New York", hotel: "Manhattan · hébergement à choisir", dateStart: "28 déc.", dateEnd: "28 déc.",
+            maps: "https://maps.google.com/?q=DUMBO+Brooklyn+New+York", jours: ["28 déc."],
+            activites: [
+                { id: 13301, date: "28 déc.", heure: "10:00", texte: "Traverser le Brooklyn Bridge à pied · prévoir des vêtements chauds", lien: "https://maps.google.com/?q=Brooklyn+Bridge+New+York" },
+                { id: 13302, date: "28 déc.", heure: "13:00", texte: "Explorer DUMBO et les quais de Brooklyn Bridge Park", lien: "https://maps.google.com/?q=Brooklyn+Bridge+Park+New+York" },
+                { id: 13303, date: "28 déc.", heure: "17:00", texte: "Admirer la vue sur Manhattan avant le retour", lien: "https://maps.google.com/?q=Main+Street+Park+DUMBO" }
+            ]
+        },
+        {
+            id: 1304, ville: "New York", hotel: "Manhattan · hébergement à choisir", dateStart: "29 déc.", dateEnd: "30 déc.",
+            maps: "https://maps.google.com/?q=Midtown+Manhattan+New+York", jours: ["29 déc.", "30 déc."],
+            activites: [
+                { id: 13401, date: "29 déc.", heure: "10:00", texte: "Découvrir le High Line et le quartier de Chelsea · accès et météo à vérifier", lien: "https://maps.google.com/?q=The+High+Line+New+York" },
+                { id: 13402, date: "29 déc.", heure: "15:00", texte: "Dernier après-midi libre · musée ou quartier à choisir selon les ouvertures", lien: "https://maps.google.com/?q=New+York+City+Museums" },
+                { id: 13403, date: "30 déc.", heure: "09:00", texte: "Départ de New York · vol et transfert à confirmer", lien: "https://maps.google.com/?q=New+York+City+Airport" }
+            ]
+        }
+    ],
+    checklist: [
+        { id: 1, categorie: "PAPIERS & RÉSERVATIONS", texte: "Vérifier les formalités de voyage applicables à sa nationalité", checked: false },
+        { id: 2, categorie: "PAPIERS & RÉSERVATIONS", texte: "Comparer puis réserver les vols aller-retour", checked: false },
+        { id: 3, categorie: "PAPIERS & RÉSERVATIONS", texte: "Choisir et réserver un hébergement pour 7 nuits", checked: false },
+        { id: 4, categorie: "PAPIERS & RÉSERVATIONS", texte: "Vérifier les horaires de Noël des lieux et réserver les billets utiles", checked: false },
+        { id: 5, categorie: "À GLISSER DANS LE SAC", texte: "Prévoir des vêtements chauds, des gants et des chaussures adaptées", checked: false },
+        { id: 6, categorie: "À GLISSER DANS LE SAC", texte: "Préparer adaptateur électrique et batterie externe", checked: false },
+        { id: 7, categorie: "PETITS PLAISIRS", texte: "Créer une playlist pour le vol", checked: true },
+        { id: 8, categorie: "PETITS PLAISIRS", texte: "Garder un créneau pour un chocolat chaud de Noël", checked: false }
+    ],
+    checklistsJour: {
+        1301: [{ id: 1, texte: "Vérifier la météo et les horaires spéciaux du 24–25 décembre", checked: false }],
+        1302: [{ id: 2, texte: "Réserver le ferry officiel pour Liberty et Ellis Islands", checked: false }],
+        1303: [{ id: 3, texte: "Prévoir une couche chaude pour la marche sur le pont", checked: false }]
+    },
+    budget: [
+        { id: 13801, nom: "Vols aller-retour · estimation pour deux", amount: 1500, currency: "EUR", eur: 1500, categorie: "Transport", payeurs: [], methode: "", paid: false },
+        { id: 13802, nom: "Hébergement · 7 nuits · estimation", amount: 2300, currency: "EUR", eur: 2300, categorie: "Hébergement", payeurs: [], methode: "", paid: false },
+        { id: 13803, nom: "Transports locaux · estimation", amount: 200, currency: "EUR", eur: 200, categorie: "Transport", payeurs: [], methode: "", paid: false },
+        { id: 13804, nom: "Repas et pauses · estimation", amount: 700, currency: "EUR", eur: 700, categorie: "Nourriture", payeurs: [], methode: "", paid: false },
+        { id: 13805, nom: "Visites et activités · estimation", amount: 200, currency: "EUR", eur: 200, categorie: "Activités & Billets", payeurs: [], methode: "", paid: false },
+        { id: 13806, nom: "Marge pour imprévus · estimation", amount: 100, currency: "EUR", eur: 100, categorie: "Shopping", payeurs: [], methode: "", paid: false }
+    ],
+    infos: [
+        {
+            id: 13901,
+            titre: "New York à Noël · repères officiels",
+            desc: "Séjour fictif du 23 au 30 décembre 2026 pour Mohamed et Mélissa. Repères consultés le 17 novembre 2026. Les créneaux sont des suggestions, pas des horaires confirmés. Le 25 décembre, le site de la Statue de la Liberté est fermé selon le National Park Service ; les horaires et ouvertures de chaque lieu restent à revérifier avant le départ.",
+            sources: [
+                { label: "Rockefeller Center · sapin 2026", url: "https://www.rockefellercenter.com/holidays/rockefeller-center-christmas-tree/" },
+                { label: "Central Park Conservancy · visite et horaires", url: "https://www.centralparknyc.org/visit" },
+                { label: "NPS · horaires et fermetures de la Statue de la Liberté", url: "https://www.nps.gov/stli/planyourvisit/hours.htm" },
+                { label: "NPS · préparer la visite et billets de ferry officiels", url: "https://www.nps.gov/stli/planyourvisit/index.htm" },
+                { label: "MTA · tarifs et OMNY", url: "https://www.mta.info/fares" }
+            ]
+        },
+        { id: 13902, titre: "Hébergement · à réserver", desc: "Manhattan sert uniquement de quartier repère. Aucune adresse, aucun établissement et aucune nuitée ne sont réservés." },
+        { id: 13903, titre: "Budget · 5 000 € indicatifs", desc: "Les lignes totalisent 5 000 € pour deux personnes, mais ce sont des enveloppes fictives et non des devis, prix en direct ou achats réalisés. Les vols et l’hébergement de Noël peuvent varier fortement : remplacez-les par les tarifs réellement trouvés." },
+        { id: 13904, titre: "Voyageurs 💛", desc: "Mohamed et Mélissa sont les deux voyageurs de cette simulation. Les dates, le programme et les montants peuvent être modifiés dans les pages GetReady." }
+    ],
+    transports: [
+        { id: 13701, type: "Métro", train: "Réseau MTA · trajets à planifier", date: "23 déc.", depStation: "Aéroport à confirmer", depTime: "", depPlatform: "À vérifier", arrStation: "Manhattan", arrTime: "", arrPlatform: "À vérifier", seat: "—", notes: "La MTA annonce un tarif de base métro/bus local de 3 USD à partir du 4 janvier 2026. Prévoir une enveloppe indicative et revérifier les tarifs, le moyen de paiement OMNY et l’itinéraire avant le départ. Aucun trajet n’est réservé." }
+    ],
+    billets: [
+        { id: 13911, nom: "Vols aller-retour · à choisir", date: "23 déc. 2026", statut: "a-reserver", reference: "À RÉSERVER · aucun vol choisi", lien: "", notes: "Dates prévues : départ le 23 décembre, retour le 30 décembre 2026. Aucun aéroport de départ, compagnie, horaire ou tarif n’est renseigné. Ajouter les vrais détails après réservation." },
+        { id: 13912, nom: "Ferry Statue de la Liberté & Ellis Island · à réserver", date: "26 déc. 2026", statut: "a-reserver", reference: "À RÉSERVER · aucun billet", lien: "https://www.nps.gov/stli/planyourvisit/index.htm", notes: "Le National Park Service désigne Statue City Cruises comme vendeur et opérateur officiel. Vérifier les départs, tarifs et disponibilités pour la date avant toute réservation." },
+        { id: 13913, nom: "Top of the Rock · optionnel", date: "24 déc. 2026", statut: "a-reserver", reference: "OPTIONNEL · aucun billet", lien: "https://www.rockefellercenter.com/holiday-top-of-the-rock/", notes: "Le sapin est visible gratuitement depuis les espaces publics du Rockefeller Center. Le billet de l’observatoire est une option payante ; aucun billet n’est acheté." }
+    ]
+};
+
+const STORAGE_KEY = DEMO_PREVIEW ? DEMO_STORAGE_KEYS[DEMO_SCENARIO] : 'voyage_data';
+function createEmptyTripData() {
+    return {
+        tripTitle: 'Mon séjour',
+        tripStart: '',
+        tripEnd: '',
+        tripType: 'Vacances',
+        tripGroup: 'Autre',
+        budgetCurrency: 'EUR',
+        budgetPeople: [],
+        vols: [],
+        programme: [],
+        checklist: [],
+        checklistsJour: {},
+        budget: [],
+        infos: [],
+        transports: [],
+        billets: [],
+        preferences: {}
+    };
+}
+if (typeof window !== 'undefined') window.createEmptyTripData = createEmptyTripData;
+
+function createInitialTripData(isDemoPreview, savedData, demoSeed = defaultData) {
+    if (savedData) {
+        const parsed = JSON.parse(savedData);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+    }
+    return isDemoPreview ? JSON.parse(JSON.stringify(demoSeed)) : createEmptyTripData();
+}
+
+const savedTripData = localStorage.getItem(STORAGE_KEY)
+    || (!DEMO_PREVIEW ? localStorage.getItem('voyage_japon_data') : null);
+let appData = createInitialTripData(DEMO_PREVIEW, savedTripData, DEMO_SCENARIO === 'newyork' ? newYorkDemoData : defaultData);
 Object.defineProperty(window, 'appData', { configurable: true, get: () => appData, set: value => { appData = value; } });
 
 // Rétrocompatibilité : complète les champs manquants sur d'anciennes
@@ -470,11 +639,11 @@ Object.defineProperty(window, 'appData', { configurable: true, get: () => appDat
 // avant l'ajout d'une fonctionnalité (ex: billets) fait planter les
 // actions qui y touchent (ex: "Enregistrer" un billet) après une sync.
 function ensureDataShape() {
-    if (!appData.tripTitle) appData.tripTitle = defaultData.tripTitle;
-    if (!appData.tripStart) appData.tripStart = defaultData.tripStart;
-    if (!appData.tripEnd) appData.tripEnd = defaultData.tripEnd;
+    if (!appData.tripTitle) appData.tripTitle = 'Mon séjour';
+    if (appData.tripStart === undefined) appData.tripStart = '';
+    if (appData.tripEnd === undefined) appData.tripEnd = '';
     if (!appData.tripType) appData.tripType = 'Vacances';
-    if (!appData.tripGroup) appData.tripGroup = 'Amis';
+    if (!appData.tripGroup) appData.tripGroup = 'Autre';
     if (!appData.vols) appData.vols = [];
     if (!appData.programme) appData.programme = [];
     if (!appData.checklist) appData.checklist = [];
@@ -584,8 +753,9 @@ const TRAVEL_BACKGROUNDS = {
 
 function getAutomaticTravelBackground() {
     const flights = Array.isArray(appData.vols) ? appData.vols : [];
+    const itineraryDestination = getNamedTripDestinations(appData)[0]?.ville;
     const outboundFlight = flights.find(flight => !/retour|return/i.test(String(flight.type || '')) && (flight.arrCity || flight.arr)) || flights.find(flight => flight.arrCity || flight.arr);
-    const destination = String(outboundFlight?.arrCity || outboundFlight?.arr || appData.programme?.[0]?.ville || '').trim();
+    const destination = String(itineraryDestination || outboundFlight?.arrCity || outboundFlight?.arr || '').trim();
     const normalized = stripAccents(destination).toLowerCase();
     let key = 'journey';
     if (/\b(lis|lisbon|lisbonne|portugal)\b/.test(normalized)) key = 'lisbon';
@@ -597,20 +767,34 @@ function getAutomaticTravelBackground() {
 function applyAppearancePreferences() {
     const preferences = appData.preferences || {};
     const theme = ['sun', 'ocean', 'lavender'].includes(preferences.theme) ? preferences.theme : 'sun';
+    const colorMode = preferences.colorMode === 'dark' ? 'dark' : 'light';
     const selectedBackground = ['auto', ...Object.keys(TRAVEL_BACKGROUNDS)].includes(preferences.background) ? preferences.background : 'auto';
     const motion = preferences.motion === 'reduced' || preferences.reduceMotion ? 'reduced' : 'system';
     const automatic = getAutomaticTravelBackground();
     const backgroundKey = selectedBackground === 'auto' ? automatic.key : selectedBackground;
     const background = TRAVEL_BACKGROUNDS[backgroundKey] || TRAVEL_BACKGROUNDS.journey;
     const hero = document.querySelector('.home-header');
+    const showTravelPhoto = true;
 
     document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.colorMode = colorMode;
+    try { document.body.classList.toggle('sidebar-collapsed', localStorage.getItem('getready_sidebar_collapsed') === 'true'); } catch {}
+    const sidebarButton = document.querySelector('.nav-collapse-button');
+    if (sidebarButton) sidebarButton.setAttribute('aria-expanded', String(!document.body.classList.contains('sidebar-collapsed')));
     const themeMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeMeta) themeMeta.content = theme === 'ocean' ? '#eef7fa' : theme === 'lavender' ? '#f6f2fb' : '#f3f6fb';
+    if (themeMeta) themeMeta.content = colorMode === 'dark' ? '#111a24' : theme === 'ocean' ? '#eef7fa' : theme === 'lavender' ? '#f6f2fb' : '#f3f6fb';
     document.body.classList.toggle('reduce-motion', motion === 'reduced');
     document.body.dataset.travelBackground = backgroundKey;
     if (hero) {
-        hero.style.backgroundImage = `linear-gradient(90deg, rgba(16, 39, 35, .48) 0%, rgba(16, 39, 35, .22) 48%, rgba(16, 39, 35, .04) 100%), url("${background.image}")`;
+        hero.style.backgroundImage = showTravelPhoto
+            ? `linear-gradient(90deg, rgba(16, 39, 35, .48) 0%, rgba(16, 39, 35, .22) 48%, rgba(16, 39, 35, .04) 100%), url("${background.image}")`
+            : 'none';
+    }
+    const heroOrbit = document.querySelector('.hero-orbit');
+    if (heroOrbit) {
+        heroOrbit.style.backgroundImage = `linear-gradient(180deg,rgba(11,36,36,.08),rgba(11,36,36,.64)),url("${background.image}")`;
+        heroOrbit.style.backgroundPosition = 'center 65%';
+        heroOrbit.style.backgroundSize = 'cover';
     }
 
     document.querySelectorAll('[data-background]').forEach(button => {
@@ -622,6 +806,11 @@ function applyAppearancePreferences() {
     if (autoPreview) autoPreview.style.backgroundImage = `linear-gradient(180deg,rgba(26,49,46,.12),rgba(26,49,46,.44)),url("${TRAVEL_BACKGROUNDS[automatic.key].image}")`;
     document.querySelectorAll('[data-theme-choice]').forEach(button => {
         const selected = button.dataset.themeChoice === theme;
+        button.classList.toggle('is-selected', selected);
+        button.setAttribute('aria-pressed', String(selected));
+    });
+    document.querySelectorAll('[data-color-mode-choice]').forEach(button => {
+        const selected = button.dataset.colorModeChoice === colorMode;
         button.classList.toggle('is-selected', selected);
         button.setAttribute('aria-pressed', String(selected));
     });
@@ -663,6 +852,23 @@ function setVisualTheme(theme) {
     applyAppearancePreferences();
 }
 
+function setColorMode(mode) {
+    if (!['light', 'dark'].includes(mode)) return;
+    appData.preferences.colorMode = mode;
+    saveToLocalStorage();
+    applyAppearancePreferences();
+}
+
+function toggleSidebar(event) {
+    const collapsed = document.body.classList.toggle('sidebar-collapsed');
+    const button = event?.target?.closest?.('.nav-collapse-button') || document.querySelector('.nav-collapse-button');
+    if (button) {
+        button.setAttribute('aria-expanded', String(!collapsed));
+        button.setAttribute('aria-label', collapsed ? 'Développer le menu' : 'Réduire le menu');
+    }
+    try { localStorage.setItem('getready_sidebar_collapsed', String(collapsed)); } catch {}
+}
+
 function setMotionPreference(mode) {
     if (!['system', 'reduced'].includes(mode)) return;
     appData.preferences.motion = mode;
@@ -672,7 +878,7 @@ function setMotionPreference(mode) {
 }
 
 function resetAppearance() {
-    appData.preferences = { ...appData.preferences, theme: 'sun', background: 'auto', motion: 'system', reduceMotion: false };
+    appData.preferences = { ...appData.preferences, theme: 'sun', colorMode: 'light', background: 'auto', motion: 'system', reduceMotion: false };
     saveToLocalStorage();
     applyAppearancePreferences();
 }
@@ -682,6 +888,256 @@ function setTripBackupFeedback(message, state = '') {
     if (!feedback) return;
     feedback.textContent = message;
     feedback.dataset.state = state;
+}
+
+function escapeICalendarText(value) {
+    return String(value ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/\r?\n/g, '\\n')
+        .replace(/,/g, '\\,')
+        .replace(/;/g, '\\;');
+}
+
+function foldICalendarLine(line) {
+    let result = '';
+    let currentLength = 0;
+    for (const character of Array.from(line)) {
+        const byteLength = new TextEncoder().encode(character).length;
+        if (currentLength + byteLength > 75) {
+            result += '\r\n ';
+            currentLength = 1;
+        }
+        result += character;
+        currentLength += byteLength;
+    }
+    return result;
+}
+
+function calendarDurationBetween(startTime, endTime) {
+    if (!startTime || !endTime) return '';
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    let minutes = endHours * 60 + endMinutes - (startHours * 60 + startMinutes);
+    if (minutes <= 0) minutes += 24 * 60;
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    return `PT${hours ? `${hours}H` : ''}${remainder ? `${remainder}M` : ''}`;
+}
+
+function buildItineraryCalendar(events, tripTitle, generatedAt = new Date()) {
+    const stamp = generatedAt.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+    const lines = [
+        'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//GetReady//Itinerary//FR',
+        'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', `X-WR-CALNAME:${escapeICalendarText(tripTitle || 'Séjour GetReady')}`
+    ];
+    events.forEach((event, index) => {
+        lines.push('BEGIN:VEVENT');
+        lines.push(`UID:${escapeICalendarText(event.uid || `getready-${index}@getready.local`)}`);
+        lines.push(`DTSTAMP:${stamp}`);
+        lines.push(`SUMMARY:${escapeICalendarText(event.title)}`);
+        if (event.time) {
+            lines.push(`DTSTART:${event.date}T${event.time.replace(':', '')}00`);
+            if (event.duration) lines.push(`DURATION:${event.duration}`);
+        } else {
+            lines.push(`DTSTART;VALUE=DATE:${event.date}`);
+            lines.push('DURATION:P1D');
+        }
+        if (event.location) lines.push(`LOCATION:${escapeICalendarText(event.location)}`);
+        if (event.description) lines.push(`DESCRIPTION:${escapeICalendarText(event.description)}`);
+        lines.push('END:VEVENT');
+    });
+    lines.push('END:VCALENDAR');
+    return `${lines.map(foldICalendarLine).join('\r\n')}\r\n`;
+}
+
+function exportItineraryCalendar() {
+    const status = document.getElementById('calendar-export-status');
+    const events = [];
+    const year = tripYear();
+    (appData.programme || []).forEach((destination, destinationIndex) => {
+        (destination.activites || []).forEach((activity, activityIndex) => {
+            const date = parseFrenchShortDate(activity.date, year);
+            if (!date) return;
+            const dateValue = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+            events.push({
+                uid: `activity-${activity.id ?? `${destinationIndex}-${activityIndex}`}@getready.local`,
+                date: dateValue,
+                time: timeToPickerValue(activity.heure),
+                duration: 'PT1H',
+                title: activity.texte || destination.ville || 'Activité du séjour',
+                location: destination.ville || '',
+                description: activity.lien ? `Lien utile : ${activity.lien}` : ''
+            });
+        });
+    });
+    (appData.vols || []).forEach((flight, index) => {
+        const date = parseFrenchShortDate(flight.date, year);
+        if (!date) return;
+        const dateValue = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+        const route = [flight.depCity || flight.dep, flight.arrCity || flight.arr].filter(Boolean).join(' → ');
+        const details = [flight.compagnie, flight.num1 && `Vol ${flight.num1}`, route && `Trajet : ${route}`].filter(Boolean);
+        events.push({
+            uid: `flight-${flight.id ?? index}@getready.local`,
+            date: dateValue,
+            time: timeToPickerValue(flight.depTime),
+            title: `${flight.type || 'Vol'}${route ? ` · ${route}` : ''}`,
+            location: [flight.depCity, flight.dep].filter(Boolean).join(' · '),
+            description: details.join('\n')
+        });
+    });
+    (appData.transports || []).forEach((transport, index) => {
+        const date = parseFrenchShortDate(transport.date, year);
+        if (!date) return;
+        const dateValue = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+        const time = timeToPickerValue(transport.depTime);
+        const arrivalTime = timeToPickerValue(transport.arrTime);
+        const duration = calendarDurationBetween(time, arrivalTime);
+        const details = [];
+        if (transport.arrStation) details.push(`Arrivée : ${transport.arrStation}${arrivalTime ? ` à ${arrivalTime}` : ''}`);
+        if (transport.notes) details.push(transport.notes);
+        events.push({
+            uid: `transport-${transport.id ?? index}@getready.local`,
+            date: dateValue,
+            time,
+            duration,
+            title: transport.train || transport.type || 'Déplacement du séjour',
+            location: transport.depStation || '',
+            description: details.join('\n')
+        });
+    });
+    (appData.billets || []).forEach((billet, index) => {
+        const status = getBilletStatus(billet);
+        if (status === 'annule') return;
+        const date = parseFrenchShortDate(billet.date, year);
+        if (!date) return;
+        const dateValue = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+        const details = [
+            `Statut : ${getBilletStatusLabel(status)}`,
+            billet.reference && `Référence : ${billet.reference}`,
+            billet.lien && `Billet : ${billet.lien}`,
+            billet.notes
+        ].filter(Boolean);
+        events.push({
+            uid: `billet-${billet.id ?? index}@getready.local`,
+            date: dateValue,
+            time: timeToPickerValue(billet.heure),
+            title: `Billet · ${billet.nom || 'Réservation'}`,
+            location: billet.lieu || '',
+            description: details.join('\n')
+        });
+    });
+    if (!events.length) {
+        if (status) status.textContent = 'Aucun élément daté à exporter. Ajoute une activité, un trajet, un vol ou un billet actif.';
+        return;
+    }
+    try {
+        const blob = new Blob([buildItineraryCalendar(events, appData.tripTitle)], { type: 'text/calendar;charset=utf-8' });
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const safeTitle = String(appData.tripTitle || 'sejour').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sejour';
+        link.href = objectUrl;
+        link.download = `${safeTitle}-itineraire.ics`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        if (status) status.textContent = `${events.length} élément${events.length > 1 ? 's exportés' : ' exporté'} dans le calendrier.`;
+    } catch {
+        if (status) status.textContent = 'Le téléchargement a échoué. Réessaie depuis un autre navigateur.';
+    }
+}
+
+function escapeCsvCell(value, protectFormula = true) {
+    let text = String(value ?? '');
+    if (protectFormula && /^[\u0000-\u0020]*[=+\-@]/.test(text)) text = `'${text}`;
+    return `"${text.replace(/"/g, '""')}"`;
+}
+
+function buildBudgetCsv(expenses, people) {
+    const headers = ['Dépense', 'Montant', 'Devise', 'Catégorie', 'Statut', 'Payé par', 'Partagé entre', 'Parts', 'Moyen de paiement'];
+    const rows = expenses.map(expense => {
+        const amount = Number(expense.amount ?? expense.eur);
+        const beneficiaries = Array.isArray(expense.beneficiaires) ? expense.beneficiaires : (Array.isArray(people) ? people : []);
+        const parts = beneficiaries.map(name => `${name}: ${getValidBudgetShare(expense.parts?.[name])}`).join(', ');
+        const payers = Array.isArray(expense.payeurs) ? expense.payeurs : [];
+        return [
+            escapeCsvCell(expense.nom),
+            escapeCsvCell(Number.isFinite(amount) ? new Intl.NumberFormat('fr-FR', { useGrouping: false, maximumFractionDigits: 20 }).format(amount) : '', false),
+            escapeCsvCell(expense.currency || 'EUR'),
+            escapeCsvCell(expense.categorie || 'Autre'),
+            escapeCsvCell(expense.paid ? 'Payée' : 'À payer'),
+            escapeCsvCell(payers.join(', ')),
+            escapeCsvCell(beneficiaries.join(', ')),
+            escapeCsvCell(parts),
+            escapeCsvCell(expense.methode || '')
+        ];
+    });
+    return `\uFEFF${[headers, ...rows].map(row => row.join(';')).join('\r\n')}\r\n`;
+}
+
+function exportBudgetCsv() {
+    const status = document.getElementById('budget-export-status');
+    if (!appData.budget.length) {
+        if (status) status.textContent = 'Ajoute une dépense pour créer un fichier CSV.';
+        return;
+    }
+    try {
+        const blob = new Blob([buildBudgetCsv(appData.budget, appData.budgetPeople)], { type: 'text/csv;charset=utf-8' });
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const safeTitle = String(appData.tripTitle || 'sejour').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sejour';
+        link.href = objectUrl;
+        link.download = `${safeTitle}-budget.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        if (status) status.textContent = `${appData.budget.length} dépense${appData.budget.length > 1 ? 's exportées' : ' exportée'} au format CSV.`;
+    } catch {
+        if (status) status.textContent = 'Le téléchargement a échoué. Réessaie depuis un autre navigateur.';
+    }
+}
+
+function buildBilletsCsv(billets) {
+    const headers = ['Réservation', 'Date', 'Heure', 'Lieu', 'Référence', 'Statut', 'Lien', 'Notes'];
+    const rows = billets.map(billet => [
+        escapeCsvCell(billet.nom),
+        escapeCsvCell(billet.date),
+        escapeCsvCell(timeToPickerValue(billet.heure)),
+        escapeCsvCell(billet.lieu),
+        escapeCsvCell(billet.reference),
+        escapeCsvCell(getBilletStatusLabel(getBilletStatus(billet))),
+        escapeCsvCell(billet.lien),
+        escapeCsvCell(billet.notes)
+    ]);
+    return `\uFEFF${[headers, ...rows].map(row => row.join(';')).join('\r\n')}\r\n`;
+}
+
+function exportBilletsCsv() {
+    const billets = appData.billets || [];
+    const status = document.getElementById('billet-export-status');
+    if (!billets.length) {
+        if (status) status.textContent = 'Ajoute une réservation pour créer un fichier CSV.';
+        return;
+    }
+    try {
+        const blob = new Blob([buildBilletsCsv(billets)], { type: 'text/csv;charset=utf-8' });
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const safeTitle = String(appData.tripTitle || 'sejour').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sejour';
+        link.href = objectUrl;
+        link.download = `${safeTitle}-reservations.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        if (status) status.textContent = `${billets.length} réservation${billets.length > 1 ? 's exportées' : ' exportée'} au format CSV.`;
+    } catch {
+        if (status) status.textContent = 'Le téléchargement a échoué. Réessaie depuis un autre navigateur.';
+    }
 }
 
 function exportTripBackup() {
@@ -740,6 +1196,8 @@ function importTripBackup(fileInput) {
             }
             selectedItineraryProgrammeId = null;
             Object.keys(selectedItineraryDayByProgramme).forEach(key => delete selectedItineraryDayByProgramme[key]);
+            Object.keys(selectedItineraryMapActivityByProgramme).forEach(key => delete selectedItineraryMapActivityByProgramme[key]);
+            Object.keys(selectedItineraryRouteModeByDay).forEach(key => delete selectedItineraryRouteModeByDay[key]);
             currentChecklistScope = 'voyage';
             currentChecklistFilter = 'all';
             currentChecklistSearch = '';
@@ -772,19 +1230,520 @@ function refreshAllUI() {
 }
 window.refreshAllUI = refreshAllUI;
 
+// Do not leave the previous account or trip visible while its cloud document
+// is being loaded. The sync layer restores a matching local draft when one exists.
+window.resetAppDataForSyncContext = function resetAppDataForSyncContext() {
+    appData = createEmptyTripData();
+    currentBudgetFilters = { query: '', category: 'all', status: 'all' };
+    const budgetSearch = document.getElementById('budget-search');
+    const budgetCategory = document.getElementById('budget-category-filter');
+    const budgetStatus = document.getElementById('budget-status-filter');
+    if (budgetSearch) budgetSearch.value = '';
+    if (budgetCategory) budgetCategory.value = 'all';
+    if (budgetStatus) budgetStatus.value = 'all';
+    currentBilletFilters = { query: '', status: 'all', sort: 'date' };
+    const billetSearch = document.getElementById('billet-search');
+    const billetStatus = document.getElementById('billet-status-filter');
+    const billetSort = document.getElementById('billet-sort-filter');
+    if (billetSearch) billetSearch.value = '';
+    if (billetStatus) billetStatus.value = 'all';
+    if (billetSort) billetSort.value = 'date';
+    ensureDataShape();
+    refreshAllUI();
+};
+
+function getDashboardChecklistProgress(data) {
+    const seen = new Set();
+    let total = 0;
+    let completed = 0;
+    const addScope = (items, scope) => {
+        if (!Array.isArray(items)) return;
+        items.forEach((item, index) => {
+            const key = item?.id === undefined || item?.id === null ? `${scope}:index:${index}` : `${scope}:id:${item.id}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            total += 1;
+            if (item?.checked) completed += 1;
+        });
+    };
+    addScope(data.checklist, 'trip');
+    const daily = data.checklistsJour || {};
+    const destinations = Array.isArray(data.programme) ? data.programme : [];
+    const visitedDestinations = new Set();
+    destinations.forEach((destination, index) => {
+        if (!destination?.id) return;
+        const scope = String(destination.id);
+        if (visitedDestinations.has(scope)) return;
+        visitedDestinations.add(scope);
+        addScope(daily[destination.id], `destination:${scope}`);
+    });
+    return { total, completed, remaining: total - completed };
+}
+
+let dashboardSyncState = 'ready';
+
+function renderDashboardReservationSummary() {
+    const element = document.getElementById('dashboard-reservations');
+    if (!element) return;
+    if (dashboardSyncState === 'loading') {
+        element.textContent = 'Chargement…';
+        element.title = 'Mise à jour des réservations du séjour.';
+        element.setAttribute('aria-label', 'Chargement des réservations du séjour.');
+        return;
+    }
+    const reservations = (appData.billets || []).filter(item => getBilletStatus(item) !== 'annule');
+    const pendingCount = reservations.filter(item => getBilletStatus(item) === 'a-reserver').length;
+    if (pendingCount) {
+        element.textContent = `${pendingCount} à réserver`;
+        element.title = `${pendingCount} réservation${pendingCount > 1 ? 's' : ''} à effectuer.`;
+        element.setAttribute('aria-label', `${pendingCount} réservation${pendingCount > 1 ? 's' : ''} à effectuer. Ouvrir le Carnet.`);
+    } else if (reservations.length) {
+        element.textContent = 'À jour';
+        element.title = 'Aucune réservation à effectuer.';
+        element.setAttribute('aria-label', `${reservations.length} réservation${reservations.length > 1 ? 's' : ''} enregistrée${reservations.length > 1 ? 's' : ''}, aucune à réserver. Ouvrir le Carnet.`);
+    } else {
+        element.textContent = 'Aucune';
+        element.title = 'Aucune réservation enregistrée pour ce séjour.';
+        element.setAttribute('aria-label', 'Aucune réservation enregistrée. Ouvrir le Carnet pour en ajouter.');
+    }
+}
+
+function getNamedTripDestinations(data) {
+    return (Array.isArray(data?.programme) ? data.programme : [])
+        .filter(destination => String(destination?.ville || '').trim());
+}
+
 function renderDashboardSummary() {
-    const destinationCount = appData.programme.length;
-    const activityCount = appData.programme.reduce((sum, destination) => sum + (destination.activites || []).length, 0);
+    renderDashboardTripShell();
+    const destinations = getNamedTripDestinations(appData);
+    const programmeEntries = Array.isArray(appData.programme) ? appData.programme : [];
+    const destinationCount = destinations.length;
+    const activityCount = programmeEntries.reduce((sum, destination) =>
+        sum + (Array.isArray(destination?.activites) ? destination.activites.length : 0), 0);
     const baseCurrency = appData.budgetCurrency || 'EUR';
-    const plannedBudget = appData.budget.reduce((sum, expense) => {
+    const isLoading = dashboardSyncState === 'loading';
+    let budgetConversionUnavailable = false;
+    const plannedBudget = (appData.budget || []).reduce((sum, expense) => {
         const converted = convertCurrency(Number(expense.amount ?? expense.eur) || 0, expense.currency || 'EUR', baseCurrency);
-        return sum + (converted === null ? 0 : converted);
+        if (converted === null) {
+            budgetConversionUnavailable = true;
+            return sum;
+        }
+        return sum + converted;
     }, 0);
-    const remainingTasks = appData.checklist.filter(item => !item.checked).length;
-    document.getElementById('dashboard-destinations').textContent = destinationCount;
-    document.getElementById('dashboard-activities').textContent = activityCount;
-    document.getElementById('dashboard-budget').textContent = formatCurrency(plannedBudget, baseCurrency);
-    document.getElementById('dashboard-checklist').textContent = `${remainingTasks} à faire`;
+    const preparation = getDashboardChecklistProgress(appData);
+    const hasBudgetEntries = (appData.budget || []).length > 0;
+    const preparationPercent = preparation.total ? Math.round((preparation.completed / preparation.total) * 100) : 0;
+    const activityElement = document.getElementById('dashboard-activities');
+    if (activityElement) activityElement.textContent = isLoading ? 'Chargement…' : activityCount;
+    const activityDetail = document.getElementById('dashboard-activities-detail');
+    if (activityDetail) activityDetail.textContent = isLoading ? 'Mise à jour du séjour' : `${destinationCount} étape${destinationCount === 1 ? '' : 's'}`;
+    renderDashboardReservationSummary();
+    const budgetElement = document.getElementById('dashboard-budget');
+    budgetElement.textContent = isLoading ? 'Chargement…' : !hasBudgetEntries ? 'À renseigner' : budgetConversionUnavailable ? 'Indisponible' : formatCurrency(plannedBudget, baseCurrency);
+    budgetElement.title = isLoading ? 'Mise à jour du budget du séjour.' : !hasBudgetEntries
+        ? 'Ajoutez une dépense pour commencer à suivre le budget.'
+        : budgetConversionUnavailable ? 'Total indisponible : certains taux de conversion ne sont pas disponibles.' : '';
+    budgetElement.setAttribute('aria-label', isLoading ? 'Chargement du budget du séjour.' : !hasBudgetEntries
+        ? 'Budget non renseigné. Ouvrir la section Budget pour ajouter une dépense.'
+        : budgetConversionUnavailable
+            ? 'Budget prévu indisponible, certains taux de conversion manquent.'
+            : `Budget prévu : ${formatCurrency(plannedBudget, baseCurrency)}`);
+    const checklistElement = document.getElementById('dashboard-checklist');
+    if (checklistElement) checklistElement.textContent = isLoading ? 'Chargement…' : preparation.total ? `${preparation.remaining} à faire` : 'Aucune tâche';
+    const preparationProgress = document.getElementById('dashboard-prep-progress');
+    if (preparationProgress) preparationProgress.textContent = isLoading ? 'Mise à jour du séjour' : preparation.total ? `${preparation.completed} sur ${preparation.total} terminée${preparation.total > 1 ? 's' : ''}` : 'Listes encore vides';
+    const mainPreparationLabel = document.getElementById('dashboard-main-progress-label');
+    if (mainPreparationLabel) mainPreparationLabel.textContent = isLoading
+        ? 'Mise à jour des préparatifs…'
+        : preparation.total ? `${preparation.completed} sur ${preparation.total} préparatifs terminés` : 'Listes à compléter';
+    const mainPreparationTrack = document.getElementById('dashboard-main-progress');
+    if (mainPreparationTrack) {
+        mainPreparationTrack.setAttribute('aria-valuenow', isLoading ? '0' : String(preparationPercent));
+        mainPreparationTrack.setAttribute('aria-valuetext', isLoading
+            ? 'Chargement des préparatifs.'
+            : preparation.total ? `${preparationPercent} % des préparatifs terminés.` : 'Aucun préparatif enregistré.');
+        mainPreparationTrack.setAttribute('aria-busy', String(isLoading));
+        mainPreparationTrack.classList.toggle('is-loading', isLoading);
+    }
+    const mainPreparationBar = document.getElementById('dashboard-main-progress-bar');
+    if (mainPreparationBar) mainPreparationBar.style.width = isLoading ? '0%' : `${preparationPercent}%`;
+    renderDashboardPriorities();
+    renderDashboardUpcomingActivities();
+
+    const setupState = getFirstTripSetupState(appData);
+    const setupGuide = document.getElementById('first-trip-guide');
+    if (setupGuide) setupGuide.hidden = dashboardSyncState === 'loading' || setupState.complete;
+    const detailsStatus = document.getElementById('first-trip-details-status');
+    if (detailsStatus) detailsStatus.textContent = setupState.detailsComplete ? 'Terminé' : 'À faire';
+    const destinationStatus = document.getElementById('first-trip-destination-status');
+    if (destinationStatus) destinationStatus.textContent = setupState.hasDestination ? 'Terminé' : 'À faire';
+    const progress = document.getElementById('first-trip-progress');
+    if (progress) {
+        const completedSteps = Number(setupState.detailsComplete) + Number(setupState.hasDestination);
+        progress.textContent = `${completedSteps} repère${completedSteps > 1 ? 's' : ''} sur 2 prêt${completedSteps > 1 ? 's' : ''}`;
+    }
+}
+
+function renderDashboardMiniCalendar() {
+    const calendar = document.getElementById('dashboard-mini-calendar');
+    const monthLabel = document.getElementById('dashboard-mini-calendar-title');
+    const rangeLabel = document.getElementById('dashboard-calendar-range');
+    if (!calendar || !monthLabel || !rangeLabel) return;
+
+    const start = parsePickerDate(appData.tripStart);
+    const end = parsePickerDate(appData.tripEnd);
+    const today = new Date();
+    const monthDate = start || end || today;
+    const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+    const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+    const gridStart = new Date(monthStart);
+    gridStart.setDate(1 - ((monthStart.getDay() + 6) % 7));
+    const gridEnd = new Date(monthEnd);
+    gridEnd.setDate(monthEnd.getDate() + (7 - ((monthEnd.getDay() + 6) % 7)) % 7);
+    const sameDay = (a, b) => Boolean(a && b) && a.getFullYear() === b.getFullYear()
+        && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    const inTrip = date => Boolean(start && end && date >= start && date <= end);
+
+    monthLabel.textContent = monthStart.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    if (start && end) {
+        const dayMonth = { day: 'numeric', month: 'short' };
+        rangeLabel.textContent = `${start.toLocaleDateString('fr-FR', dayMonth)} – ${end.toLocaleDateString('fr-FR', dayMonth)}`;
+    } else if (start) {
+        rangeLabel.textContent = `À partir du ${start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+    } else if (end) {
+        rangeLabel.textContent = `Jusqu’au ${end.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+    } else {
+        rangeLabel.textContent = 'Choisir vos dates';
+    }
+
+    const cells = [];
+    for (const cursor = new Date(gridStart); cursor <= gridEnd; cursor.setDate(cursor.getDate() + 1)) {
+        const date = new Date(cursor);
+        const isCurrentMonth = date.getMonth() === monthStart.getMonth();
+        const classes = ['dashboard-calendar-day'];
+        if (!isCurrentMonth) classes.push('is-outside-month');
+        if (inTrip(date)) classes.push('is-trip');
+        if (sameDay(date, start)) classes.push('is-trip-start');
+        if (sameDay(date, end)) classes.push('is-trip-end');
+        if (sameDay(date, today)) classes.push('is-today');
+        const label = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        cells.push(`<span class="${classes.join(' ')}" role="gridcell" aria-label="${label}${inTrip(date) ? ', dates du séjour' : ''}"${sameDay(date, today) ? ' aria-current="date"' : ''}>${date.getDate()}</span>`);
+    }
+    calendar.innerHTML = cells.join('');
+}
+
+function renderDashboardTripShell() {
+    const start = parsePickerDate(appData.tripStart);
+    const end = parsePickerDate(appData.tripEnd);
+    const startLabel = start ? start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '';
+    const endLabel = end ? end.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+    const dateLabel = startLabel && endLabel ? `${startLabel} — ${endLabel}`
+        : startLabel ? `À partir du ${startLabel}`
+            : endLabel ? `Jusqu’au ${endLabel}` : 'Dates à définir';
+    const title = document.getElementById('app-topbar-trip-title');
+    const date = document.getElementById('app-topbar-trip-date');
+    if (title) title.textContent = appData.tripTitle || 'Mon séjour';
+    if (date) date.textContent = dateLabel;
+    renderDashboardMiniCalendar();
+}
+
+function renderDashboardPriorities() {
+    const list = document.getElementById('dashboard-priority-list');
+    const count = document.getElementById('dashboard-priority-count');
+    if (!list || !count) return;
+    if (dashboardSyncState === 'loading') {
+        list.setAttribute('aria-busy', 'true');
+        list.innerHTML = '<p class="dashboard-priority-empty">Mise à jour des actions du séjour…</p>';
+        count.textContent = 'Mise à jour…';
+        return;
+    }
+    list.setAttribute('aria-busy', 'false');
+
+    const tickets = sortBillets((appData.billets || []).filter(item => getBilletStatus(item) === 'a-reserver'), 'date');
+    const pending = [];
+    if (tickets.length) {
+        const first = tickets[0];
+        pending.push({
+            icon: 'fa-ticket',
+            type: 'Réservation',
+            title: first.nom || first.lieu || 'Finaliser une réservation',
+            detail: `${tickets.length} réservation${tickets.length > 1 ? 's' : ''} à effectuer`,
+            action: 'switchDashboardTab',
+            args: ['infos', 'billets']
+        });
+    }
+
+    const pendingPreparations = [];
+    const seenPreparationKeys = new Set();
+    const addPendingPreparations = (items, scope, place) => {
+        if (!Array.isArray(items)) return;
+        items.forEach((item, index) => {
+            if (!item || item.checked) return;
+            const scopeKey = String(scope);
+            const key = item.id === undefined || item.id === null ? scopeKey + ':index:' + index : scopeKey + ':id:' + item.id;
+            if (seenPreparationKeys.has(key)) return;
+            seenPreparationKeys.add(key);
+            pendingPreparations.push({ item, scope, place });
+        });
+    };
+    addPendingPreparations(appData.checklist, 'voyage', 'Tout le séjour');
+    const destinations = getNamedTripDestinations(appData);
+    const programmeEntries = Array.isArray(appData.programme) ? appData.programme : [];
+    programmeEntries.forEach(destination => {
+        addPendingPreparations(appData.checklistsJour?.[destination.id], destination.id, destination.ville || 'Cette étape');
+    });
+    pendingPreparations.slice(0, tickets.length ? 2 : 3).forEach(({ item, scope, place }) => {
+        pending.push({
+            icon: 'fa-list-check',
+            type: 'Préparatifs · ' + place,
+            title: item.texte || 'Terminer un préparatif',
+            detail: 'Encore à faire',
+            action: 'openDashboardChecklist',
+            args: [scope]
+        });
+    });
+
+    if (!pending.length && destinations.length && !programmeEntries.some(destination =>
+        (Array.isArray(destination?.activites) ? destination.activites : []).length)) {
+        pending.push({
+            icon: 'fa-calendar-plus',
+            type: 'Itinéraire',
+            title: 'Planifier une première activité',
+            detail: 'Ajoutez une idée à votre programme',
+            action: 'switchDashboardTab',
+            args: ['programme', 'day']
+        });
+    }
+
+    const visible = pending.slice(0, 3);
+    const setupIncomplete = !getFirstTripSetupState(appData).complete;
+    count.textContent = visible.length
+        ? `${visible.length} priorité${visible.length > 1 ? 's' : ''} affichée${visible.length > 1 ? 's' : ''}`
+        : setupIncomplete ? 'Séjour à compléter' : 'Tout est à jour';
+    if (!visible.length) {
+        list.innerHTML = setupIncomplete
+            ? '<p class="dashboard-priority-empty">Terminez le guide de démarrage au-dessus pour finaliser votre séjour.</p>'
+            : '<p class="dashboard-priority-empty"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Aucune action prioritaire pour le moment.</p>';
+        return;
+    }
+    list.innerHTML = visible.map(item => `
+        <button type="button" class="dashboard-priority-item" ${actionAttrs(item.action, item.args)}>
+            <span class="dashboard-priority-icon"><i class="fa-solid ${item.icon}" aria-hidden="true"></i></span>
+            <span class="dashboard-priority-copy"><small>${esc(item.type)}</small><strong>${esc(item.title)}</strong><span>${esc(item.detail)}</span></span>
+            <i class="fa-solid fa-arrow-right dashboard-priority-arrow" aria-hidden="true"></i>
+        </button>
+    `).join('');
+}
+
+function renderDashboardUpcomingActivities() {
+    const list = document.getElementById('dashboard-upcoming-list');
+    const status = document.getElementById('dashboard-upcoming-status');
+    const allButton = document.getElementById('dashboard-upcoming-all');
+    if (!list || !status) return;
+    if (dashboardSyncState === 'loading') {
+        if (allButton) allButton.hidden = true;
+        list.setAttribute('aria-busy', 'true');
+        list.innerHTML = '<p class="dashboard-upcoming-empty">Mise à jour des activités du séjour…</p>';
+        status.textContent = 'Mise à jour…';
+        return;
+    }
+    list.setAttribute('aria-busy', 'false');
+    if (allButton) allButton.hidden = true;
+    const todayCardDate = document.querySelector('.today-card')?.dataset.date || '';
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const datedActivities = collectScheduleItems()
+        .filter(item => item.type === 'activity' && item.date instanceof Date && !Number.isNaN(item.date.getTime()))
+        .sort((a, b) => a.date - b.date || a.sortKey.localeCompare(b.sortKey));
+    const upcomingActivities = datedActivities.filter(item => {
+        const activityDay = new Date(item.date.getFullYear(), item.date.getMonth(), item.date.getDate());
+        if (activityDay < today) return false;
+        if (activityDay.getTime() === today.getTime() && item.time) {
+            const time = timeToPickerValue(item.time);
+            if (time) {
+                const activityMinutes = Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+                if (activityMinutes < currentMinutes) return false;
+            }
+        }
+        return true;
+    });
+    const visible = upcomingActivities
+        .filter(item => dateToPickerValue(item.date) !== todayCardDate)
+        .slice(0, 3);
+    if (!visible.length) {
+        if (upcomingActivities.length && todayCardDate) {
+            status.textContent = 'Prochaine activité affichée ci-dessus';
+            list.innerHTML = '<p class="dashboard-upcoming-empty">La prochaine activité est déjà mise en avant dans le résumé du programme.</p>';
+            return;
+        }
+        const destinations = getNamedTripDestinations(appData);
+        const programmeEntries = Array.isArray(appData.programme) ? appData.programme : [];
+        const hasActivities = programmeEntries.some(destination => Array.isArray(destination?.activites) && destination.activites.length);
+        const hasUndatedActivities = programmeEntries.some(destination =>
+            (Array.isArray(destination?.activites) ? destination.activites : [])
+                .some(activity => !parseFrenchShortDate(activity.date, tripYear()))
+        );
+        const message = !hasActivities
+            ? 'Aucune activité planifiée pour le moment.'
+            : hasUndatedActivities
+                ? 'Ajoutez une date à vos activités pour les afficher ici.'
+                : 'Aucune activité à venir. Ajoutez la suite de votre programme.';
+        const focus = destinations.length ? 'day' : 'city';
+        status.textContent = hasActivities ? 'À compléter' : 'Aucune activité';
+        list.innerHTML = '<div class="dashboard-upcoming-empty"><span>' + esc(message) + '</span><button type="button" ' + actionAttrs('switchDashboardTab', ['programme', focus]) + '>Voir l’itinéraire</button></div>';
+        return;
+    }
+    if (allButton) allButton.hidden = false;
+    status.textContent = upcomingActivities.length > visible.length
+        ? visible.length + ' affichées · ' + upcomingActivities.length + ' à venir'
+        : upcomingActivities.length + ' prochaine' + (upcomingActivities.length > 1 ? 's' : '') + ' activité' + (upcomingActivities.length > 1 ? 's' : '');
+    list.innerHTML = visible.map(item => {
+        const date = item.date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/\.$/, '');
+        const time = timeToPickerValue(item.time);
+        const place = item.sub || 'Lieu à préciser';
+        const label = item.label || 'Activité du séjour';
+        const context = [date, time, place].filter(Boolean).join(' · ');
+        const timeLabel = time ? ' · ' + esc(time) : '';
+        return '<button type="button" class="dashboard-upcoming-item" ' +
+            actionAttrs('openDashboardActivity', [item.programmeId, item.activityDate]) +
+            ' aria-label="' + esc('Ouvrir ' + label + ' dans l’itinéraire · ' + context) + '">' +
+            '<span class="dashboard-upcoming-icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>' +
+            '<span class="dashboard-upcoming-copy"><small>' + esc(date) + timeLabel + '</small>' +
+            '<strong>' + esc(label) + '</strong><span>' + esc(place) + '</span></span>' +
+            '<i class="fa-solid fa-arrow-right dashboard-upcoming-arrow" aria-hidden="true"></i></button>';
+    }).join('');
+}
+
+function renderDashboardTrips({ trips = [], selected = null, complete = true, signedOut = false, loading = false } = {}) {
+    const grid = document.getElementById('dashboard-trips-grid');
+    const status = document.getElementById('dashboard-trips-status');
+    if (!grid || !status) return;
+    grid.setAttribute('aria-busy', 'false');
+    if (loading) {
+        grid.setAttribute('aria-busy', 'true');
+        grid.innerHTML = '<p class="dashboard-trips-empty">Récupération des séjours associés à ce compte…</p>';
+        status.textContent = 'Chargement…';
+        return;
+    }
+    if (signedOut) {
+        grid.innerHTML = '<p class="dashboard-trips-empty">Connectez-vous pour retrouver vos séjours.</p>';
+        status.textContent = 'Compte non connecté';
+        return;
+    }
+    if (!trips.length) {
+        grid.innerHTML = complete
+            ? `<div class="dashboard-trips-empty is-actionable"><p class="dashboard-trips-empty-copy">Aucun séjour enregistré pour ce compte. Commencez par définir les dates et la destination.</p><button type="button" class="dashboard-trips-empty-action" ${actionAttrs('openModal', ['modal-choose-type'])}>Créer mon premier séjour</button></div>`
+            : `<div class="dashboard-trips-empty is-actionable" role="status"><p class="dashboard-trips-empty-copy">Impossible de récupérer la liste des séjours. Vérifiez la connexion ou l’accès à votre compte.</p><button type="button" class="dashboard-trips-empty-action" ${actionAttrs('switchDashboardTab', ['settings'])}>Voir les réglages</button></div>`;
+        status.textContent = complete ? 'Aucun séjour' : 'Chargement impossible';
+        return;
+    }
+    grid.innerHTML = trips.map(trip => {
+        const isSelected = selected && trip.ownerUid === selected.ownerUid && trip.tripId === selected.tripId;
+        const args = esc(JSON.stringify([trip.ownerUid, trip.tripId]));
+        const formatTripDate = (value, options) => {
+            if (!value) return null;
+            const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
+            return Number.isNaN(date.getTime()) ? null : date.toLocaleDateString('fr-FR', options);
+        };
+        const startDate = formatTripDate(trip.tripStart, { day: 'numeric', month: 'short' });
+        const endDate = formatTripDate(trip.tripEnd, { day: 'numeric', month: 'short', year: 'numeric' });
+        const dates = startDate && endDate ? `${startDate} — ${endDate}` : 'Dates à définir';
+        const destination = trip.destination ? `<span><i class="fa-solid fa-location-dot" aria-hidden="true"></i>${esc(trip.destination)}</span>` : '';
+        const accessLabel = trip.demo ? 'DÉMONSTRATION LOCALE' : trip.isOwner ? 'CRÉÉ PAR VOUS' : 'SÉJOUR PARTAGÉ';
+        const staticCard = trip.demo || isSelected;
+        const tag = staticCard ? 'article' : 'button type="button" data-action="openDashboardTrip"';
+        const actionArgs = staticCard ? '' : `data-action-args='${args}'`;
+        const openLabel = trip.demo ? 'Aperçu fictif · données sur cet appareil' : isSelected ? 'Séjour ouvert' : 'Ouvrir le séjour';
+        return `<${tag} class="dashboard-trip-card${isSelected ? ' is-current' : ''}${trip.demo ? ' is-demo' : ''}" ${actionArgs} aria-current="${isSelected ? 'true' : 'false'}"><span class="dashboard-trip-card-top"><i class="fa-solid fa-suitcase-rolling" aria-hidden="true"></i><b>${isSelected ? 'SÉJOUR PRINCIPAL' : accessLabel}</b></span><strong>${esc(trip.title || 'Mon séjour')}</strong><span class="dashboard-trip-card-meta"><span><i class="fa-regular fa-calendar" aria-hidden="true"></i>${esc(dates)}</span>${destination}</span><span class="dashboard-trip-card-open">${openLabel}${staticCard ? '' : ' <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>'}</span></${staticCard ? 'article' : 'button'}>`;
+    }).join('');
+    status.textContent = complete ? `${trips.length} séjour${trips.length === 1 ? '' : 's'} accessible${trips.length === 1 ? '' : 's'}` : `Liste partielle · ${trips.length} séjour${trips.length === 1 ? '' : 's'} chargé${trips.length === 1 ? '' : 's'}`;
+}
+
+function renderDashboardSyncNotice(state) {
+    dashboardSyncState = ['loading', 'saving', 'pending', 'error'].includes(state) ? state : 'ready';
+    const note = document.getElementById('dashboard-sync-note');
+    if (!note || DEMO_PREVIEW) return;
+    if (state === 'loading') {
+        note.hidden = false;
+        note.dataset.state = 'loading';
+        note.setAttribute('aria-busy', 'true');
+        note.textContent = 'Mise à jour des informations du séjour…';
+        renderDashboardSummary();
+        return;
+    }
+    if (state === 'saving') {
+        note.hidden = false;
+        note.dataset.state = 'saving';
+        note.setAttribute('aria-busy', 'true');
+        note.textContent = 'Enregistrement des modifications dans le cloud…';
+        renderDashboardSummary();
+        return;
+    }
+    note.setAttribute('aria-busy', 'false');
+    if (state === 'pending') {
+        note.hidden = false;
+        note.dataset.state = 'pending';
+        note.innerHTML = `Une action dans les réglages est nécessaire pour terminer la synchronisation. Les données affichées restent conservées sur cet appareil. <button type="button" class="dashboard-sync-action" ${actionAttrs('switchDashboardTab', ['settings'])}>Voir les réglages</button>`;
+        renderDashboardSummary();
+        return;
+    }
+    if (state === 'error') {
+        note.hidden = false;
+        note.dataset.state = 'error';
+        note.innerHTML = `La synchronisation est indisponible. Les données affichées peuvent être incomplètes ou ne pas être à jour. <button type="button" class="dashboard-sync-action" ${actionAttrs('switchDashboardTab', ['settings'])}>Voir les réglages</button>`;
+        renderDashboardSummary();
+        return;
+    }
+    note.hidden = true;
+    note.textContent = '';
+    renderDashboardSummary();
+}
+
+window.addEventListener('getready:trips', event => {
+    renderDashboardTrips(event.detail);
+    if (event.detail?.loading) renderDashboardSyncNotice('loading');
+    if (event.detail?.signedOut) renderDashboardSyncNotice('');
+});
+window.addEventListener('getready:sync-status', event => renderDashboardSyncNotice(event.detail?.state || ''));
+
+function openDashboardTrip(ownerUid, tripId) {
+    const select = document.getElementById('cloud-trip-select');
+    if (!select) return;
+    const value = JSON.stringify([ownerUid, tripId || 'legacy']);
+    if (![...select.options].some(option => option.value === value)) return;
+    if (select.value === value) return;
+    select.value = value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function openDashboardReservations() {
+    const pending = (appData.billets || []).some(item => getBilletStatus(item) === 'a-reserver');
+    if (pending) {
+        switchDashboardTab('infos', 'billets');
+        return;
+    }
+    resetBilletFilters();
+    switchDashboardTab('infos', 'reservations');
+}
+
+function openDashboardChecklist(scope) {
+    currentChecklistFilter = 'todo';
+    currentChecklistSearch = '';
+    const destination = (appData.programme || []).find(item => String(item.id) === String(scope));
+    currentChecklistScope = scope === 'voyage' ? 'voyage' : (destination?.id ?? 'voyage');
+    switchDashboardTab('checklist');
+    renderChecklist();
+}
+
+function openDashboardActivity(programmeId, date) {
+    const destination = (appData.programme || []).find(item => String(item.id) === String(programmeId));
+    if (!destination) return;
+    selectedItineraryProgrammeId = destination.id;
+    selectedItineraryDayByProgramme[destination.id] = date;
+    renderProgramme();
+    switchDashboardTab('programme', 'day');
 }
 
 function switchDashboardTab(tabId, itineraryFocus = null) {
@@ -801,6 +1760,14 @@ function switchDashboardTab(tabId, itineraryFocus = null) {
             void target.offsetWidth;
             target.classList.add('shortcut-arrival');
             window.setTimeout(() => target.classList.remove('shortcut-arrival'), 1100);
+        }));
+        return;
+    }
+    if (tabId === 'infos' && ['billets', 'reservations'].includes(itineraryFocus)) {
+        if (itineraryFocus === 'billets') showBilletsToBook();
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            const target = document.getElementById('billets-list');
+            if (target) target.scrollIntoView({ block: 'start', behavior });
         }));
         return;
     }
@@ -844,14 +1811,10 @@ function switchTab(tabId, el) {
     nextPage.classList.add('active');
     if (el) { el.classList.add('active'); el.setAttribute('aria-current', 'page'); }
     document.body.dataset.page = tabId;
-    if (!wasActive) animatePageEntrance(nextPage);
-
-    if (tabId === 'programme') {
-        requestAnimationFrame(() => {
-            const behavior = shouldReduceMotion() ? 'auto' : 'smooth';
-            document.querySelector('.itinerary-city-slide.is-active')?.scrollIntoView({ block: 'nearest', inline: 'center', behavior });
-            document.querySelector('.itinerary-date-card.is-selected')?.scrollIntoView({ block: 'nearest', inline: 'center', behavior });
-        });
+    if (tabId === 'accueil') applyAppearancePreferences();
+    if (!wasActive) {
+        window.scrollTo({ top:0, behavior:'auto' });
+        animatePageEntrance(nextPage);
     }
 
     if (tabId === 'budget') {
@@ -861,38 +1824,133 @@ function switchTab(tabId, el) {
 
 // --- GESTION DES DATES & COMPTE À REBOURS ---
 function updateCountdown() {
-    const dateDepart = appData.tripStart ? new Date(appData.tripStart + "T00:00:00") : null;
-    const aujourdhui = new Date();
-    const difference = dateDepart ? dateDepart - aujourdhui : 0;
-    const joursRestants = dateDepart ? Math.ceil(difference / (1000 * 60 * 60 * 24)) : 0;
-    document.getElementById('days-count').innerText = dateDepart ? (joursRestants > 0 ? joursRestants : 0) : '—';
-    document.querySelector('.countdown-text').innerText = dateDepart ? 'jours avant le départ' : 'dates à planifier';
-    document.querySelector('.hero-countdown-label').innerText = dateDepart ? 'ON Y EST DANS' : 'CHOISISSEZ LES DATES';
+    const dateDepart = parsePickerDate(appData.tripStart);
+    const dateFin = parsePickerDate(appData.tripEnd);
+    const now = new Date();
+    const aujourdhui = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const jourUTC = date => Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+    const aujourdHuiUTC = jourUTC(aujourdhui);
+    const jourMs = 24 * 60 * 60 * 1000;
+    const joursAvantDepart = dateDepart ? Math.round((jourUTC(dateDepart) - aujourdHuiUTC) / jourMs) : null;
+    const joursAvantFin = dateFin ? Math.round((jourUTC(dateFin) - aujourdHuiUTC) / jourMs) : null;
+    let countdownValue = '—';
+    let countdownText = 'dates à planifier';
+    let countdownLabel = 'CHOISISSEZ LES DATES';
 
-    // Formatage propre de l'affichage des dates du voyage
+    if (dateDepart && joursAvantDepart > 0) {
+        countdownValue = String(joursAvantDepart);
+        countdownText = `${joursAvantDepart === 1 ? 'jour' : 'jours'} avant le départ`;
+        countdownLabel = 'ON Y EST DANS';
+    } else if (dateDepart && joursAvantDepart === 0) {
+        countdownValue = '0';
+        countdownText = 'départ aujourd’hui';
+        countdownLabel = 'DÉPART AUJOURD’HUI';
+    } else if (dateDepart && dateFin && joursAvantFin >= 0) {
+        countdownValue = String(joursAvantFin);
+        countdownText = joursAvantFin === 0 ? 'dernier jour' : `${joursAvantFin === 1 ? 'jour' : 'jours'} restants`;
+        countdownLabel = 'SÉJOUR EN COURS';
+    } else if (dateDepart && dateFin) {
+        countdownValue = '✓';
+        countdownText = 'séjour terminé';
+        countdownLabel = 'BON RETOUR';
+    } else if (dateDepart) {
+        countdownText = 'fin du séjour à préciser';
+        countdownLabel = 'DATES À ACTUALISER';
+    }
+
+    document.getElementById('days-count').innerText = countdownValue;
+    document.querySelector('.countdown-text').innerText = countdownText;
+    document.querySelector('.hero-countdown-label').innerText = countdownLabel;
+
     const startOpt = { day: 'numeric', month: 'short' };
     const endOpt = { day: 'numeric', month: 'short', year: 'numeric' };
-    const startDate = appData.tripStart ? new Date(appData.tripStart + 'T00:00:00').toLocaleDateString('fr-FR', startOpt) : '';
-    const endDate = appData.tripEnd ? new Date(appData.tripEnd + 'T00:00:00').toLocaleDateString('fr-FR', endOpt) : '';
+    const startDate = dateDepart ? dateDepart.toLocaleDateString('fr-FR', startOpt) : '';
+    const endDate = dateFin ? dateFin.toLocaleDateString('fr-FR', endOpt) : '';
+    const tripDatesLabel = startDate && endDate ? `${startDate} — ${endDate}`
+        : startDate ? `À partir du ${startDate}`
+            : endDate ? `Jusqu’au ${endDate}` : 'Dates à définir';
 
     document.getElementById('display-trip-title').textContent = appData.tripTitle;
-    document.getElementById('display-trip-dates').innerText = startDate && endDate ? `${startDate} — ${endDate}` : 'Dates à définir';
-    document.getElementById('trip-context-label').innerText = `${appData.tripType || 'Séjour'} · ${appData.tripGroup === 'Solo' ? 'En solo' : appData.tripGroup === 'Couple' ? 'En couple' : appData.tripGroup === 'Amis' ? 'Entre amis' : appData.tripGroup === 'Famille' ? 'En famille' : appData.tripGroup === 'Équipe' ? 'En équipe' : 'En groupe'}`;
+    document.getElementById('display-trip-dates').innerText = tripDatesLabel;
+    renderDashboardTripShell();
+    const groupDescription = appData.tripGroup === 'Solo' ? 'En solo'
+        : appData.tripGroup === 'Couple' ? 'En couple'
+            : appData.tripGroup === 'Amis' ? 'Entre amis'
+                : appData.tripGroup === 'Famille' ? 'En famille'
+                    : appData.tripGroup === 'Équipe' ? 'En équipe' : 'En groupe';
+    const participantCount = new Set((Array.isArray(appData.budgetPeople) ? appData.budgetPeople : [])
+        .map(name => String(name || '').trim())
+        .filter(Boolean)).size;
+    const tripContextParts = [appData.tripType || 'Séjour', groupDescription];
+    if (participantCount) tripContextParts.push(participantCount + ' participant' + (participantCount === 1 ? '' : 's'));
+    document.getElementById('trip-context-label').textContent = tripContextParts.join(' · ');
+    const primaryDestination = (appData.programme || []).find(destination => String(destination?.ville || '').trim())?.ville || '';
+    const destinationLabel = primaryDestination || 'Destination à ajouter';
+    const destinationElement = document.getElementById('dashboard-main-destination');
+    if (destinationElement) destinationElement.textContent = destinationLabel;
+    const heroLocation = document.getElementById('dashboard-hero-location');
+    if (heroLocation) heroLocation.textContent = primaryDestination || 'Votre séjour';
 
     const groupLabels = {
         Solo: 'VOTRE CARNET DE VOYAGE', Couple: 'VOTRE CARNET À DEUX', Amis: 'VOTRE CARNET ENTRE AMIS',
         Famille: 'VOTRE CARNET DE FAMILLE', Équipe: 'VOTRE CARNET D’ÉQUIPE', Autre: 'VOTRE CARNET DE SÉJOUR'
     };
-    const tripHeadlines = {
-        Vacances: 'Vos vacances, au même endroit.',
-        'Week-end': 'Votre week-end, bien organisé.',
-        'Voyage professionnel': 'Votre déplacement, en un coup d’œil.',
-        Événement: 'Le programme de votre événement.',
-        'Road trip': 'Votre itinéraire, étape par étape.',
-        Autre: 'Tout votre séjour, au même endroit.'
-    };
     document.getElementById('dashboard-overline').textContent = groupLabels[appData.tripGroup] || groupLabels.Autre;
-    document.getElementById('dashboard-intro-title').textContent = tripHeadlines[appData.tripType] || tripHeadlines.Autre;
+    document.getElementById('dashboard-intro-title').textContent = 'Bonjour !';
+    let introCopy = 'Voici où en est votre prochain voyage.';
+    if (!dateDepart && !dateFin) {
+        introCopy = 'Commencez par choisir les dates et une première destination.';
+    } else if (!dateDepart || !dateFin) {
+        introCopy = 'Complétez les dates de votre séjour pour en suivre l’avancement.';
+    } else if (joursAvantDepart === 0) {
+        introCopy = 'Le départ, c’est aujourd’hui. Retrouvez votre programme et vos réservations.';
+    } else if (joursAvantDepart < 0 && joursAvantFin >= 0) {
+        introCopy = 'Votre séjour est en cours. Retrouvez le programme et les informations utiles du jour.';
+    } else if (joursAvantFin < 0) {
+        introCopy = 'Votre séjour est terminé. Retrouvez son itinéraire et les informations enregistrées.';
+    }
+    document.getElementById('dashboard-intro-copy').textContent = introCopy;
+
+    const primaryAction = document.getElementById('dashboard-primary-action');
+    const primaryActionLabel = document.getElementById('dashboard-primary-action-label');
+    if (primaryAction && primaryActionLabel) {
+        const setupState = getFirstTripSetupState(appData);
+        const destinations = getNamedTripDestinations(appData);
+        const hasActivities = destinations.some(destination => Array.isArray(destination.activites) && destination.activites.length > 0);
+        let action = 'switchDashboardTab';
+        let args = ['programme'];
+        let label = 'Explorer l’itinéraire';
+        if (!setupState.detailsComplete) {
+            action = 'openEditTripModal';
+            args = [];
+            label = 'Définir mon séjour';
+        } else if (!destinations.length) {
+            action = 'openItineraryEditor';
+            args = [];
+            label = 'Ajouter une destination';
+        } else if (!hasActivities) {
+            action = 'openItineraryEditor';
+            args = [];
+            label = 'Planifier les journées';
+        } else if (dateDepart && dateFin && joursAvantDepart <= 0 && joursAvantFin >= 0) {
+            label = 'Voir le programme du jour';
+        } else if (dateDepart && dateFin && joursAvantFin < 0) {
+            label = 'Revoir l’itinéraire';
+        }
+        primaryAction.dataset.action = action;
+        primaryAction.dataset.actionArgs = JSON.stringify(args);
+        primaryActionLabel.textContent = label;
+    }
+
+}
+
+function getFirstTripSetupState(data) {
+    const tripTitle = String(data.tripTitle || '').trim();
+    const hasTitle = Boolean(tripTitle) && tripTitle !== 'Mon séjour';
+    const hasDates = Boolean(data.tripStart && data.tripEnd && data.tripStart <= data.tripEnd);
+    const hasDestination = getNamedTripDestinations(data).length > 0;
+    const detailsComplete = hasTitle && hasDates;
+    return { detailsComplete, hasDestination, complete: detailsComplete && hasDestination };
 }
 
 function openEditTripModal() {
@@ -920,6 +1978,7 @@ function saveTripDates() {
         appData.tripGroup = tripGroup;
         saveToLocalStorage();
         updateCountdown();
+        renderDashboardSummary();
         closeModal('modal-edit-trip');
     }
 }
@@ -1815,6 +2874,8 @@ function openEditProgrammeModal(id) {
 
 let selectedItineraryProgrammeId = null;
 const selectedItineraryDayByProgramme = {};
+const selectedItineraryMapActivityByProgramme = {};
+const selectedItineraryRouteModeByDay = {};
 let itineraryInitialFocusSet = false;
 
 function sortedItineraryDays(prog) {
@@ -1897,6 +2958,36 @@ function selectItineraryDay(progId, date) {
     renderDestinationDayBar(progId);
 }
 
+function focusItineraryMap(progId, activityId) {
+    const programme = (appData.programme || []).find(item => String(item.id) === String(progId));
+    const activity = programme?.activites?.find(item => String(item.id) === String(activityId));
+    const map = document.getElementById(`itinerary-day-map-${safeId(progId)}`);
+    if (!programme || !activity || !map) return;
+
+    selectedItineraryMapActivityByProgramme[progId] = activity.id;
+    map.src = buildMapEmbedUrl(buildItineraryMapQuery(programme, [activity]));
+    const label = document.getElementById(`itinerary-day-map-label-${safeId(progId)}`);
+    if (label) label.textContent = activity.texte || programme.ville || 'Lieu sélectionné';
+    document.querySelectorAll('[data-itinerary-map-activity]').forEach(button => {
+        if (String(button.dataset.itineraryMapProgramme) !== String(progId)) return;
+        const selected = String(button.dataset.itineraryMapActivity) === String(activity.id);
+        button.setAttribute('aria-pressed', String(selected));
+    });
+}
+
+function changeItineraryRouteMode(progId, mode) {
+    const programme = (appData.programme || []).find(item => String(item.id) === String(progId));
+    const date = selectedItineraryDayByProgramme[progId];
+    if (!programme || !date) return;
+    const activities = (programme.activites || []).filter(activity => activity.date === date)
+        .sort((a, b) => String(a.heure || '').localeCompare(String(b.heure || '')));
+    const supportedModes = ['walking', 'driving', 'bicycling', 'transit'];
+    const modeKey = `${progId}|${date}`;
+    selectedItineraryRouteModeByDay[modeKey] = supportedModes.includes(mode) ? mode : 'walking';
+    const link = document.getElementById(`itinerary-day-route-link-${safeId(progId)}`);
+    if (link) link.href = buildDayDirectionsUrl(activities, programme.ville, selectedItineraryRouteModeByDay[modeKey]);
+}
+
 function openItineraryEditor() {
     if (!requireEditor()) return;
     renderItineraryEditor();
@@ -1973,6 +3064,10 @@ function deleteManagedDestination(progId) {
     appData.programme = appData.programme.filter(item => item.id !== progId);
     if (selectedItineraryProgrammeId === progId) selectedItineraryProgrammeId = appData.programme[0]?.id || null;
     delete selectedItineraryDayByProgramme[progId];
+    delete selectedItineraryMapActivityByProgramme[progId];
+    Object.keys(selectedItineraryRouteModeByDay).forEach(key => {
+        if (key.startsWith(`${progId}|`)) delete selectedItineraryRouteModeByDay[key];
+    });
     saveToLocalStorage();
     renderProgramme();
     renderItineraryEditor();
@@ -2219,9 +3314,15 @@ function renderDestinationDayBar(progId) {
     }).join('') : `<div class="itinerary-no-dates"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i><span>Ajoute les dates de cette étape pour créer ton planning.</span></div>`;
 
     let activitiesHtml = '';
+    let selectedDayActivities = [];
     if (selectedDate) {
-        const dayActivities = (prog.activites || []).filter(activity => activity.date === selectedDate).sort((a, b) => String(a.heure || '').localeCompare(String(b.heure || '')));
-        dayActivities.forEach(activity => {
+        selectedDayActivities = (prog.activites || []).filter(activity => activity.date === selectedDate).sort((a, b) => String(a.heure || '').localeCompare(String(b.heure || '')));
+        const rememberedMapActivity = selectedItineraryMapActivityByProgramme[progId];
+        const initialMapActivity = selectedDayActivities.find(activity => String(activity.id) === String(rememberedMapActivity))
+            || selectedDayActivities.find(activity => extractLatLng(activity.lien))
+            || selectedDayActivities[0];
+        if (initialMapActivity) selectedItineraryMapActivityByProgramme[progId] = initialMapActivity.id;
+        selectedDayActivities.forEach(activity => {
             if (editingActivite === activity.id) {
                 activitiesHtml += `
                     <div class="itinerary-activity-edit">
@@ -2237,9 +3338,8 @@ function renderDestinationDayBar(progId) {
                 return;
             }
             const activityMapUrl = mapsOpenLink(activity.lien);
-            const activityMapLink = activityMapUrl
-                ? `<a href="${activityMapUrl}" target="_blank" rel="noopener" class="activity-link-btn" aria-label="Ouvrir le lieu sur la carte" title="Ouvrir le lieu sur la carte"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i><span>Carte</span></a>`
-                : '';
+            const isMapFocus = String(selectedItineraryMapActivityByProgramme[progId]) === String(activity.id);
+            const activityMapLink = `<button type="button" class="activity-map-focus-button" ${actionAttrs('focusItineraryMap', [progId, activity.id])} data-itinerary-map-activity="${esc(activity.id)}" data-itinerary-map-programme="${esc(progId)}" aria-label="Centrer la carte sur ${esc(activity.texte)}" aria-pressed="${isMapFocus}" title="Afficher sur la carte"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></button>${activityMapUrl ? `<a href="${activityMapUrl}" target="_blank" rel="noopener" class="activity-link-btn" aria-label="Ouvrir le lieu dans Google Maps" title="Ouvrir dans Google Maps"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i><span>Carte</span></a>` : ''}`;
             activitiesHtml += `
                 <article class="itinerary-activity">
                     <time class="itinerary-activity-time">${esc(activity.heure || '—')}</time>
@@ -2252,6 +3352,8 @@ function renderDestinationDayBar(progId) {
         activitiesHtml = `<div class="itinerary-plan-empty"><span class="itinerary-empty-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span><strong>Ton planning prend forme ici</strong><p>Choisis une date ou ajoute une journée à cette étape.</p></div>`;
     }
 
+    const routeModeKey = `${progId}|${selectedDate}`;
+    const selectedRouteMode = selectedItineraryRouteModeByDay[routeModeKey] || 'walking';
     const dayTools = selectedDate ? (editingDay === `${progId}|${selectedDate}` ? `
         <div class="itinerary-day-edit">
             ${datePickerPairHtml(`edit-day-date-${selectedSuffix}`, selectedDate, 'Choisir une date')}
@@ -2261,9 +3363,15 @@ function renderDestinationDayBar(progId) {
     ` : `
         <div class="itinerary-plan-heading">
             <div><span>PLANNING DE LA JOURNÉE</span><h3>${esc(selectedDate)}</h3></div>
+            ${buildDayDirectionsUrl(selectedDayActivities, prog.ville, selectedRouteMode) ? `<div class="itinerary-route-controls"><label class="itinerary-route-mode-label" for="itinerary-route-mode-${safeId(progId)}"><span>Mode</span><select id="itinerary-route-mode-${safeId(progId)}" class="itinerary-route-mode" ${actionAttrs('changeItineraryRouteMode', [progId], { event: 'change', value: true })}><option value="walking" ${selectedRouteMode === 'walking' ? 'selected' : ''}>À pied</option><option value="driving" ${selectedRouteMode === 'driving' ? 'selected' : ''}>Voiture</option><option value="bicycling" ${selectedRouteMode === 'bicycling' ? 'selected' : ''}>Vélo</option><option value="transit" ${selectedRouteMode === 'transit' ? 'selected' : ''}>Transports</option></select></label><a id="itinerary-day-route-link-${safeId(progId)}" class="itinerary-day-map-link" href="${esc(buildDayDirectionsUrl(selectedDayActivities, prog.ville, selectedRouteMode))}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-route" aria-hidden="true"></i><span>Voir ${selectedDayActivities.length} lieu${selectedDayActivities.length > 1 ? 'x' : ''} sur la carte</span></a></div>` : ''}
         </div>
     `) : '';
 
+    const itineraryMapQuery = buildItineraryMapQuery(prog, selectedDayActivities);
+    const focusActivity = selectedDayActivities.find(activity => String(activity.id) === String(selectedItineraryMapActivityByProgramme[progId]))
+        || selectedDayActivities.find(activity => extractLatLng(activity.lien))
+        || selectedDayActivities[0];
+    const itineraryMapLabel = focusActivity?.texte || prog.ville || 'cette étape';
     container.innerHTML = `
         <section class="itinerary-selected-place">
             <div class="itinerary-place-copy">
@@ -2279,7 +3387,10 @@ function renderDestinationDayBar(progId) {
         </section>
         <section class="itinerary-day-plan">
             ${dayTools}
-            <div class="itinerary-activities">${activitiesHtml}</div>
+            <div class="itinerary-map-layout">
+                <div class="itinerary-activities">${activitiesHtml}</div>
+                ${itineraryMapQuery ? `<aside class="itinerary-day-map-preview" aria-label="Carte de l’étape"><div class="itinerary-day-map-heading"><span>REPÈRE SUR LA CARTE</span><strong id="itinerary-day-map-label-${safeId(prog.id)}">${esc(itineraryMapLabel)}</strong><small>${esc(prog.ville || '')}</small></div><iframe id="itinerary-day-map-${safeId(prog.id)}" src="${esc(buildMapEmbedUrl(itineraryMapQuery))}" title="Carte : ${esc(itineraryMapLabel)}" loading="lazy" referrerpolicy="no-referrer"></iframe></aside>` : ''}
+            </div>
         </section>
     `;
     syncPickerControls(container);
@@ -2661,12 +3772,17 @@ function deleteItemJour(progId, itemId) {
 }
 
 // --- BUDGET ---
+let currentBudgetFilters = { query: '', category: 'all', status: 'all' };
+
 function updateBudgetUI() {
     const list = document.getElementById('expenses-list');
     list.innerHTML = '';
     const baseCurrency = appData.budgetCurrency || 'EUR';
     let total = 0, paid = 0;
     const paidByPerson = {};
+    const sharedByPerson = {};
+    const minorUnits = currencyMinorUnits(baseCurrency);
+    let visibleExpenseCount = 0;
 
     appData.budget.forEach(exp => {
         const amount = Number(exp.amount ?? exp.eur) || 0;
@@ -2676,11 +3792,18 @@ function updateBudgetUI() {
         if (converted !== null) total += converted;
         if (exp.paid && converted !== null) {
             paid += converted;
-            if (payeurs.length) {
-                const part = converted / payeurs.length;
-                payeurs.forEach(name => { paidByPerson[name] = (paidByPerson[name] || 0) + part; });
+            const knownPayeurs = [...new Set(payeurs.filter(name => appData.budgetPeople.includes(name)))];
+            const knownBeneficiaires = getBudgetBeneficiaries(exp, appData.budgetPeople);
+            if (knownPayeurs.length && knownBeneficiaires.length) {
+                const expenseUnits = Math.round(converted * minorUnits);
+                const payerShares = allocateBudgetMinorUnits(expenseUnits, knownPayeurs);
+                const beneficiaryShares = allocateBudgetMinorUnits(expenseUnits, knownBeneficiaires, getBudgetShareWeights(exp, knownBeneficiaires));
+                Object.entries(payerShares).forEach(([name, part]) => { paidByPerson[name] = (paidByPerson[name] || 0) + part / minorUnits; });
+                Object.entries(beneficiaryShares).forEach(([name, part]) => { sharedByPerson[name] = (sharedByPerson[name] || 0) + part / minorUnits; });
             }
         }
+        if (!budgetExpenseMatchesFilters(exp, currentBudgetFilters, appData.budgetPeople)) return;
+        visibleExpenseCount++;
         const cat = exp.categorie || 'Autre';
         const icon = budgetCategoryIcons[cat] || budgetCategoryIcons['Autre'];
         const methodeIcon = exp.methode === 'Carte bleue' ? '💳' : (exp.methode === 'Espèces' ? '💴' : '');
@@ -2710,15 +3833,47 @@ function updateBudgetUI() {
 
     if (appData.budget.length === 0) {
         list.innerHTML = `<div class="empty-state"><span class="empty-state-icon"><i class="fa-solid fa-coins"></i></span><h3>Votre budget, à votre rythme</h3><p>Ajoutez une dépense dès qu'un prix se précise. Les montants de plusieurs devises seront réunis dans la devise choisie.</p></div>`;
+    } else if (visibleExpenseCount === 0) {
+        list.innerHTML = `<div class="budget-filter-empty"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Aucune dépense ne correspond à ces critères.</span><button type="button" data-action="resetBudgetFilters">Effacer les filtres</button></div>`;
     }
 
     document.getElementById('budget-total-paid').innerText = formatCurrency(paid, baseCurrency);
     document.getElementById('budget-total-remaining').innerText = formatCurrency(total - paid, baseCurrency);
     populateCurrencySelectors();
-    renderBudgetSplit(paidByPerson);
+    renderBudgetSplit(paidByPerson, calculateBudgetSettlements(paidByPerson, sharedByPerson, appData.budgetPeople, baseCurrency));
     renderBudgetPeopleManageList();
     renderBudgetPeoplePicker();
     renderDashboardSummary();
+}
+
+function budgetExpenseMatchesFilters(expense, filters, people) {
+    if (filters.category !== 'all' && (expense.categorie || 'Autre') !== filters.category) return false;
+    if (filters.status === 'paid' && !expense.paid) return false;
+    if (filters.status === 'unpaid' && expense.paid) return false;
+    const beneficiaries = Array.isArray(expense.beneficiaires) ? expense.beneficiaires : people;
+    const payers = Array.isArray(expense.payeurs) ? expense.payeurs : [];
+    const text = [expense.nom, expense.categorie, ...payers, ...beneficiaries]
+        .filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const query = String(filters.query || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+    return !query || text.includes(query);
+}
+
+function updateBudgetFilter(control) {
+    const key = control.dataset.budgetFilter;
+    if (!['query', 'category', 'status'].includes(key)) return;
+    currentBudgetFilters = { ...currentBudgetFilters, [key]: control.value };
+    updateBudgetUI();
+}
+
+function resetBudgetFilters() {
+    currentBudgetFilters = { query: '', category: 'all', status: 'all' };
+    const search = document.getElementById('budget-search');
+    const category = document.getElementById('budget-category-filter');
+    const status = document.getElementById('budget-status-filter');
+    if (search) search.value = '';
+    if (category) category.value = 'all';
+    if (status) status.value = 'all';
+    updateBudgetUI();
 }
 
 // --- GESTION DES PRÉNOMS (pour attribuer/répartir les dépenses) ---
@@ -2746,6 +3901,7 @@ function addBudgetPerson() {
     input.value = '';
     saveToLocalStorage();
     updateBudgetUI();
+    updateCountdown();
 }
 
 function removeBudgetPersonAt(index) {
@@ -2754,23 +3910,44 @@ function removeBudgetPersonAt(index) {
     appData.budgetPeople.splice(index, 1);
     appData.budget.forEach(exp => {
         if (exp.payeurs) exp.payeurs = exp.payeurs.filter(n => n !== name);
+        if (Array.isArray(exp.beneficiaires)) {
+            exp.beneficiaires = exp.beneficiaires.filter(n => n !== name);
+            if (exp.beneficiaires.length === 0) exp.beneficiaires = appData.budgetPeople.slice();
+        }
+        if (exp.parts) delete exp.parts[name];
     });
     selectedPayeurs = selectedPayeurs.filter(n => n !== name);
+    selectedBeneficiaires = selectedBeneficiaires.filter(n => n !== name);
+    delete selectedShareParts[name];
     saveToLocalStorage();
     updateBudgetUI();
+    updateCountdown();
 }
 
 // --- SÉLECTEUR MULTIPLE "PAYÉ PAR" DANS LE FORMULAIRE DE DÉPENSE ---
 let selectedPayeurs = [];
+let selectedBeneficiaires = [];
+let selectedShareParts = {};
 
 function renderBudgetPeoplePicker() {
     const picker = document.getElementById('bud-payeurs-picker');
     const hint = document.getElementById('bud-payeurs-hint');
+    const beneficiariesPicker = document.getElementById('bud-beneficiaires-picker');
+    const beneficiariesHint = document.getElementById('bud-beneficiaires-hint');
     if (!picker) return;
     hint.style.display = appData.budgetPeople.length === 0 ? 'block' : 'none';
     picker.innerHTML = appData.budgetPeople.map((name, i) => `
             <button type="button" class="payeur-toggle-chip ${selectedPayeurs.includes(name) ? 'selected' : ''}" ${actionAttrs('toggleBudPayeurAt', [i])}>${esc(name)}</button>
     `).join('');
+    if (beneficiariesPicker) {
+        if (beneficiariesHint) beneficiariesHint.style.display = appData.budgetPeople.length === 0 ? 'block' : 'none';
+        beneficiariesPicker.innerHTML = appData.budgetPeople.map((name, i) => `
+            <div class="budget-beneficiary-option">
+                <button type="button" class="payeur-toggle-chip ${selectedBeneficiaires.includes(name) ? 'selected' : ''}" ${actionAttrs('toggleBudBeneficiaryAt', [i])}>${esc(name)}</button>
+                ${selectedBeneficiaires.includes(name) && selectedBeneficiaires.length > 1 ? `<label><span>Parts</span><input type="number" min="0.01" step="0.01" value="${esc(getValidBudgetShare(selectedShareParts[name]))}" aria-label="Nombre de parts pour ${esc(name)}" ${actionAttrs('updateBudgetShare', [name], { event: 'input', target: true })}></label>` : ''}
+            </div>
+        `).join('');
+    }
 }
 
 function toggleBudPayeurAt(index) {
@@ -2780,9 +3957,86 @@ function toggleBudPayeurAt(index) {
     renderBudgetPeoplePicker();
 }
 
-// Répartition des dépenses déjà payées entre les personnes, pour
-// savoir qui doit rembourser quoi à qui (utile pour un couple/groupe).
-function renderBudgetSplit(paidByPerson) {
+function toggleBudBeneficiaryAt(index) {
+    const name = appData.budgetPeople[index];
+    const i = selectedBeneficiaires.indexOf(name);
+    if (i === -1) {
+        selectedBeneficiaires.push(name);
+        if (!getValidBudgetShare(selectedShareParts[name])) selectedShareParts[name] = 1;
+    }
+    else if (selectedBeneficiaires.length > 1) selectedBeneficiaires.splice(i, 1);
+    renderBudgetPeoplePicker();
+}
+
+function updateBudgetShare(name, input) {
+    const share = Number(input.value);
+    if (Number.isFinite(share) && share > 0) selectedShareParts[name] = share;
+}
+
+function currencyMinorUnits(currency) {
+    try {
+        return 10 ** new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).resolvedOptions().maximumFractionDigits;
+    } catch { return 100; }
+}
+
+function getBudgetBeneficiaries(expense, participants) {
+    const beneficiaries = Array.isArray(expense.beneficiaires) ? expense.beneficiaires : participants;
+    return [...new Set(beneficiaries.filter(name => participants.includes(name)))];
+}
+
+function getValidBudgetShare(value) {
+    const share = Number(value);
+    return Number.isFinite(share) && share > 0 ? share : 1;
+}
+
+function getBudgetShareWeights(expense, beneficiaries) {
+    return Object.fromEntries(beneficiaries.map(name => [name, getValidBudgetShare(expense.parts?.[name])]));
+}
+
+function allocateBudgetMinorUnits(totalUnits, people, weights = {}) {
+    if (!people.length) return {};
+    const validWeights = people.map(name => getValidBudgetShare(weights[name]));
+    const totalWeight = validWeights.reduce((sum, weight) => sum + weight, 0);
+    const exactParts = validWeights.map(weight => totalUnits * weight / totalWeight);
+    const allocated = exactParts.map(Math.floor);
+    let remainder = totalUnits - allocated.reduce((sum, part) => sum + part, 0);
+    const remainderOrder = exactParts.map((amount, index) => ({ index, remainder: amount - allocated[index] }))
+        .sort((a, b) => b.remainder - a.remainder || a.index - b.index);
+    for (let index = 0; index < remainder; index++) allocated[remainderOrder[index].index]++;
+    return Object.fromEntries(people.map((name, index) => [name, allocated[index]]));
+}
+
+function calculateBudgetSettlements(paidByPerson, sharedByPerson, people, currency) {
+    const participants = [...new Set(people)];
+    if (participants.length < 2) return [];
+
+    const minorUnits = currencyMinorUnits(currency);
+    const cents = amount => Math.round((Number(amount) || 0) * minorUnits);
+    const balances = participants.map(name => ({
+        name,
+        amount: cents(paidByPerson[name]) - cents(sharedByPerson[name])
+    }));
+    const debtors = balances.filter(person => person.amount < 0).map(person => ({ ...person, amount: -person.amount }));
+    const creditors = balances.filter(person => person.amount > 0).map(person => ({ ...person }));
+    const settlements = [];
+    let debtorIndex = 0;
+    let creditorIndex = 0;
+
+    while (debtorIndex < debtors.length && creditorIndex < creditors.length) {
+        const amount = Math.min(debtors[debtorIndex].amount, creditors[creditorIndex].amount);
+        if (amount > 0) settlements.push({ from: debtors[debtorIndex].name, to: creditors[creditorIndex].name, amount: amount / minorUnits });
+        debtors[debtorIndex].amount -= amount;
+        creditors[creditorIndex].amount -= amount;
+        if (debtors[debtorIndex].amount === 0) debtorIndex++;
+        if (creditors[creditorIndex].amount === 0) creditorIndex++;
+    }
+
+    return settlements;
+}
+
+// Répartit les dépenses réglées entre tous les participants et simplifie
+// les remboursements en un nombre réduit de virements.
+function renderBudgetSplit(paidByPerson, settlements) {
     const card = document.getElementById('budget-split-card');
     const names = Object.keys(paidByPerson);
     const currency = appData.budgetCurrency || 'EUR';
@@ -2798,26 +4052,15 @@ function renderBudgetSplit(paidByPerson) {
         </div>`
     ).join('');
 
-    let balanceHtml = '';
-    if (names.length === 2) {
-        const [a, b] = names;
-        const diff = paidByPerson[a] - paidByPerson[b];
-        if (Math.abs(diff) > 0.009) {
-            const debtor = diff > 0 ? b : a;
-            const creditor = diff > 0 ? a : b;
-            balanceHtml = `<div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08); font-size:0.85rem; font-weight:700; color: var(--accent-primary);">
-                ${esc(debtor)} doit rembourser ${formatCurrency(Math.abs(diff) / 2, currency)} à ${esc(creditor)}
-            </div>`;
-        } else {
-            balanceHtml = `<div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08); font-size:0.85rem; font-weight:700; color: var(--accent-primary);">Comptes équilibrés 👌</div>`;
-        }
-    }
+    const transferHtml = settlements.length
+        ? settlements.map(settlement => `<div class="budget-settlement-row"><span>${esc(settlement.from)} rembourse ${esc(settlement.to)}</span><strong>${formatCurrency(settlement.amount, currency)}</strong></div>`).join('')
+        : `<div class="budget-settlement-balanced">Comptes équilibrés 👌</div>`;
 
     card.innerHTML = `
         <div class="card" style="padding:14px 16px; margin-bottom:16px;">
-            <div class="section-title" style="margin-bottom:6px;">Répartition</div>
+            <div class="section-title" style="margin-bottom:6px;">Avances payées</div>
             ${rowsHtml}
-            ${balanceHtml}
+            <div class="budget-settlement-list" aria-label="Remboursements entre participants">${transferHtml}</div>
         </div>
     `;
 }
@@ -2839,6 +4082,8 @@ function openAddBudgetModal() {
     document.getElementById('bud-currency').value = appData.budgetCurrency || 'EUR';
     document.getElementById('bud-cat').value = 'Autre';
     selectedPayeurs = [];
+    selectedBeneficiaires = appData.budgetPeople.slice();
+    selectedShareParts = Object.fromEntries(selectedBeneficiaires.map(name => [name, 1]));
     renderBudgetPeoplePicker();
     document.getElementById('bud-methode').value = '';
     document.getElementById('bud-paid').checked = false;
@@ -2855,6 +4100,8 @@ function openEditBudgetModal(id) {
     document.getElementById('bud-currency').value = exp.currency || 'EUR';
     document.getElementById('bud-cat').value = exp.categorie || 'Autre';
     selectedPayeurs = (exp.payeurs || []).slice();
+    selectedBeneficiaires = getBudgetBeneficiaries(exp, appData.budgetPeople);
+    selectedShareParts = getBudgetShareWeights(exp, selectedBeneficiaires);
     renderBudgetPeoplePicker();
     document.getElementById('bud-methode').value = exp.methode || '';
     document.getElementById('bud-paid').checked = !!exp.paid;
@@ -2878,6 +4125,8 @@ function saveBudget() {
     const currency = document.getElementById('bud-currency').value || 'EUR';
     const categorie = document.getElementById('bud-cat').value;
     const payeurs = selectedPayeurs.slice();
+    const beneficiaires = selectedBeneficiaires.slice();
+    const parts = getBudgetShareWeights({ parts: selectedShareParts }, beneficiaires);
     const methode = document.getElementById('bud-methode').value;
     const paid = document.getElementById('bud-paid').checked;
     if (!nom || isNaN(amount) || amount < 0) return;
@@ -2891,11 +4140,13 @@ function saveBudget() {
             exp.eur = convertCurrency(amount, currency, 'EUR') ?? (currency === 'EUR' ? amount : 0);
             exp.categorie = categorie;
             exp.payeurs = payeurs;
+            exp.beneficiaires = beneficiaires;
+            exp.parts = parts;
             exp.methode = methode;
             exp.paid = paid;
         }
     } else {
-        appData.budget.push({ id: Date.now(), nom, amount, currency, eur: convertCurrency(amount, currency, 'EUR') ?? (currency === 'EUR' ? amount : 0), categorie, payeurs, methode, paid });
+        appData.budget.push({ id: Date.now(), nom, amount, currency, eur: convertCurrency(amount, currency, 'EUR') ?? (currency === 'EUR' ? amount : 0), categorie, payeurs, beneficiaires, parts, methode, paid });
     }
     saveToLocalStorage();
     updateBudgetUI();
@@ -2921,6 +4172,12 @@ function renderInfos() {
     appData.infos.forEach(info => {
         let currentIcon = '<i class="fa-solid fa-circle-info"></i>';
         const lowerTitle = info.titre.toLowerCase();
+        const sourcesHtml = (Array.isArray(info.sources) ? info.sources : []).map(source => {
+            const href = safeUrl(source?.url);
+            if (!href) return '';
+            const label = esc(source?.label || 'Source officielle');
+            return `<a class="info-source-link" href="${href}" target="_blank" rel="noopener noreferrer">${label}<i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>`;
+        }).filter(Boolean).join('');
 
         for (const [key, icon] of Object.entries(iconsMap)) {
             if (lowerTitle.includes(key)) {
@@ -2939,6 +4196,7 @@ function renderInfos() {
                     </div>
                 </div>
                 <div style="font-size: 0.95rem; line-height: 1.5; color: #444; white-space: pre-line; font-weight: 500;">${esc(info.desc)}</div>
+                ${sourcesHtml ? `<div class="info-source-list" aria-label="Sources officielles">${sourcesHtml}</div>` : ''}
                 <div style="text-align:right; margin-top: 10px;">
                     <button ${actionAttrs('openEditInfoModal', [info.id])} class="edit-action" aria-label="Modifier cette information" title="Modifier cette information">
                         <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
@@ -2980,6 +4238,16 @@ function buildMapEmbedUrl(query) {
     return `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
 }
 
+function buildItineraryMapQuery(programme, activities) {
+    const dayActivities = activities || [];
+    const focusActivity = dayActivities.find(activity => extractLatLng(activity.lien)) || dayActivities[0];
+    if (focusActivity) {
+        return extractLatLng(focusActivity.lien)
+            || [String(focusActivity.texte || '').trim(), String(programme?.ville || '').trim()].filter(Boolean).join(', ');
+    }
+    return extractLatLng(programme?.maps) || String(programme?.ville || '').trim();
+}
+
 function buildRouteEmbedUrl(origin, destination) {
     // dirflg=w force l'affichage à pied plutôt qu'en voiture par défaut
     return `https://www.google.com/maps?saddr=${encodeURIComponent(origin)}&daddr=${encodeURIComponent(destination)}&dirflg=w&output=embed`;
@@ -3016,6 +4284,24 @@ function extractLatLng(mapsUrl) {
         }
     }
     return null;
+}
+
+function buildDayDirectionsUrl(activities, city, mode = 'walking') {
+    const places = (activities || []).map(activity => {
+        const coordinates = extractLatLng(activity.lien);
+        if (coordinates) return coordinates;
+        return [String(activity.texte || '').trim(), String(city || '').trim()].filter(Boolean).join(', ');
+    }).filter(Boolean);
+    if (!places.length) return '';
+
+    const url = new URL('https://www.google.com/maps/dir/');
+    url.searchParams.set('api', '1');
+    const supportedModes = ['walking', 'driving', 'bicycling', 'transit'];
+    url.searchParams.set('travelmode', supportedModes.includes(mode) ? mode : 'walking');
+    if (places.length > 1) url.searchParams.set('origin', places.shift());
+    url.searchParams.set('destination', places.pop());
+    if (places.length) url.searchParams.set('waypoints', places.join('|'));
+    return url.toString();
 }
 
 // Construit un lien "ouvrir dans Maps" cliquable à partir d'un champ
@@ -3185,19 +4471,170 @@ function populateItineraryMapSelect() {
 }
 
 // --- BILLETS & TICKETS ---
+const BILLET_STATUS_LABELS = Object.freeze({
+    'a-reserver': 'À réserver',
+    confirme: 'Confirmée',
+    annule: 'Annulée'
+});
+
+function getBilletStatus(billet) {
+    return Object.prototype.hasOwnProperty.call(BILLET_STATUS_LABELS, billet?.statut) ? billet.statut : 'confirme';
+}
+
+function getBilletStatusLabel(status) {
+    return BILLET_STATUS_LABELS[status] || BILLET_STATUS_LABELS.confirme;
+}
+
+function formatBilletShareText(billet) {
+    const fields = [
+        `Statut : ${getBilletStatusLabel(getBilletStatus(billet))}`,
+        [billet.date, timeToPickerValue(billet.heure)].filter(Boolean).length
+            ? `Date : ${[billet.date, timeToPickerValue(billet.heure)].filter(Boolean).join(' à ')}` : '',
+        billet.lieu ? `Lieu : ${billet.lieu}` : '',
+        billet.reference ? `Référence : ${billet.reference}` : '',
+        billet.notes ? `Notes : ${billet.notes}` : ''
+    ].filter(Boolean);
+    let safeLink = '';
+    try {
+        const parsed = new URL(String(billet.lien || '').trim());
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') safeLink = parsed.href;
+    } catch { /* Un lien invalide est simplement omis du partage. */ }
+    if (safeLink) fields.push(`Lien : ${safeLink}`);
+    return [billet.nom || 'Réservation', ...fields].join('\n');
+}
+
+async function shareBillet(id) {
+    const billet = (appData.billets || []).find(item => String(item.id) === String(id));
+    if (!billet) return;
+    const text = formatBilletShareText(billet);
+    const status = document.getElementById('billet-share-status');
+    try {
+        if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+            await navigator.share({ title: billet.nom || 'Réservation GetReady', text });
+            if (status) status.textContent = 'La réservation a été partagée.';
+            return;
+        }
+        if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+        } else {
+            const field = document.createElement('textarea');
+            field.value = text;
+            field.setAttribute('readonly', '');
+            field.style.position = 'fixed';
+            field.style.opacity = '0';
+            document.body.appendChild(field);
+            field.select();
+            const copied = document.execCommand('copy');
+            field.remove();
+            if (!copied) throw new Error('Copie indisponible');
+        }
+        if (status) status.textContent = 'Les détails de la réservation ont été copiés.';
+    } catch (error) {
+        if (error?.name === 'AbortError') return;
+        if (status) status.textContent = 'Le partage a échoué. Réessaie ou copie les détails manuellement.';
+    }
+}
+
+let currentBilletFilters = { query: '', status: 'all', sort: 'date' };
+
+function billetMatchesFilters(billet, filters) {
+    const status = getBilletStatus(billet);
+    if (filters.status !== 'all' && status !== filters.status) return false;
+    const searchable = [billet.nom, billet.date, timeToPickerValue(billet.heure), billet.lieu, billet.reference, billet.notes]
+        .filter(Boolean).join(' ');
+    return !filters.query || stripAccents(searchable).toLowerCase().includes(stripAccents(filters.query).trim().toLowerCase());
+}
+
+function updateBilletFilter(control) {
+    const key = control.dataset.billetFilter;
+    if (!['query', 'status', 'sort'].includes(key)) return;
+    currentBilletFilters = { ...currentBilletFilters, [key]: control.value };
+    renderBillets();
+}
+
+function resetBilletFilters() {
+    currentBilletFilters = { query: '', status: 'all', sort: 'date' };
+    const search = document.getElementById('billet-search');
+    const status = document.getElementById('billet-status-filter');
+    const sort = document.getElementById('billet-sort-filter');
+    if (search) search.value = '';
+    if (status) status.value = 'all';
+    if (sort) sort.value = 'date';
+    renderBillets();
+}
+
+function showBilletsToBook() {
+    currentBilletFilters = { query: '', status: 'a-reserver', sort: 'date' };
+    const search = document.getElementById('billet-search');
+    const status = document.getElementById('billet-status-filter');
+    const sort = document.getElementById('billet-sort-filter');
+    if (search) search.value = '';
+    if (status) status.value = 'a-reserver';
+    if (sort) sort.value = 'date';
+    renderBillets();
+}
+
+function billetDateForSort(value) {
+    const parsed = parsePickerDate(value);
+    if (!parsed || /^\d{4}-\d{2}-\d{2}$/.test(String(value || '').trim())) return parsed;
+    const tripStart = parsePickerDate(appData.tripStart);
+    const tripEnd = parsePickerDate(appData.tripEnd);
+    if (!tripStart || !tripEnd || tripEnd < tripStart) return parsed;
+
+    const years = new Set([tripStart.getFullYear() - 1, tripStart.getFullYear(), tripEnd.getFullYear(), tripEnd.getFullYear() + 1]);
+    const candidates = [...years].map(year => new Date(year, parsed.getMonth(), parsed.getDate()))
+        .filter(date => date.getMonth() === parsed.getMonth() && date.getDate() === parsed.getDate());
+    const insideTrip = candidates.find(date => date >= tripStart && date <= tripEnd);
+    if (insideTrip) return insideTrip;
+
+    const distance = date => date < tripStart ? tripStart - date : date > tripEnd ? date - tripEnd : 0;
+    return candidates.sort((a, b) => distance(a) - distance(b))[0] || parsed;
+}
+
+function sortBillets(billets, sort = 'date') {
+    const collator = new Intl.Collator('fr', { sensitivity: 'base', numeric: true });
+    return billets.map((billet, index) => ({ billet, index })).sort((a, b) => {
+        if (sort === 'name') {
+            return collator.compare(a.billet.nom || '', b.billet.nom || '') || a.index - b.index;
+        }
+        const dateA = billetDateForSort(a.billet.date)?.getTime() ?? Number.POSITIVE_INFINITY;
+        const dateB = billetDateForSort(b.billet.date)?.getTime() ?? Number.POSITIVE_INFINITY;
+        const timeA = timeToPickerValue(a.billet.heure);
+        const timeB = timeToPickerValue(b.billet.heure);
+        const minutesA = timeA ? Number(timeA.slice(0, 2)) * 60 + Number(timeA.slice(3, 5)) : Number.POSITIVE_INFINITY;
+        const minutesB = timeB ? Number(timeB.slice(0, 2)) * 60 + Number(timeB.slice(3, 5)) : Number.POSITIVE_INFINITY;
+        return dateA - dateB || minutesA - minutesB || collator.compare(a.billet.nom || '', b.billet.nom || '') || a.index - b.index;
+    }).map(entry => entry.billet);
+}
+
 function renderBillets() {
     const list = document.getElementById('billets-list');
     if (!list) return;
     list.innerHTML = '';
+    const count = document.getElementById('billet-filter-count');
+    const billets = appData.billets || [];
 
-    if (!appData.billets || appData.billets.length === 0) {
+    if (billets.length === 0) {
+        if (count) count.textContent = '0 réservation';
         list.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; padding: 4px 5px 10px;">Aucun billet enregistré pour l'instant.</p>`;
         return;
     }
 
-    appData.billets.forEach(billet => {
+    const visibleBillets = sortBillets(
+        billets.filter(billet => billetMatchesFilters(billet, currentBilletFilters)),
+        currentBilletFilters.sort
+    );
+    if (count) count.textContent = `${visibleBillets.length} sur ${billets.length} réservation${billets.length > 1 ? 's' : ''}`;
+    if (visibleBillets.length === 0) {
+        list.innerHTML = `<div class="billet-filter-empty" role="status" aria-live="polite"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Aucune réservation ne correspond à ces critères.</span><button type="button" data-action="resetBilletFilters">Effacer les filtres</button></div>`;
+        return;
+    }
+
+    visibleBillets.forEach(billet => {
         const lienUrl = safeUrl(billet.lien);
         const lienHtml = lienUrl ? `<a href="${lienUrl}" target="_blank" rel="noopener" style="color: var(--accent-primary); font-weight:600; text-decoration:underline;">Ouvrir le billet</a>` : '';
+        const billetDateTime = [billet.date, timeToPickerValue(billet.heure)].filter(Boolean).join(' · ');
+        const status = getBilletStatus(billet);
         list.innerHTML += `
             <div class="card">
                     <button class="delete-btn" ${actionAttrs('deleteItem', ['billets', billet.id])} aria-label="Supprimer cette réservation"><i class="fa-solid fa-xmark"></i></button>
@@ -3207,14 +4644,19 @@ function renderBillets() {
                         <div>
                             <div class="card-title" style="font-size: 1.1rem;">${esc(billet.nom)}</div>
                             ${billet.reference ? `<div class="card-subtitle">Réf. ${esc(billet.reference)}</div>` : ''}
+                            <span class="billet-status-badge is-${status}">${esc(getBilletStatusLabel(status))}</span>
                         </div>
                     </div>
-                    ${billet.date ? `<span class="card-date">${esc(billet.date)}</span>` : ''}
+                    ${billetDateTime ? `<span class="card-date">${esc(billetDateTime)}</span>` : ''}
                 </div>
+                ${billet.lieu ? `<div class="billet-location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> ${esc(billet.lieu)}</div>` : ''}
                 ${billet.notes ? `<div style="font-size: 0.9rem; line-height: 1.5; color: #444; white-space: pre-line; margin-bottom: 8px;">${esc(billet.notes)}</div>` : ''}
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="billet-card-actions">
                     ${lienHtml || '<span></span>'}
-                    <button class="edit-action" ${actionAttrs('openEditBilletModal', [billet.id])} aria-label="Modifier cette réservation" title="Modifier cette réservation"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
+                    <div class="billet-card-action-buttons">
+                        <button type="button" class="billet-share-button" ${actionAttrs('shareBillet', [billet.id])}><i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span>Partager</span></button>
+                        <button type="button" class="edit-action" ${actionAttrs('openEditBilletModal', [billet.id])} aria-label="Modifier cette réservation" title="Modifier cette réservation"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
+                    </div>
                 </div>
             </div>
         `;
@@ -3225,7 +4667,10 @@ function openAddBilletModal() {
     document.getElementById('billet-modal-title').innerText = "Ajouter un billet";
     document.getElementById('billet-edit-id').value = '';
     document.getElementById('billet-nom').value = '';
+    document.getElementById('billet-lieu').value = '';
     document.getElementById('billet-date').value = '';
+    document.getElementById('billet-heure').value = '';
+    document.getElementById('billet-statut').value = 'confirme';
     document.getElementById('billet-reference').value = '';
     document.getElementById('billet-lien').value = '';
     document.getElementById('billet-notes').value = '';
@@ -3238,7 +4683,10 @@ function openEditBilletModal(id) {
     document.getElementById('billet-modal-title').innerText = "Modifier le billet";
     document.getElementById('billet-edit-id').value = billet.id;
     document.getElementById('billet-nom').value = billet.nom || '';
+    document.getElementById('billet-lieu').value = billet.lieu || '';
     document.getElementById('billet-date').value = billet.date || '';
+    document.getElementById('billet-heure').value = timeToPickerValue(billet.heure);
+    document.getElementById('billet-statut').value = getBilletStatus(billet);
     document.getElementById('billet-reference').value = billet.reference || '';
     document.getElementById('billet-lien').value = billet.lien || '';
     document.getElementById('billet-notes').value = billet.notes || '';
@@ -3249,7 +4697,10 @@ function saveBillet() {
     if (!requireEditor()) return;
     const editId = document.getElementById('billet-edit-id').value;
     const nom = document.getElementById('billet-nom').value.trim();
+    const lieu = document.getElementById('billet-lieu').value.trim();
     const date = dateToStoredValue(document.getElementById('billet-date').value);
+    const heure = timeToPickerValue(document.getElementById('billet-heure').value);
+    const statut = getBilletStatus({ statut: document.getElementById('billet-statut').value });
     const reference = document.getElementById('billet-reference').value.trim();
     const lien = document.getElementById('billet-lien').value.trim();
     const notes = document.getElementById('billet-notes').value.trim();
@@ -3260,17 +4711,21 @@ function saveBillet() {
         const billet = appData.billets.find(b => b.id === parseInt(editId));
         if (billet) {
             billet.nom = nom;
+            billet.lieu = lieu;
             billet.date = date;
+            billet.heure = heure;
+            billet.statut = statut;
             billet.reference = reference;
             billet.lien = lien;
             billet.notes = notes;
         }
     } else {
-        appData.billets.push({ id: Date.now(), nom: nom, date: date, reference: reference, lien: lien, notes: notes });
+        appData.billets.push({ id: Date.now(), nom: nom, lieu, date, heure, statut, reference, lien, notes });
     }
 
     saveToLocalStorage();
     renderBillets();
+    renderDashboardSummary();
     closeModal('modal-billet');
 }
 
@@ -3326,7 +4781,10 @@ function deleteItem(category, id) {
         }
         if (category === 'budget') updateBudgetUI();
         if (category === 'infos') renderInfos();
-        if (category === 'billets') renderBillets();
+        if (category === 'billets') {
+            renderBillets();
+            renderDashboardSummary();
+        }
     }
 }
 
@@ -3393,6 +4851,7 @@ function saveProgramme() {
         }
         buildChecklistSelector();
         renderProgramme();
+        renderDashboardSummary();
         closeModal('modal-programme');
     }
 }
@@ -3401,9 +4860,23 @@ function initializeApp() {
     document.body.dataset.page = 'accueil';
     document.body.classList.add('is-editor');
     applyAppearancePreferences();
+    window.matchMedia('(min-width: 601px)').addEventListener('change', () => {
+        if (document.body.dataset.page === 'accueil') applyAppearancePreferences();
+    });
     if (DEMO_PREVIEW) {
         document.body.classList.add('demo-preview');
         document.getElementById('demo-banner')?.removeAttribute('hidden');
+        if (DEMO_SCENARIO === 'newyork') {
+            const bannerTitle = document.querySelector('#demo-banner strong');
+            const bannerCopy = document.querySelector('#demo-banner span:not(.demo-banner-icon)');
+            if (bannerTitle) bannerTitle.textContent = 'Noël à New York · scénario de démonstration';
+            if (bannerCopy) bannerCopy.textContent = 'Mohamed & Mélissa · enveloppe fictive de 5 000 € · horaires à revérifier · aucun vol, billet ou hébergement réservé.';
+        }
+        renderDashboardTrips({
+            trips: [{ ownerUid: 'demo-local', tripId: 'demo', title: appData.tripTitle, tripStart: appData.tripStart, tripEnd: appData.tripEnd, destination: appData.programme?.[0]?.ville || '', isOwner: true, demo: true }],
+            selected: { ownerUid: 'demo-local', tripId: 'demo' },
+            complete: true
+        });
     }
     updateCountdown();
     renderTodayCard();
@@ -3484,6 +4957,8 @@ const ACTIONS = {
     setBudgetBaseCurrency,
     setTravelBackground,
     setVisualTheme,
+    setColorMode,
+    toggleSidebar,
     setMotionPreference,
     resetAppearance,
     syncDateText,
@@ -3493,6 +4968,7 @@ const ACTIONS = {
     // Shared navigation and dialogs
     switchDashboardTab,
     switchTab,
+    openDashboardReservations,
     openEditTripModal,
     saveTripDates,
     closeModal,
@@ -3521,12 +4997,17 @@ const ACTIONS = {
     saveTransport,
     deleteTransport,
     // Itinerary and checklists
+    openDashboardTrip,
+    openDashboardChecklist,
+    openDashboardActivity,
     openAddProgrammeModal,
     openItineraryEditor,
     openAddProgrammeFromEditor,
     openEditProgrammeModal,
     selectItineraryDestination,
     selectItineraryDay,
+    focusItineraryMap,
+    changeItineraryRouteMode,
     selectManagedDestination,
     selectManagedDay,
     editManagedDestination,
@@ -3561,6 +5042,10 @@ const ACTIONS = {
     updateBudgetUI,
     removeBudgetPersonAt,
     toggleBudPayeurAt,
+    toggleBudBeneficiaryAt,
+    updateBudgetShare,
+    updateBudgetFilter,
+    resetBudgetFilters,
     openAddBudgetModal,
     openEditBudgetModal,
     toggleBudgetPaid,
@@ -3570,8 +5055,15 @@ const ACTIONS = {
     openAddBilletModal,
     openEditBilletModal,
     saveBillet,
+    updateBilletFilter,
+    resetBilletFilters,
+    shareBillet,
+    sortBillets,
+    exportBilletsCsv,
     saveInfo,
     exportTripBackup,
+    exportItineraryCalendar,
+    exportBudgetCsv,
     importTripBackup,
     deleteItem,
 };

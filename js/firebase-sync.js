@@ -19,6 +19,8 @@ let authSdk = null;
 let firestoreSdk = null;
 let activeUser = null;
 let activeOwnerUid = null;
+const LEGACY_TRIP_ID = 'legacy';
+let activeTripId = LEGACY_TRIP_ID;
 let activeTripRef = null;
 let stopTripListener = null;
 let syncReady = false;
@@ -35,6 +37,23 @@ let saveMutationSequence = 0;
 let authRun = 0;
 let forceCloudLoadForOwner = null;
 let mode = 'signin';
+let dashboardAccessibleTrips = [];
+let dashboardMembershipsComplete = true;
+
+function publishDashboardTrips(trips, selectedOwnerUid, selectedTripId, complete = true, signedOut = false, loading = false) {
+    dashboardAccessibleTrips = trips || [];
+    dashboardMembershipsComplete = complete;
+    if (typeof CustomEvent !== 'function' || typeof window.dispatchEvent !== 'function') return;
+    window.dispatchEvent(new CustomEvent('getready:trips', {
+        detail: {
+            trips: dashboardAccessibleTrips,
+            selected: selectedOwnerUid ? { ownerUid: selectedOwnerUid, tripId: selectedTripId || LEGACY_TRIP_ID } : null,
+            complete,
+            signedOut,
+            loading
+        }
+    }));
+}
 
 function createAccountPanel() {
     const sideColumn = document.querySelector('.settings-side-column');
@@ -68,6 +87,7 @@ function createAccountPanel() {
             <p class="cloud-account-email" id="cloud-account-email"></p>
             <label class="cloud-trip-label" for="cloud-trip-select">Séjour ouvert</label>
             <select class="cloud-trip-select" id="cloud-trip-select" aria-label="Choisir un séjour"></select>
+            <button class="cloud-text-button" id="cloud-create-trip" type="button">Créer un autre séjour</button>
             <div class="cloud-sync-choice" id="cloud-sync-choice" hidden>
                 <p id="cloud-sync-choice-copy"></p>
                 <button class="cloud-action-button is-primary" id="cloud-upload-local" type="button">Sauvegarder ce séjour sur Firebase</button>
@@ -81,6 +101,14 @@ function createAccountPanel() {
                 <div class="cloud-invite-result" id="cloud-invite-result" hidden>
                     <input id="cloud-invite-link" type="url" readonly aria-label="Lien d’invitation">
                     <button class="cloud-action-button" id="cloud-copy-invite" type="button">Copier le lien</button>
+                </div>
+                <div class="cloud-members">
+                    <div class="cloud-members-heading">
+                        <h3>Personnes qui partagent ce séjour</h3>
+                        <button class="cloud-text-button" id="cloud-members-refresh" type="button">Actualiser</button>
+                    </div>
+                    <p class="cloud-members-status" id="cloud-members-status" role="status" aria-live="polite">La liste apparaîtra ici.</p>
+                    <ul class="cloud-members-list" id="cloud-members-list"></ul>
                 </div>
             </div>
             <button class="cloud-action-button is-secondary" id="cloud-sign-out" type="button">Se déconnecter</button>
@@ -100,8 +128,14 @@ function createAccountPanel() {
     panel.querySelector('#cloud-upload-local').addEventListener('click', uploadLocalData);
     panel.querySelector('#cloud-load-remote').addEventListener('click', loadRemoteData);
     panel.querySelector('#cloud-trip-select').addEventListener('change', changeActiveTrip);
+    panel.querySelector('#cloud-create-trip').addEventListener('click', createPersonalTrip);
     panel.querySelector('#cloud-create-invite').addEventListener('click', createInvite);
     panel.querySelector('#cloud-copy-invite').addEventListener('click', copyInviteLink);
+    panel.querySelector('#cloud-members-refresh').addEventListener('click', () => loadTripMembers());
+    panel.querySelector('#cloud-members-list').addEventListener('click', event => {
+        const button = event.target.closest('button[data-member-uid]');
+        if (button) removeTripMember(button.dataset.memberUid, button);
+    });
 }
 
 function setStatus(message, state = '') {
@@ -112,6 +146,13 @@ function setStatus(message, state = '') {
     }
     const gateStatus = document.getElementById('auth-gate-status');
     if (gateStatus) gateStatus.textContent = message;
+}
+
+function setSyncStatus(message, state = '') {
+    setStatus(message, state);
+    if (typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('getready:sync-status', { detail: { state } }));
+    }
 }
 
 function setAuthGate(state, user = null) {
@@ -137,6 +178,14 @@ function setAuthGate(state, user = null) {
     if (email) email.textContent = user?.email || '';
 }
 
+function isDemoPreviewUrl(href) {
+    try {
+        return ['lisbonne', 'newyork'].includes(new URL(href).searchParams.get('demo'));
+    } catch {
+        return false;
+    }
+}
+
 function renderAccount(user = activeUser) {
     const form = document.getElementById('cloud-auth-form');
     const connected = document.getElementById('cloud-account-connected');
@@ -151,16 +200,132 @@ function renderAccount(user = activeUser) {
     if (shareTools && !user) shareTools.hidden = true;
 }
 
-function renderTripSelect(trips, selectedOwnerUid) {
+function tripSelectionValue(trip) {
+    return JSON.stringify([trip.ownerUid, trip.tripId || LEGACY_TRIP_ID]);
+}
+
+function parseTripSelection(value) {
+    try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed) && typeof parsed[0] === 'string' && typeof parsed[1] === 'string') {
+            return { ownerUid: parsed[0], tripId: parsed[1] };
+        }
+    } catch {}
+    // Older integrations and saved selections used only the owner UID.
+    return typeof value === 'string' && value ? { ownerUid: value, tripId: LEGACY_TRIP_ID } : null;
+}
+
+function renderTripSelect(trips, selectedOwnerUid, selectedTripId = LEGACY_TRIP_ID) {
     const select = document.getElementById('cloud-trip-select');
     if (!select) return;
-    const options = trips.map(trip => `<option value="${trip.ownerUid}">${escapeHtml(trip.title)}</option>`).join('');
-    select.innerHTML = options || `<option value="${activeUser.uid}">Mon séjour</option>`;
-    select.value = trips.some(trip => trip.ownerUid === selectedOwnerUid) ? selectedOwnerUid : (trips[0]?.ownerUid || activeUser.uid);
+    const options = trips.map(trip => `<option value="${escapeHtml(tripSelectionValue(trip))}">${escapeHtml(trip.title)}</option>`).join('');
+    select.innerHTML = options || `<option value="${escapeHtml(tripSelectionValue({ ownerUid: activeUser.uid, tripId: LEGACY_TRIP_ID }))}">Mon séjour</option>`;
+    const selected = trips.find(trip => trip.ownerUid === selectedOwnerUid && (trip.tripId || LEGACY_TRIP_ID) === selectedTripId);
+    select.value = tripSelectionValue(selected || trips[0] || { ownerUid: activeUser.uid, tripId: LEGACY_TRIP_ID });
+}
+
+function updateTripSelectTitle(context, title) {
+    const select = document.getElementById('cloud-trip-select');
+    if (!select || !title) return;
+    const value = tripSelectionValue(context);
+    const option = Array.from(select.options || []).find(item => item.value === value);
+    if (option) option.textContent = title;
+}
+
+function tripDocumentRef(ownerUid, tripId = LEGACY_TRIP_ID) {
+    return tripId === LEGACY_TRIP_ID
+        ? firestoreSdk.doc(db, 'userTrips', ownerUid)
+        : firestoreSdk.doc(db, 'userTrips', ownerUid, 'trips', tripId);
+}
+
+function tripMembersCollection(ownerUid, tripId = LEGACY_TRIP_ID) {
+    return tripId === LEGACY_TRIP_ID
+        ? firestoreSdk.collection(db, 'userTrips', ownerUid, 'members')
+        : firestoreSdk.collection(db, 'userTrips', ownerUid, 'trips', tripId, 'members');
+}
+
+function tripMemberRef(ownerUid, tripId, memberUid) {
+    return tripId === LEGACY_TRIP_ID
+        ? firestoreSdk.doc(db, 'userTrips', ownerUid, 'members', memberUid)
+        : firestoreSdk.doc(db, 'userTrips', ownerUid, 'trips', tripId, 'members', memberUid);
 }
 
 function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+}
+
+function renderTripMembers(members, context) {
+    if (!isCurrentSyncContext(context)) return;
+    const list = document.getElementById('cloud-members-list');
+    const status = document.getElementById('cloud-members-status');
+    if (!list || !status) return;
+    const visibleMembers = members.filter(member => member.ownerUid === context.ownerUid);
+    list.innerHTML = visibleMembers.map(member => {
+        const isOwner = member.uid === context.ownerUid;
+        const label = member.email || `Membre · ${String(member.uid).slice(0, 8)}`;
+        return `<li class="cloud-member-row"><span class="cloud-member-identity"><strong>${escapeHtml(label)}</strong><small>${isOwner ? 'Organisateur' : 'Membre'}</small></span>${isOwner ? '' : `<button class="cloud-text-button is-danger" type="button" data-member-uid="${escapeHtml(member.uid)}" aria-label="Retirer ${escapeHtml(label)} du séjour">Retirer</button>`}</li>`;
+    }).join('');
+    status.textContent = visibleMembers.length
+        ? `${visibleMembers.length} ${visibleMembers.length > 1 ? 'personnes ont' : 'personne a'} accès à ce séjour.`
+        : 'Aucun membre enregistré pour le moment.';
+}
+
+async function loadTripMembers(context = activeSyncContext) {
+    if (!context || context.userUid !== context.ownerUid || !isCurrentSyncContext(context)) return;
+    const status = document.getElementById('cloud-members-status');
+    if (status) status.textContent = 'Chargement des membres…';
+    try {
+        const snapshot = await firestoreSdk.getDocs(tripMembersCollection(context.ownerUid, context.tripId));
+        if (!isCurrentSyncContext(context)) return;
+        const members = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            members.push({
+                uid: data.uid || doc.id,
+                ownerUid: data.ownerUid,
+                email: data.email || '',
+                role: data.role || 'editor'
+            });
+        });
+        renderTripMembers(members, context);
+    } catch (error) {
+        if (!isCurrentSyncContext(context)) return;
+        if (status) status.textContent = 'Impossible de charger les membres. Vérifie les règles Firestore puis actualise.';
+        console.error('Lecture des membres impossible :', error);
+    }
+}
+
+async function removeTripMember(memberUid, button = null) {
+    const context = activeSyncContext;
+    if (!context || context.userUid !== context.ownerUid || memberUid === context.ownerUid || !isCurrentSyncContext(context)) return;
+    if (!window.confirm('Retirer cette personne du séjour et invalider le lien utilisé pour le rejoindre ?')) return;
+    if (button) button.disabled = true;
+    let inviteRevoked = false;
+    try {
+        const memberRef = tripMemberRef(context.ownerUid, context.tripId, memberUid);
+        const memberSnapshot = await firestoreSdk.getDoc(memberRef);
+        const inviteId = memberSnapshot.exists() ? memberSnapshot.data()?.inviteId : '';
+        if (inviteId) {
+            await firestoreSdk.deleteDoc(firestoreSdk.doc(db, 'tripInvites', inviteId));
+            inviteRevoked = true;
+        }
+        await firestoreSdk.deleteDoc(memberRef);
+        if (!isCurrentSyncContext(context)) return;
+        setStatus(inviteRevoked
+            ? 'Accès au séjour retiré et lien utilisé invalidé.'
+            : 'Accès au séjour retiré.', 'success');
+        await loadTripMembers(context);
+    } catch (error) {
+        if (button) button.disabled = false;
+        if (isCurrentSyncContext(context)) {
+            setStatus(inviteRevoked
+                ? 'Le lien d’invitation est invalidé, mais l’accès n’a pas pu être retiré. Réessaie.'
+                : error?.code === 'permission-denied'
+                    ? 'Tu n’as pas l’autorisation de retirer cette personne.'
+                    : 'Impossible de retirer cette personne. Vérifie la connexion puis réessaie.', 'error');
+        }
+        console.error('Suppression du membre impossible :', error);
+    }
 }
 
 function setAuthMode(nextMode) {
@@ -304,14 +469,15 @@ function clearSyncChoice() {
     if (choice) choice.hidden = true;
 }
 
-function makeSyncContext(user, ownerUid) {
+function makeSyncContext(user, ownerUid, tripId = LEGACY_TRIP_ID) {
     const generation = ++syncContextGeneration;
     return {
         userUid: user.uid,
         ownerUid,
-        tripRef: firestoreSdk.doc(db, 'userTrips', ownerUid),
+        tripId,
+        tripRef: tripDocumentRef(ownerUid, tripId),
         generation,
-        key: `${user.uid}:${ownerUid}`
+        key: tripId === LEGACY_TRIP_ID ? `${user.uid}:${ownerUid}` : `${user.uid}:${ownerUid}:${tripId}`
     };
 }
 
@@ -320,18 +486,40 @@ function isCurrentSyncContext(context) {
         && activeSyncContext === context
         && context.generation === syncContextGeneration
         && activeUser?.uid === context.userUid
-        && activeOwnerUid === context.ownerUid;
+        && activeOwnerUid === context.ownerUid
+        && activeTripId === context.tripId;
 }
 
 function pendingSaveStorageKey(context) {
-    return `getready_pending_cloud_save_${encodeURIComponent(context.userUid)}_${encodeURIComponent(context.ownerUid)}`;
+    const tripSuffix = context.tripId === LEGACY_TRIP_ID ? '' : `_${encodeURIComponent(context.tripId)}`;
+    return `getready_pending_cloud_save_${encodeURIComponent(context.userUid)}_${encodeURIComponent(context.ownerUid)}${tripSuffix}`;
+}
+
+function localTripDataStorageKey(context) {
+    const tripSuffix = context.tripId === LEGACY_TRIP_ID ? '' : `_${encodeURIComponent(context.tripId)}`;
+    return `getready_local_trip_data_${encodeURIComponent(context.userUid)}_${encodeURIComponent(context.ownerUid)}${tripSuffix}`;
+}
+
+function legacyStorageKey(key, context) {
+    if (context.tripId !== LEGACY_TRIP_ID) return null;
+    return key.replace(`_${encodeURIComponent(context.tripId)}`, '');
+}
+
+function readLocalTripData(context) {
+    try {
+        const key = localTripDataStorageKey(context);
+        const data = JSON.parse(localStorage.getItem(key) || localStorage.getItem(legacyStorageKey(key, context)) || 'null');
+        return data && typeof data === 'object' && !Array.isArray(data) ? data : null;
+    } catch {
+        return null;
+    }
 }
 
 function archivePendingSave(context, saved) {
     if (!saved?.mutationId) return false;
     try {
         localStorage.setItem(
-            `getready_cloud_save_archive_${encodeURIComponent(context.userUid)}_${encodeURIComponent(context.ownerUid)}_${encodeURIComponent(saved.mutationId)}`,
+            `getready_cloud_save_archive_${encodeURIComponent(context.userUid)}_${encodeURIComponent(context.ownerUid)}${context.tripId === LEGACY_TRIP_ID ? '' : `_${encodeURIComponent(context.tripId)}`}_${encodeURIComponent(saved.mutationId)}`,
             JSON.stringify(saved)
         );
         return true;
@@ -353,6 +541,7 @@ function persistPendingSave(save) {
             mutationId: save.mutationId,
             userUid: save.context.userUid,
             ownerUid: save.context.ownerUid,
+            tripId: save.context.tripId,
             data: save.data,
             queuedAt: save.queuedAt,
             disposition: 'pending'
@@ -366,8 +555,10 @@ function persistPendingSave(save) {
 
 function readPendingSave(context) {
     try {
-        const saved = JSON.parse(localStorage.getItem(pendingSaveStorageKey(context)) || 'null');
-        if (saved?.userUid !== context.userUid || saved?.ownerUid !== context.ownerUid || !saved.data || typeof saved.data !== 'object') return null;
+        const key = pendingSaveStorageKey(context);
+        const saved = JSON.parse(localStorage.getItem(key) || localStorage.getItem(legacyStorageKey(key, context)) || 'null');
+        if (saved?.userUid !== context.userUid || saved?.ownerUid !== context.ownerUid
+            || (saved.tripId && saved.tripId !== context.tripId) || !saved.data || typeof saved.data !== 'object') return null;
         if (saved.disposition && saved.disposition !== 'pending') return null;
         return { ...saved, context, timer: null };
     } catch {
@@ -429,7 +620,7 @@ function schedulePendingSave(save) {
         save.timer = null;
         if (!isCurrentSyncContext(save.context) || !syncReady) return;
         if (pendingCloudSaves.get(save.context.key)?.mutationId !== save.mutationId) return;
-        setStatus('Synchronisation des modifications…');
+        setSyncStatus('Synchronisation des modifications…', 'saving');
         try {
             const written = await enqueueCloudWrite(save.context, save.data, () =>
                 isCurrentSyncContext(save.context)
@@ -439,12 +630,12 @@ function schedulePendingSave(save) {
             if (written && isCurrentSyncContext(save.context)
                 && pendingCloudSaves.get(save.context.key)?.mutationId === save.mutationId) {
                 clearPendingSave(save);
-                setStatus('Toutes les modifications sont synchronisées.', 'success');
+                setSyncStatus('Toutes les modifications sont synchronisées.', 'success');
             }
         } catch (error) {
             if (isCurrentSyncContext(save.context)
                 && pendingCloudSaves.get(save.context.key)?.mutationId === save.mutationId) {
-                setStatus('Modification gardée sur cet appareil. La synchronisation a échoué.', 'error');
+                setSyncStatus('Modification gardée sur cet appareil. La synchronisation a échoué.', 'error');
                 console.error('Erreur de synchronisation Firebase :', error);
             }
         } finally {
@@ -456,13 +647,22 @@ function schedulePendingSave(save) {
     }, 350);
 }
 
+function retryPendingSaveOnReconnect() {
+    const context = activeSyncContext;
+    if (!context || !syncReady || !isCurrentSyncContext(context)) return;
+    const save = pendingCloudSaves.get(context.key);
+    if (save) schedulePendingSave(save);
+}
+
 function enqueueCloudWrite(context, data, isStillValid = () => isCurrentSyncContext(context)) {
-    const writeKey = context.ownerUid;
+    const writeKey = `${context.ownerUid}:${context.tripId}`;
     const previousWrite = cloudWriteChains.get(writeKey) || Promise.resolve();
     const write = previousWrite.catch(() => {}).then(async () => {
         if (!isStillValid() || !isCurrentSyncContext(context)) return false;
         await firestoreSdk.setDoc(context.tripRef, {
             ownerUid: context.ownerUid,
+            tripId: context.tripId,
+            tripTitle: data?.tripTitle || 'Séjour GetReady',
             data,
             updatedAt: firestoreSdk.serverTimestamp()
         });
@@ -481,7 +681,7 @@ function persistRemoteChoice(choice) {
     if (!isCurrentSyncContext(choice.context) || choice.writePending) return;
     choice.needsPersistence = true;
     choice.writePending = true;
-    setStatus('Version distante chargée. Confirmation de la synchronisation…');
+    setSyncStatus('Version distante chargée. Confirmation de la synchronisation…', 'saving');
     void enqueueCloudWrite(choice.context, choice.data, () =>
         isCurrentSyncContext(choice.context)
         && remoteVersionChoices.get(choice.context.key)?.token === choice.token
@@ -490,14 +690,14 @@ function persistRemoteChoice(choice) {
         choice.writePending = false;
         if (!written) return;
         choice.needsPersistence = false;
-        setStatus('Version distante chargée et conservée dans Firebase.', 'success');
+        setSyncStatus('Version distante chargée et conservée dans Firebase.', 'success');
     }).catch(error => {
         if (remoteVersionChoices.get(choice.context.key)?.token !== choice.token || !isCurrentSyncContext(choice.context)) return;
         choice.writePending = false;
         choice.needsPersistence = true;
         pendingCloudData = { context: choice.context, data: choice.data };
         showSyncChoice('La version distante est affichée, mais sa confirmation cloud a échoué. Réessaie de la charger.', true);
-        setStatus('Version distante affichée localement ; synchronisation à confirmer.', 'error');
+        setSyncStatus('Version distante affichée localement ; synchronisation à confirmer.', 'error');
         console.error('Restauration de la version distante impossible :', error);
     });
 }
@@ -521,7 +721,8 @@ async function redeemPendingInvite(user) {
         if (invite.expiresAt?.toDate && invite.expiresAt.toDate().getTime() < Date.now()) {
             throw new Error('Ce lien d’invitation a expiré. Demande-en un nouveau à la personne qui organise le séjour.');
         }
-        const memberRef = firestoreSdk.doc(db, 'userTrips', invite.ownerUid, 'members', user.uid);
+        const tripId = invite.tripId || LEGACY_TRIP_ID;
+        const memberRef = tripMemberRef(invite.ownerUid, tripId, user.uid);
         const memberSnap = await firestoreSdk.getDoc(memberRef);
         if (!memberSnap.exists()) {
             const accepted = window.confirm(`Rejoindre « ${invite.tripTitle || 'ce séjour GetReady'} » avec ${user.email} ?`);
@@ -529,7 +730,9 @@ async function redeemPendingInvite(user) {
             await firestoreSdk.setDoc(memberRef, {
                 uid: user.uid,
                 ownerUid: invite.ownerUid,
+                tripId,
                 role: 'editor',
+                email: user.email.toLowerCase(),
                 inviteId: token,
                 joinedAt: firestoreSdk.serverTimestamp()
             });
@@ -537,7 +740,7 @@ async function redeemPendingInvite(user) {
         url.searchParams.delete('invite');
         window.history.replaceState({}, '', url);
         setStatus('Invitation acceptée. Chargement du séjour partagé…', 'success');
-        return invite.ownerUid;
+        return { ownerUid: invite.ownerUid, tripId };
     } catch (error) {
         setStatus(error.message || 'Impossible d’accepter cette invitation. Vérifie que tu es connecté·e avec la bonne adresse.', 'error');
         return null;
@@ -545,7 +748,8 @@ async function redeemPendingInvite(user) {
 }
 
 async function loadMemberships(user) {
-    const tripsByOwner = new Map();
+    const tripsByKey = new Map();
+    let complete = true;
     try {
         const memberships = await firestoreSdk.getDocs(
             firestoreSdk.query(
@@ -555,14 +759,18 @@ async function loadMemberships(user) {
         );
         memberships.forEach(member => {
             const data = member.data();
-            if (data.ownerUid) tripsByOwner.set(data.ownerUid, data.ownerUid === user.uid ? 'Mon séjour' : 'Séjour partagé');
+            if (!data.ownerUid) return;
+            const segments = member.ref?.path?.split('/') || [];
+            const tripId = segments.length >= 6 && segments[2] === 'trips' ? segments[3] : (data.tripId || LEGACY_TRIP_ID);
+            const key = `${data.ownerUid}:${tripId}`;
+            tripsByKey.set(key, { ownerUid: data.ownerUid, tripId, title: data.tripTitle || (data.ownerUid === user.uid ? 'Mon séjour' : 'Séjour partagé') });
         });
     } catch (error) {
+        complete = false;
         console.error('Lecture des séjours associés impossible :', error);
     }
 
-    // Compatibilité : ajoute une appartenance propriétaire aux comptes ayant
-    // déjà un document personnel créé avant l’activation du partage.
+    // Le document racine reste le séjour historique (legacy) du compte.
     const ownTripRef = firestoreSdk.doc(db, 'userTrips', user.uid);
     try {
         const ownTrip = await firestoreSdk.getDoc(ownTripRef);
@@ -570,37 +778,65 @@ async function loadMemberships(user) {
             const memberRef = firestoreSdk.doc(db, 'userTrips', user.uid, 'members', user.uid);
             const member = await firestoreSdk.getDoc(memberRef);
             if (!member.exists()) {
-                await firestoreSdk.setDoc(memberRef, { uid: user.uid, ownerUid: user.uid, role: 'owner', joinedAt: firestoreSdk.serverTimestamp() });
+                await firestoreSdk.setDoc(memberRef, { uid: user.uid, ownerUid: user.uid, role: 'owner', email: user.email || '', joinedAt: firestoreSdk.serverTimestamp() });
             }
-            tripsByOwner.set(user.uid, ownTrip.data()?.data?.tripTitle || 'Mon séjour');
+            tripsByKey.set(`${user.uid}:${LEGACY_TRIP_ID}`, { ownerUid: user.uid, tripId: LEGACY_TRIP_ID, title: ownTrip.data()?.data?.tripTitle || 'Mon séjour' });
         }
     } catch (error) {
+        complete = false;
         console.error('Lecture du séjour propriétaire impossible :', error);
     }
 
-    tripsByOwner.set(user.uid, tripsByOwner.get(user.uid) || 'Mon séjour');
+    // Les séjours personnels récents vivent dans la sous-collection trips.
+    try {
+        const ownTrips = await firestoreSdk.getDocs(firestoreSdk.collection(db, 'userTrips', user.uid, 'trips'));
+        ownTrips.forEach(doc => {
+            const data = doc.data();
+            tripsByKey.set(`${user.uid}:${doc.id}`, { ownerUid: user.uid, tripId: doc.id, title: data.tripTitle || data.data?.tripTitle || 'Nouveau séjour' });
+        });
+    } catch (error) {
+        complete = false;
+        console.error('Lecture des séjours personnels impossible :', error);
+    }
+
+    tripsByKey.set(`${user.uid}:${LEGACY_TRIP_ID}`, tripsByKey.get(`${user.uid}:${LEGACY_TRIP_ID}`) || { ownerUid: user.uid, tripId: LEGACY_TRIP_ID, title: 'Mon séjour', fallback: true });
     const trips = [];
-    for (const [ownerUid, fallbackTitle] of tripsByOwner) {
+    for (const trip of tripsByKey.values()) {
+        const { ownerUid, tripId, title: fallbackTitle } = trip;
         try {
-            const trip = await firestoreSdk.getDoc(firestoreSdk.doc(db, 'userTrips', ownerUid));
-            const title = trip.exists() ? (trip.data()?.data?.tripTitle || fallbackTitle) : fallbackTitle;
-            trips.push({ ownerUid, title });
+            const snapshot = await firestoreSdk.getDoc(tripDocumentRef(ownerUid, tripId));
+            if (!snapshot.exists() && trip.fallback) continue;
+            const documentData = snapshot.exists() ? snapshot.data() || {} : {};
+            const tripData = documentData.data || {};
+            const title = documentData.tripTitle || tripData.tripTitle || fallbackTitle;
+            trips.push({
+                ownerUid,
+                tripId,
+                title,
+                isOwner: ownerUid === user.uid,
+                tripStart: tripData.tripStart || '',
+                tripEnd: tripData.tripEnd || '',
+                destination: Array.isArray(tripData.programme) ? (tripData.programme.find(item => item?.ville)?.ville || '') : ''
+            });
         } catch {
-            trips.push({ ownerUid, title: fallbackTitle });
+            complete = false;
+            trips.push({ ownerUid, tripId, title: fallbackTitle, isOwner: ownerUid === user.uid, tripStart: '', tripEnd: '', destination: '' });
         }
     }
-    return trips;
+    return { trips, complete };
 }
 
 async function handleUserState(user) {
     const run = ++authRun;
     const userChanged = activeUser?.uid !== user?.uid;
     if (userChanged) {
+        publishDashboardTrips([], null, null, false, false, true);
         invalidateActiveSyncContext();
         if (stopTripListener) stopTripListener();
         stopTripListener = null;
         activeTripRef = null;
         activeOwnerUid = null;
+        activeTripId = LEGACY_TRIP_ID;
         pendingCloudData = null;
     }
     activeUser = user;
@@ -610,28 +846,38 @@ async function handleUserState(user) {
         invalidateActiveSyncContext();
         pendingCloudData = null;
         activeOwnerUid = null;
+        activeTripId = LEGACY_TRIP_ID;
         activeTripRef = null;
         if (stopTripListener) stopTripListener();
         stopTripListener = null;
+        publishDashboardTrips([], null, null, true, true);
         document.getElementById('cloud-share-tools').hidden = true;
         setAuthGate('login');
         setStatus('Connecte-toi ou crée un compte pour ouvrir GetReady.');
         return;
     }
 
-    setStatus('Recherche des séjours associés au compte…');
-    const invitedOwnerUid = await redeemPendingInvite(user);
+    setStatus('Recherche des séjours associés au compte…', 'loading');
+    const invitedTrip = await redeemPendingInvite(user);
     if (run !== authRun) return;
-    const trips = await loadMemberships(user);
+    const membershipState = await loadMemberships(user);
+    const { trips } = membershipState;
     if (run !== authRun) return;
-    const storedOwnerUid = localStorage.getItem(`getready_active_trip_${user.uid}`);
-    activeOwnerUid = invitedOwnerUid || (trips.some(trip => trip.ownerUid === storedOwnerUid) ? storedOwnerUid : null)
-        || (trips.some(trip => trip.ownerUid === user.uid) ? user.uid : trips[0]?.ownerUid)
-        || user.uid;
-    if (invitedOwnerUid) forceCloudLoadForOwner = invitedOwnerUid;
-    localStorage.setItem(`getready_active_trip_${user.uid}`, activeOwnerUid);
-    renderTripSelect(trips, activeOwnerUid);
-    startTripSync(user, activeOwnerUid);
+    let storedTrip = null;
+    try { storedTrip = parseTripSelection(localStorage.getItem(`getready_active_trip_${user.uid}`)); } catch {}
+    const hasTrip = selection => selection && trips.some(trip => trip.ownerUid === selection.ownerUid && trip.tripId === selection.tripId);
+    const selectedTrip = invitedTrip || (hasTrip(storedTrip) ? storedTrip : null)
+        || trips.find(trip => trip.ownerUid === user.uid && trip.tripId === LEGACY_TRIP_ID)
+        || trips.find(trip => trip.ownerUid === user.uid)
+        || trips[0]
+        || { ownerUid: user.uid, tripId: LEGACY_TRIP_ID };
+    activeOwnerUid = selectedTrip.ownerUid;
+    activeTripId = selectedTrip.tripId || LEGACY_TRIP_ID;
+    if (invitedTrip) forceCloudLoadForOwner = invitedTrip.ownerUid;
+    localStorage.setItem(`getready_active_trip_${user.uid}`, tripSelectionValue(selectedTrip));
+    renderTripSelect(trips, activeOwnerUid, activeTripId);
+    publishDashboardTrips(trips, activeOwnerUid, activeTripId, membershipState.complete);
+    startTripSync(user, activeOwnerUid, activeTripId);
     // Unlock editing only after an explicit account/trip context exists.
     setAuthGate('open');
 }
@@ -639,19 +885,66 @@ async function handleUserState(user) {
 async function changeActiveTrip(event) {
     if (!activeUser) return;
     const user = activeUser;
-    const ownerUid = event.target.value;
-    if (!ownerUid || ownerUid === activeOwnerUid) return;
-    localStorage.setItem(`getready_active_trip_${user.uid}`, ownerUid);
+    const selected = parseTripSelection(event.target.value);
+    if (!selected || (selected.ownerUid === activeOwnerUid && selected.tripId === activeTripId)) return;
+    localStorage.setItem(`getready_active_trip_${user.uid}`, tripSelectionValue(selected));
+    publishDashboardTrips(dashboardAccessibleTrips, selected.ownerUid, selected.tripId, dashboardMembershipsComplete);
     forceCloudLoadForOwner = null;
-    await startTripSync(user, ownerUid);
+    await startTripSync(user, selected.ownerUid, selected.tripId);
 }
 
-async function startTripSync(user, ownerUid) {
+async function createPersonalTrip() {
+    if (!activeUser || activeOwnerUid !== activeUser.uid) return;
+    const title = window.prompt('Quel est le nom de ce séjour ?')?.trim();
+    if (!title) return;
+    const tripId = crypto.randomUUID();
+    const trip = { ...(window.createEmptyTripData?.() || { tripTitle: title }), tripTitle: title };
+    const ref = tripDocumentRef(activeUser.uid, tripId);
+    const button = document.getElementById('cloud-create-trip');
+    if (button) button.disabled = true;
+    try {
+        const batch = firestoreSdk.writeBatch(db);
+        batch.set(ref, {
+            ownerUid: activeUser.uid,
+            tripId,
+            tripTitle: title,
+            data: trip,
+            createdAt: firestoreSdk.serverTimestamp(),
+            updatedAt: firestoreSdk.serverTimestamp()
+        });
+        batch.set(tripMemberRef(activeUser.uid, tripId, activeUser.uid), {
+            uid: activeUser.uid,
+            ownerUid: activeUser.uid,
+            tripId,
+            role: 'owner',
+            email: activeUser.email || '',
+            joinedAt: firestoreSdk.serverTimestamp()
+        });
+        await batch.commit();
+        const membershipState = await loadMemberships(activeUser);
+        const trips = membershipState.trips;
+        renderTripSelect(trips, activeUser.uid, tripId);
+        publishDashboardTrips(trips, activeUser.uid, tripId, membershipState.complete);
+        localStorage.setItem(`getready_active_trip_${activeUser.uid}`, tripSelectionValue({ ownerUid: activeUser.uid, tripId }));
+        await startTripSync(activeUser, activeUser.uid, tripId);
+        setStatus(`Le séjour « ${title} » est prêt.`, 'success');
+    } catch (error) {
+        setStatus(error?.code === 'permission-denied'
+            ? 'Les règles Firestore doivent être mises à jour pour créer un séjour.'
+            : 'Impossible de créer ce séjour. Vérifie la connexion puis réessaie.', 'error');
+        console.error('Création du séjour impossible :', error);
+    } finally {
+        if (button) button.disabled = false;
+    }
+}
+
+async function startTripSync(user, ownerUid, tripId = LEGACY_TRIP_ID) {
     invalidateActiveSyncContext();
     if (stopTripListener) stopTripListener();
     stopTripListener = null;
     activeOwnerUid = ownerUid;
-    activeSyncContext = makeSyncContext(user, ownerUid);
+    activeTripId = tripId;
+    activeSyncContext = makeSyncContext(user, ownerUid, tripId);
     const context = activeSyncContext;
     activeTripRef = context.tripRef;
     syncReady = false;
@@ -659,7 +952,7 @@ async function startTripSync(user, ownerUid) {
     clearSyncChoice();
     const shareTools = document.getElementById('cloud-share-tools');
     if (shareTools) shareTools.hidden = true;
-    setStatus('Vérification du séjour en ligne…');
+    setSyncStatus('Vérification du séjour en ligne…', 'loading');
     let firstSnapshot = true;
 
     // Restore an interrupted local cloud save only for the exact same account
@@ -669,12 +962,19 @@ async function startTripSync(user, ownerUid) {
         localPendingSave = { ...localPendingSave, context, timer: null };
         pendingCloudSaves.set(context.key, localPendingSave);
         if (appDataContextKey !== context.key) applyRemoteData(localPendingSave.data, context);
-    } else if (appDataContextKey === null) {
-        // On the first authenticated session, existing local data is the
-        // user's candidate for this trip. Later trip changes are never treated
-        // as belonging to the newly selected trip automatically.
-        appDataContextKey = context.key;
-        appDataSyncContext = context;
+    } else {
+        const localTripData = readLocalTripData(context);
+        if (localTripData) {
+            applyRemoteData(localTripData, context);
+        } else if (appDataContextKey === null && !localStorage.getItem('getready_local_data_context')) {
+            // On the first authenticated session, existing local data is the
+            // user's candidate for this trip. Later trip changes are never treated
+            // as belonging to the newly selected trip automatically.
+            appDataContextKey = context.key;
+            appDataSyncContext = context;
+        } else if (appDataContextKey !== context.key) {
+            if (window.resetAppDataForSyncContext) window.resetAppDataForSyncContext();
+        }
     }
 
     stopTripListener = firestoreSdk.onSnapshot(context.tripRef, snapshot => {
@@ -685,9 +985,9 @@ async function startTripSync(user, ownerUid) {
             showSyncChoice(isDataForTrip
                 ? 'Aucun séjour n’est encore sauvegardé ici. Tu peux envoyer celui de cet appareil.'
                 : 'Ce séjour ne contient pas encore de données. Les données affichées appartiennent à un autre séjour.', false);
-            setStatus(isDataForTrip
+            setSyncStatus(isDataForTrip
                 ? (ownerUid === user.uid ? 'Compte prêt · séjour encore local.' : 'Le séjour partagé est introuvable.')
-                : 'Séjour en attente de données locales.', isDataForTrip && ownerUid !== user.uid ? 'error' : 'ready');
+                : 'Séjour en attente de données locales.', isDataForTrip && ownerUid !== user.uid ? 'error' : 'pending');
             if (firstSnapshot) forceCloudLoadForOwner = null;
             firstSnapshot = false;
             return;
@@ -695,7 +995,7 @@ async function startTripSync(user, ownerUid) {
 
         const remoteData = snapshot.data()?.data;
         if (!remoteData || typeof remoteData !== 'object') {
-            setStatus('Le document Firebase existe mais son format est invalide. Tes données locales sont conservées.', 'error');
+            setSyncStatus('Le document Firebase existe mais son format est invalide. Tes données locales sont conservées.', 'error');
             firstSnapshot = false;
             return;
         }
@@ -722,37 +1022,38 @@ async function startTripSync(user, ownerUid) {
             syncReady = true;
             forceCloudLoadForOwner = null;
             clearSyncChoice();
-            setStatus('Séjour partagé chargé. Les modifications sont synchronisées.', 'success');
+            setSyncStatus('Séjour partagé chargé. Les modifications sont synchronisées.', 'success');
         } else if (firstSnapshot && appDataContextKey !== context.key && !currentLocalSave) {
             // Never compare or upload the previous trip's in-memory data as if
             // it belonged to the newly selected trip.
             applyRemoteData(remoteData, context);
             syncReady = true;
             clearSyncChoice();
-            setStatus('Séjour chargé depuis Firebase.', 'success');
+            setSyncStatus('Séjour chargé depuis Firebase.', 'success');
         } else if (currentLocalSave && remoteJson !== localJson) {
             // Preserve the local draft and stop its timer until the user chooses
             // which version to keep. This is a guard, not an automatic merge.
             syncReady = false;
             pendingCloudData = { context, data: remoteData };
             showSyncChoice('Une modification locale et une version distante sont en attente. Choisis laquelle conserver.', true);
-            setStatus('Deux versions du séjour sont en attente de ton choix.', 'ready');
+            setSyncStatus('Deux versions du séjour sont en attente de ton choix.', 'pending');
         } else if (syncReady && remoteJson !== localJson) {
             applyRemoteData(remoteData, context);
-            setStatus('Séjour synchronisé · les changements des autres membres sont à jour.', 'success');
+            setSyncStatus('Séjour synchronisé · les changements des autres membres sont à jour.', 'success');
         } else if (remoteJson === localJson) {
             syncReady = true;
             pendingCloudData = null;
             if (currentLocalSave && !remoteChoice) clearPendingSave(currentLocalSave);
             clearSyncChoice();
-            setStatus('Séjour synchronisé avec Firebase.', 'success');
+            setSyncStatus('Séjour synchronisé avec Firebase.', 'success');
         } else {
             syncReady = false;
             pendingCloudData = { context, data: remoteData };
             showSyncChoice('Un séjour est déjà enregistré ici. Choisis la version à conserver pour éviter d’écraser des données.', true);
-            setStatus('Choisis la version à conserver.', 'ready');
+            setSyncStatus('Choisis la version à conserver.', 'pending');
         }
         if (shareTools) shareTools.hidden = !(syncReady && ownerUid === user.uid);
+        if (syncReady && ownerUid === user.uid) loadTripMembers(context);
         const latestLocalSave = pendingCloudSaves.get(context.key);
         if (syncReady && !forcedCloudLoad && latestLocalSave) {
             schedulePendingSave(latestLocalSave);
@@ -762,7 +1063,7 @@ async function startTripSync(user, ownerUid) {
         if (!isCurrentSyncContext(context)) return;
         syncReady = false;
         const permissionDenied = error?.code === 'permission-denied';
-        setStatus(permissionDenied
+        setSyncStatus(permissionDenied
             ? 'Firebase refuse l’accès : les règles firestore.rules doivent être publiées sur le projet getready-77e40.'
             : 'Impossible de lire Firestore. Vérifie la connexion et les règles de la base.', 'error');
         console.error('Erreur Firestore GetReady :', error);
@@ -779,8 +1080,14 @@ function applyRemoteData(data, context = activeSyncContext) {
         if (window.refreshAllUI) window.refreshAllUI();
         localStorage.setItem('voyage_data', JSON.stringify(window.appData));
         localStorage.setItem('voyage_japon_data', JSON.stringify(window.appData));
-        if (context) appDataContextKey = context.key;
-        if (context) appDataSyncContext = context;
+        if (context) {
+            appDataContextKey = context.key;
+            appDataSyncContext = context;
+            const serialized = JSON.stringify(window.appData);
+            localStorage.setItem(localTripDataStorageKey(context), serialized);
+            localStorage.setItem('getready_local_data_context', context.key);
+            updateTripSelectTitle(context, window.appData?.tripTitle);
+        }
     } finally {
         applyingCloudData = false;
     }
@@ -799,15 +1106,15 @@ async function uploadLocalData() {
     if (hasRemote && !window.confirm('Remplacer le séjour enregistré dans Firebase par celui de cet appareil ?')) return;
     const button = document.getElementById('cloud-upload-local');
     if (button) button.disabled = true;
-    setStatus('Sauvegarde du séjour sur Firebase…');
+    setSyncStatus('Sauvegarde du séjour sur Firebase…', 'saving');
     try {
         const data = JSON.parse(JSON.stringify(window.appData));
         const written = await enqueueCloudWrite(context, data, () => isCurrentSyncContext(context));
         if (!written) return;
         if (!isCurrentSyncContext(context)) return;
         if (context.userUid === context.ownerUid) {
-            const memberRef = firestoreSdk.doc(db, 'userTrips', context.ownerUid, 'members', context.userUid);
-            await firestoreSdk.setDoc(memberRef, { uid: context.userUid, ownerUid: context.ownerUid, role: 'owner', joinedAt: firestoreSdk.serverTimestamp() });
+            const memberRef = tripMemberRef(context.ownerUid, context.tripId, context.userUid);
+            await firestoreSdk.setDoc(memberRef, { uid: context.userUid, ownerUid: context.ownerUid, tripId: context.tripId, role: 'owner', email: activeUser?.email || '', joinedAt: firestoreSdk.serverTimestamp() });
             if (!isCurrentSyncContext(context)) return;
         }
         pendingCloudData = null;
@@ -819,10 +1126,11 @@ async function uploadLocalData() {
         clearSyncChoice();
         const shareTools = document.getElementById('cloud-share-tools');
         if (shareTools) shareTools.hidden = context.userUid !== context.ownerUid;
-        setStatus('Séjour sauvegardé. La synchronisation est active.', 'success');
+        if (context.userUid === context.ownerUid) loadTripMembers(context);
+        setSyncStatus('Séjour sauvegardé. La synchronisation est active.', 'success');
     } catch (error) {
         if (!isCurrentSyncContext(context)) return;
-        setStatus(error?.code === 'permission-denied'
+        setSyncStatus(error?.code === 'permission-denied'
             ? 'Firebase refuse l’accès : publie firestore.rules sur le projet getready-77e40.'
             : 'La sauvegarde a échoué. Vérifie ta connexion et réessaie.', 'error');
         console.error('Erreur de sauvegarde Firebase :', error);
@@ -853,7 +1161,7 @@ function loadRemoteData() {
         data: selectedData,
         dataJson: JSON.stringify(selectedData),
         discardedLocalJson: localSave?.data ? JSON.stringify(localSave.data) : previousChoice?.discardedLocalJson || null,
-        needsPersistence: cloudWriteChains.has(context.ownerUid) || !!previousChoice?.needsPersistence,
+        needsPersistence: cloudWriteChains.has(`${context.ownerUid}:${context.tripId}`) || !!previousChoice?.needsPersistence,
         writePending: false
     };
     remoteVersionChoices.set(context.key, choice);
@@ -863,9 +1171,9 @@ function loadRemoteData() {
     clearSyncChoice();
     const shareTools = document.getElementById('cloud-share-tools');
     if (shareTools) shareTools.hidden = context.userUid !== context.ownerUid;
-    setStatus(choice.needsPersistence
+    setSyncStatus(choice.needsPersistence
         ? 'Version distante chargée. Confirmation de la synchronisation…'
-        : 'Séjour du cloud chargé sur cet appareil.', choice.needsPersistence ? 'ready' : 'success');
+        : 'Séjour du cloud chargé sur cet appareil.', choice.needsPersistence ? 'pending' : 'success');
     if (choice.needsPersistence) persistRemoteChoice(choice);
 }
 
@@ -881,6 +1189,7 @@ async function createInvite() {
         const inviteRef = firestoreSdk.doc(db, 'tripInvites', token);
         await firestoreSdk.setDoc(inviteRef, {
             ownerUid: activeOwnerUid,
+            tripId: activeTripId,
             createdBy: activeUser.uid,
             inviteeEmail: email,
             tripTitle: window.appData?.tripTitle || 'Séjour GetReady',
@@ -930,10 +1239,11 @@ window.saveToCloud = function (data) {
         // Capture an independent snapshot at edit time, before the debounce.
         safeData = JSON.parse(JSON.stringify(data));
     } catch (error) {
-        setStatus('Les données locales sont conservées, mais la copie cloud n’a pas pu être préparée.', 'error');
+        setSyncStatus('Les données locales sont conservées, mais la copie cloud n’a pas pu être préparée.', 'error');
         console.error('Préparation de la sauvegarde Firebase impossible :', error);
         return;
     }
+    updateTripSelectTitle(context, safeData.tripTitle);
 
     const save = {
         context,
@@ -947,6 +1257,12 @@ window.saveToCloud = function (data) {
     remoteVersionChoices.delete(context.key);
     pendingCloudSaves.set(context.key, save);
     persistPendingSave(save);
+    try {
+        localStorage.setItem(localTripDataStorageKey(context), JSON.stringify(safeData));
+        localStorage.setItem('getready_local_data_context', context.key);
+    } catch (error) {
+        console.warn('Impossible de conserver une copie locale associée au séjour :', error);
+    }
     if (isCurrentSyncContext(context) && syncReady) schedulePendingSave(save);
 };
 
@@ -970,11 +1286,18 @@ async function initializeFirebase() {
         const loading = document.getElementById('auth-gate-loading');
         if (loading) loading.hidden = true;
         setAuthGate('login');
-        setStatus('Firebase est indisponible. Vérifie ta connexion ; l’accès reste verrouillé tant que le compte ne peut pas être vérifié.', 'error');
+        setSyncStatus('Firebase est indisponible. Vérifie ta connexion ; l’accès reste verrouillé tant que le compte ne peut pas être vérifié.', 'error');
         console.error('Initialisation Firebase impossible :', error);
     }
 }
 
-createAccountPanel();
-setAuthGate('loading');
-initializeFirebase();
+window.addEventListener('online', retryPendingSaveOnReconnect);
+
+if (isDemoPreviewUrl(window.location.href)) {
+    // The demo uses isolated local data and never needs an account or Firebase.
+    setAuthGate('open');
+} else {
+    createAccountPanel();
+    setAuthGate('loading');
+    initializeFirebase();
+}

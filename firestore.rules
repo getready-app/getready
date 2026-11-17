@@ -23,6 +23,18 @@ service cloud.firestore {
         && get(invitePath).data.expiresAt > request.time;
     }
 
+    function hasValidTripInvite(ownerUid, tripId, inviteId) {
+      let invitePath = /databases/$(database)/documents/tripInvites/$(inviteId);
+      return signedIn()
+        && inviteId is string
+        && exists(invitePath)
+        && get(invitePath).data.ownerUid == ownerUid
+        && get(invitePath).data.tripId == tripId
+        && get(invitePath).data.inviteeEmail == request.auth.token.email
+        && get(invitePath).data.expiresAt is timestamp
+        && get(invitePath).data.expiresAt > request.time;
+    }
+
     match /userTrips/{ownerUid} {
       allow get: if isTripMember(ownerUid);
       allow list: if false;
@@ -51,6 +63,44 @@ service cloud.firestore {
                       && request.resource.data.ownerUid == ownerUid;
         allow delete: if signedIn() && request.auth.uid == ownerUid && memberUid != ownerUid;
       }
+
+      match /trips/{tripId} {
+        allow get: if signedIn()
+                   && (request.auth.uid == ownerUid
+                     || exists(/databases/$(database)/documents/userTrips/$(ownerUid)/trips/$(tripId)/members/$(request.auth.uid)));
+        allow list: if signedIn() && request.auth.uid == ownerUid;
+        allow create: if signedIn()
+                      && request.auth.uid == ownerUid
+                      && request.resource.data.ownerUid == ownerUid
+                      && request.resource.data.tripId == tripId;
+        allow update: if signedIn()
+                      && (request.auth.uid == ownerUid
+                        || exists(/databases/$(database)/documents/userTrips/$(ownerUid)/trips/$(tripId)/members/$(request.auth.uid)))
+                      && request.resource.data.ownerUid == resource.data.ownerUid
+                      && request.resource.data.tripId == resource.data.tripId;
+        allow delete: if signedIn() && request.auth.uid == ownerUid;
+
+        match /members/{memberUid} {
+          allow get: if signedIn()
+                     && (request.auth.uid == memberUid || request.auth.uid == ownerUid);
+          allow list: if signedIn() && request.auth.uid == ownerUid;
+          allow create: if signedIn()
+                        && request.auth.uid == memberUid
+                        && request.resource.data.uid == memberUid
+                        && request.resource.data.ownerUid == ownerUid
+                        && request.resource.data.tripId == tripId
+                        && ((request.resource.data.role == 'owner' && ownerUid == memberUid)
+                          || (request.resource.data.role == 'editor'
+                            && hasValidTripInvite(ownerUid, tripId, request.resource.data.inviteId)));
+          allow update: if signedIn()
+                        && request.auth.uid == ownerUid
+                        && memberUid != ownerUid
+                        && request.resource.data.uid == resource.data.uid
+                        && request.resource.data.ownerUid == ownerUid
+                        && request.resource.data.tripId == tripId;
+          allow delete: if signedIn() && request.auth.uid == ownerUid && memberUid != ownerUid;
+        }
+      }
     }
 
     // Permet à chaque membre de retrouver ses appartenances par collectionGroup,
@@ -71,6 +121,7 @@ service cloud.firestore {
                     && isTripMember(request.auth.uid)
                     && request.resource.data.inviteeEmail is string
                     && request.resource.data.tripTitle is string
+                    && (!('tripId' in request.resource.data) || request.resource.data.tripId is string)
                     && request.resource.data.expiresAt is timestamp
                     && request.resource.data.expiresAt > request.time;
       allow update: if false;
