@@ -4357,17 +4357,17 @@ function renderInfos() {
         }
 
         list.innerHTML += `
-            <div class="card">
+            <div class="card notebook-card info-card">
                     <button class="delete-btn" ${actionAttrs('deleteItem', ['infos', info.id])} aria-label="Supprimer cette information"><i class="fa-solid fa-xmark"></i></button>
-                <div class="card-header-row" style="margin-bottom: 12px;">
+                <div class="card-header-row">
                     <div class="card-title-group">
-                        <div class="card-icon" style="background-color: #fcebeb; color: var(--accent);">${currentIcon}</div>
-                        <div class="card-title" style="font-size: 1.2rem;">${esc(info.titre)}</div>
+                        <div class="card-icon notebook-icon">${currentIcon}</div>
+                        <div class="card-title">${esc(info.titre)}</div>
                     </div>
                 </div>
-                <div style="font-size: 0.95rem; line-height: 1.5; color: #444; white-space: pre-line; font-weight: 500;">${esc(info.desc)}</div>
+                <div class="notebook-text">${esc(info.desc)}</div>
                 ${sourcesHtml ? `<div class="info-source-list" aria-label="Sources officielles">${sourcesHtml}</div>` : ''}
-                <div style="text-align:right; margin-top: 10px;">
+                <div class="info-card-actions">
                     <button ${actionAttrs('openEditInfoModal', [info.id])} class="edit-action" aria-label="Modifier cette information" title="Modifier cette information">
                         <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
                     </button>
@@ -4773,7 +4773,7 @@ function renderBillets() {
 
     if (billets.length === 0) {
         if (count) count.textContent = '0 réservation';
-        list.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; padding: 4px 5px 10px;">Aucun billet enregistré pour l'instant.</p>`;
+        list.innerHTML = `<p class="notebook-empty">Aucun billet enregistré pour l'instant.</p>`;
         return;
     }
 
@@ -4789,17 +4789,17 @@ function renderBillets() {
 
     visibleBillets.forEach(billet => {
         const lienUrl = safeUrl(billet.lien);
-        const lienHtml = lienUrl ? `<a href="${lienUrl}" target="_blank" rel="noopener" style="color: var(--accent-primary); font-weight:600; text-decoration:underline;">Ouvrir le billet</a>` : '';
+        const lienHtml = lienUrl ? `<a href="${lienUrl}" target="_blank" rel="noopener" class="billet-link">Ouvrir le billet</a>` : '';
         const billetDateTime = [billet.date, timeToPickerValue(billet.heure)].filter(Boolean).join(' · ');
         const status = getBilletStatus(billet);
         list.innerHTML += `
-            <div class="card">
+            <div class="card notebook-card billet-card">
                     <button class="delete-btn" ${actionAttrs('deleteItem', ['billets', billet.id])} aria-label="Supprimer cette réservation"><i class="fa-solid fa-xmark"></i></button>
-                <div class="card-header-row" style="margin-bottom: 10px;">
+                <div class="card-header-row">
                     <div class="card-title-group">
-                        <div class="card-icon" style="background-color: #fcebeb; color: var(--accent);"><i class="fa-solid fa-ticket"></i></div>
+                        <div class="card-icon notebook-icon"><i class="fa-solid fa-ticket" aria-hidden="true"></i></div>
                         <div>
-                            <div class="card-title" style="font-size: 1.1rem;">${esc(billet.nom)}</div>
+                            <div class="card-title">${esc(billet.nom)}</div>
                             ${billet.reference ? `<div class="card-subtitle">Réf. ${esc(billet.reference)}</div>` : ''}
                             <span class="billet-status-badge is-${status}">${esc(getBilletStatusLabel(status))}</span>
                         </div>
@@ -4807,7 +4807,7 @@ function renderBillets() {
                     ${billetDateTime ? `<span class="card-date">${esc(billetDateTime)}</span>` : ''}
                 </div>
                 ${billet.lieu ? `<div class="billet-location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> ${esc(billet.lieu)}</div>` : ''}
-                ${billet.notes ? `<div style="font-size: 0.9rem; line-height: 1.5; color: #444; white-space: pre-line; margin-bottom: 8px;">${esc(billet.notes)}</div>` : ''}
+                ${billet.notes ? `<div class="notebook-text">${esc(billet.notes)}</div>` : ''}
                 <div class="billet-card-actions">
                     ${lienHtml || '<span></span>'}
                     <div class="billet-card-action-buttons">

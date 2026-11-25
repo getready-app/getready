@@ -2092,3 +2092,227 @@ body.reduce-motion * { transition: none; animation: none; }
     .budget-filter-select { flex: 1 1 40%; }
     .budget-filter-select select { width: 100%; }
 }
+
+/* ==========================================================================
+   13. Carnet
+   ========================================================================== */
+#page-infos > .content-container { display: flex; flex-direction: column; gap: 14px; }
+#page-infos .card { margin: 0; padding: 16px; }
+#page-infos :is(select, input[type="search"]) {
+    min-height: 40px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 10px;
+    color: var(--ep-ink);
+    background-color: var(--ep-fill);
+    box-shadow: none;
+    font: 15px var(--ep-font);
+}
+#page-infos select { padding-right: 30px; }
+#page-infos :is(select, input):focus { outline: 0; box-shadow: 0 0 0 3px color-mix(in srgb, var(--ep-accent) 40%, transparent); }
+
+/* En-tête commun des cartes du carnet */
+#page-infos .card-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 0 0 10px; padding-right: 30px; }
+#page-infos .card-title-group { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+#page-infos .card-title { color: var(--ep-ink); font-family: var(--ep-font); font-size: 16.5px; font-weight: 650; letter-spacing: -.01em; line-height: 1.3; }
+#page-infos .card-subtitle { color: var(--ep-ink-2); font-size: 13px; }
+.notebook-icon {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    color: #FFFFFF;
+    background: var(--ep-tile-gray);
+    font-size: 14px;
+    box-shadow: none;
+}
+.notebook-map-card .notebook-icon { background: var(--ep-tile-teal); }
+.billet-card .notebook-icon { background: var(--ep-tile-lavender); }
+.info-card .notebook-icon:has(.fa-phone) { background: var(--ep-tile-red); }
+.info-card .notebook-icon:has(.fa-bed) { background: var(--ep-tile-lavender); }
+.info-card .notebook-icon:has(.fa-train) { background: var(--ep-tile-blue); }
+.info-card .notebook-icon:has(.fa-wifi) { background: var(--ep-tile-teal); }
+#page-infos .card-date {
+    flex: none;
+    padding: 4px 10px;
+    border-radius: 999px;
+    color: var(--ep-ink);
+    background: var(--ep-fill);
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+#page-infos .delete-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-ink-3);
+    background: transparent;
+    font-size: 13px;
+}
+#page-infos .delete-btn:hover { color: var(--ep-danger); background: var(--ep-fill); }
+.notebook-card { position: relative; }
+.notebook-text { margin: 0 0 10px; color: var(--ep-ink); font-size: 14.5px; line-height: 1.5; white-space: pre-line; }
+
+/* Carte du séjour */
+.notebook-map-card { display: flex; flex-direction: column; gap: 10px; }
+.notebook-map-card .card-header-row { margin: 0; padding-right: 0; }
+#page-infos .input-group { display: flex; flex-direction: column; gap: 4px; margin: 0; }
+#page-infos .input-group label { color: var(--ep-ink-2); font-size: 13px; font-weight: 500; }
+#page-infos .input-group select { width: 100%; }
+.notebook-map-frame { overflow: hidden; border-radius: 12px; background: var(--ep-surface-2); }
+.notebook-map-frame iframe { display: block; width: 100%; height: 260px; border: 0; }
+.notebook-map-note { margin: 0; color: var(--ep-ink-2); font-size: 12.5px; }
+.notebook-map-note.is-pending { color: var(--ep-accent-text); }
+.notebook-directions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    border-radius: 12px;
+    color: var(--ep-accent-ink);
+    background: var(--ep-accent);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.notebook-directions:hover { background: color-mix(in srgb, var(--ep-accent) 88%, #000); }
+
+/* Réservations */
+.notebook-section-title { margin: 12px 2px 0; font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+.billet-export-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.billet-export-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 34px;
+    padding: 0 13px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-ink);
+    background: var(--ep-fill);
+    font-size: 13.5px;
+    font-weight: 600;
+}
+#billet-export-status,
+#billet-share-status,
+#billet-filter-count { color: var(--ep-ink-2); font-size: 13px; }
+.billet-filter-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; padding: 0; border: 0; background: none; box-shadow: none; }
+.billet-search-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 240px;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 10px;
+    color: var(--ep-ink-3);
+    background: var(--ep-fill);
+}
+#page-infos .billet-search-field input { flex: 1; min-width: 0; padding: 0; background: transparent; }
+#page-infos .billet-search-field input:focus { box-shadow: none; }
+.billet-search-field:focus-within { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ep-accent) 40%, transparent); }
+.billet-status-filter,
+.billet-sort-filter { display: flex; flex-direction: column; gap: 4px; color: var(--ep-ink-2); font-size: 12.5px; font-weight: 500; }
+.billet-filter-reset { min-height: 40px; padding: 0 12px; border: 0; border-radius: 10px; color: var(--ep-accent-text); background: transparent; font-size: 14px; font-weight: 600; }
+.billet-filter-reset:hover { background: var(--ep-accent-soft); }
+
+#billets-list,
+#infos-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 12px; }
+#billets-list:empty,
+#infos-list:empty { display: none; }
+.billet-status-badge {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 4px;
+    padding: 2px 9px;
+    border: 0;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.billet-status-badge.is-a-reserver { color: var(--ep-warning-ink); background: color-mix(in srgb, var(--ep-tile-yellow) 26%, transparent); }
+.billet-status-badge.is-confirme { color: var(--ep-success); background: color-mix(in srgb, var(--ep-success) 14%, transparent); }
+.billet-status-badge.is-annule { color: var(--ep-ink-2); background: var(--ep-fill); text-decoration: line-through; }
+.billet-location { display: flex; align-items: flex-start; gap: 7px; margin: 0 0 8px; color: var(--ep-ink-2); font-size: 13.5px; }
+.billet-location i { margin-top: 2px; color: var(--ep-ink-3); }
+.billet-card-actions,
+.info-card-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--ep-line); }
+.info-card-actions { justify-content: flex-end; }
+.billet-card-action-buttons { display: flex; align-items: center; gap: 6px; }
+.billet-link { color: var(--ep-accent-text); font-size: 14px; font-weight: 600; text-decoration: none; }
+.billet-link:hover { text-decoration: underline; }
+.billet-share-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-ink);
+    background: var(--ep-fill);
+    font-size: 13px;
+    font-weight: 600;
+}
+#page-infos .edit-action {
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-ink-2);
+    background: var(--ep-fill);
+}
+#page-infos .edit-action:hover { color: var(--ep-accent-text); background: var(--ep-accent-soft); }
+.notebook-empty,
+.billet-filter-empty {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 16px;
+    border-radius: var(--ep-radius);
+    color: var(--ep-ink-2);
+    background: var(--ep-surface);
+    box-shadow: var(--ep-shadow);
+    font-size: 14px;
+}
+.billet-filter-empty { grid-column: 1 / -1; }
+.billet-filter-empty button { margin-left: auto; border: 0; border-radius: 999px; padding: 7px 12px; color: var(--ep-accent-text); background: var(--ep-accent-soft); font-weight: 600; }
+
+/* Sources officielles des informations pratiques */
+.info-source-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; }
+.info-source-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    color: var(--ep-accent-text);
+    background: var(--ep-accent-soft);
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.info-source-link i { font-size: 10px; }
+
+@media (max-width: 600px) {
+    .billet-status-filter,
+    .billet-sort-filter { flex: 1 1 40%; }
+    .billet-filter-toolbar select { width: 100%; }
+    .notebook-map-frame iframe { height: 220px; }
+}
