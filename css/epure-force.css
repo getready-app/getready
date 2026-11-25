@@ -218,3 +218,34 @@ html[data-theme] body[data-page="budget"] #page-budget .swap-currencies { color:
 /* Carnet : anciennes cartes (bordures, ombres, icônes roses). */
 #page-infos .card { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-surface) !important; box-shadow: var(--ep-shadow) !important; }
 #page-infos .card-icon.notebook-icon { color: #FFFFFF !important; }
+
+/* Réglages : l'ancien en-tête « forêt » et ses textes clairs imposés. */
+#page-settings .settings-hero {
+    min-height: 0 !important;
+    padding: 28px clamp(16px, 3vw, 40px) 6px !important;
+    border-radius: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+}
+#page-settings .settings-hero::before,
+#page-settings .settings-hero::after { display: none !important; content: none !important; }
+#page-settings .settings-hero-copy h1,
+html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy h1 { color: var(--ep-ink) !important; font-size: clamp(28px, 3.4vw, 34px) !important; letter-spacing: -.03em !important; }
+#page-settings .settings-hero-copy p,
+html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy p { color: var(--ep-ink-2) !important; font-size: 15px !important; }
+#page-settings .settings-panel,
+#page-settings .settings-backup-card,
+#page-settings .settings-reset-button { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-surface) !important; }
+#page-settings .settings-content :is(h2, h3, h4) { color: var(--ep-ink) !important; }
+#page-settings .settings-theme-choice,
+#page-settings .settings-color-mode button,
+#page-settings .settings-motion-options button { border: 0 !important; }
+#page-settings .settings-color-mode button[aria-pressed="true"] { color: var(--ep-ink) !important; }
+#page-settings .settings-link-button { padding: 0 !important; border: 0 !important; color: var(--ep-accent-text) !important; background: none !important; box-shadow: none !important; }
+#page-settings .settings-auto-pill { color: #1D1D1F !important; background: rgba(255, 255, 255, .9) !important; }
+#page-settings .settings-auto-pill i { color: #1D1D1F !important; }
+#page-settings .settings-motion-options button { background: transparent !important; box-shadow: none !important; }
+#page-settings .settings-motion-options button > i { width: 20px !important; height: auto !important; color: var(--ep-ink-2) !important; background: none !important; box-shadow: none !important; }
+#page-settings .settings-theme-choice { background: var(--ep-surface-2) !important; }
+#page-settings .settings-theme-choice[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--ep-accent) !important; }
+#page-settings :is(.settings-primary-column, .settings-side-column, .settings-panel) { width: auto !important; max-width: none !important; }

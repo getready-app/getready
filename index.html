@@ -16,7 +16,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="css/app.css?v=5">
+    <link rel="stylesheet" href="css/app.css?v=6">
 </head>
 <body>
 
@@ -385,7 +385,7 @@
     <div id="page-settings" class="page">
         <header class="settings-hero">
             <div class="settings-hero-inner">
-                <div class="settings-hero-copy"><span class="settings-eyebrow"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> TON ESPACE, TES ENVIES</span><h1>Fais comme chez toi.</h1><p>Une ambiance qui te ressemble, pour mieux préparer la suite.</p></div>
+                <div class="settings-hero-copy"><span class="settings-eyebrow"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> TON ESPACE</span><h1>Réglages</h1><p>Apparence, compte et sauvegardes de ton séjour.</p></div>
                 <div class="settings-hero-mark" aria-hidden="true"><i class="fa-solid fa-compass"></i><span></span></div>
             </div>
         </header>
@@ -393,7 +393,7 @@
             <div class="settings-layout">
                 <div class="settings-primary-column">
                     <section class="settings-panel" aria-labelledby="settings-background-title">
-                        <div class="settings-panel-heading"><span class="settings-panel-icon"><i class="fa-solid fa-panorama" aria-hidden="true"></i></span><div><span class="settings-kicker">PERSONNALISATION</span><h2 id="settings-background-title">Le décor de votre séjour</h2><p>Le vol est utilisé en priorité, puis votre première étape.</p></div></div>
+                        <div class="settings-panel-heading"><span class="settings-panel-icon"><i class="fa-solid fa-panorama" aria-hidden="true"></i></span><div><span class="settings-kicker">PERSONNALISATION</span><h2 id="settings-background-title">Photo du séjour</h2><p>Affichée sur la carte du voyage. En automatique, la destination du vol est utilisée en priorité, puis la première étape.</p></div></div>
                         <div class="settings-background-grid">
                             <button type="button" class="settings-background-choice is-auto" data-background="auto" data-action="setTravelBackground" data-action-args='["auto"]' aria-pressed="false">
                                 <span class="settings-background-art art-auto" data-background-preview="auto"><span class="settings-auto-pill"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> AUTO</span></span><span class="settings-choice-copy"><span class="settings-choice-title">Destination du vol</span><span class="settings-choice-subtitle" id="settings-auto-destination">Détection automatique</span></span><i class="fa-solid fa-circle-check settings-choice-check" aria-hidden="true"></i>
@@ -414,11 +414,11 @@
                     </section>
 
                     <section class="settings-panel" aria-labelledby="settings-theme-title">
-                        <div class="settings-panel-heading"><span class="settings-panel-icon"><i class="fa-solid fa-palette" aria-hidden="true"></i></span><div><span class="settings-kicker">COULEURS</span><h2 id="settings-theme-title">Ta palette</h2><p>Les couleurs s’appliquent à toute l’interface.</p></div></div>
+                        <div class="settings-panel-heading"><span class="settings-panel-icon"><i class="fa-solid fa-palette" aria-hidden="true"></i></span><div><span class="settings-kicker">APPARENCE</span><h2 id="settings-theme-title">Couleur et mode d’affichage</h2><p>La couleur d’accent sert aux boutons, à la sélection et à la progression.</p></div></div>
                         <div class="settings-theme-grid">
-                            <button type="button" class="settings-theme-choice theme-sun" data-theme-choice="sun" data-action="setVisualTheme" data-action-args='["sun"]' aria-pressed="false"><span class="theme-preview theme-preview-sun"><i></i><i></i><i></i><b></b></span><span class="theme-choice-copy"><strong>Escapade</strong><small>Chaleureuse & naturelle</small></span><i class="fa-solid fa-circle-check theme-check" aria-hidden="true"></i></button>
-                            <button type="button" class="settings-theme-choice theme-ocean" data-theme-choice="ocean" data-action="setVisualTheme" data-action-args='["ocean"]' aria-pressed="false"><span class="theme-preview theme-preview-ocean"><i></i><i></i><i></i><b></b></span><span class="theme-choice-copy"><strong>Grand large</strong><small>Fraîche & apaisante</small></span><i class="fa-solid fa-circle-check theme-check" aria-hidden="true"></i></button>
-                            <button type="button" class="settings-theme-choice theme-lavender" data-theme-choice="lavender" data-action="setVisualTheme" data-action-args='["lavender"]' aria-pressed="false"><span class="theme-preview theme-preview-lavender"><i></i><i></i><i></i><b></b></span><span class="theme-choice-copy"><strong>Douceur</strong><small>Lumineuse & créative</small></span><i class="fa-solid fa-circle-check theme-check" aria-hidden="true"></i></button>
+                            <button type="button" class="settings-theme-choice theme-sun" data-theme-choice="sun" data-action="setVisualTheme" data-action-args='["sun"]' aria-pressed="false"><span class="theme-preview theme-preview-sun"><i></i><i></i><i></i><b></b></span><span class="theme-choice-copy"><strong>Escapade</strong><small>Ocean Teal</small></span><i class="fa-solid fa-circle-check theme-check" aria-hidden="true"></i></button>
+                            <button type="button" class="settings-theme-choice theme-ocean" data-theme-choice="ocean" data-action="setVisualTheme" data-action-args='["ocean"]' aria-pressed="false"><span class="theme-preview theme-preview-ocean"><i></i><i></i><i></i><b></b></span><span class="theme-choice-copy"><strong>Grand large</strong><small>Bleu océan</small></span><i class="fa-solid fa-circle-check theme-check" aria-hidden="true"></i></button>
+                            <button type="button" class="settings-theme-choice theme-lavender" data-theme-choice="lavender" data-action="setVisualTheme" data-action-args='["lavender"]' aria-pressed="false"><span class="theme-preview theme-preview-lavender"><i></i><i></i><i></i><b></b></span><span class="theme-choice-copy"><strong>Douceur</strong><small>Lavande</small></span><i class="fa-solid fa-circle-check theme-check" aria-hidden="true"></i></button>
                         </div>
                         <div class="settings-color-mode" role="group" aria-label="Mode d’affichage"><span>Mode d’affichage</span><button type="button" data-color-mode-choice="auto" data-action="setColorMode" data-action-args='["auto"]' aria-pressed="false"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i> Automatique</button><button type="button" data-color-mode-choice="light" data-action="setColorMode" data-action-args='["light"]' aria-pressed="false"><i class="fa-solid fa-sun" aria-hidden="true"></i> Clair</button><button type="button" data-color-mode-choice="dark" data-action="setColorMode" data-action-args='["dark"]' aria-pressed="false"><i class="fa-solid fa-moon" aria-hidden="true"></i> Sombre</button></div>
                     </section>
