@@ -21,7 +21,7 @@ function ticketSchedule(billets) {
     return vm.runInNewContext(`${scheduleHelpers}\ncollectScheduleItems();`, {
         appData: { tripStart: '2027-04-16', vols: [], transports: [], programme: [], billets },
         tripYear() { return 2027; },
-        parseFrenchShortDate(value) { return value === '16 avr.' ? new Date(2027, 3, 16) : null; },
+        resolveTripDate(value) { return value === '16 avr.' ? new Date(2027, 3, 16) : null; },
         timeToPickerValue(value) { return String(value || '').match(/^(\d{1,2}:\d{2})/)?.[1] || ''; }
     });
 }
@@ -72,7 +72,7 @@ test('la carte « Aujourd’hui » affiche le billet comme événement sans heur
     const context = {
         appData: { tripStart: '2027-04-16', vols: [], transports: [], programme: [], billets: [{ nom: 'Musée maritime', date: '16 avr.', reference: 'AB123' }] },
         tripYear() { return 2027; },
-        parseFrenchShortDate(value) { return value === '16 avr.' ? new Date() : null; },
+        resolveTripDate(value) { return value === '16 avr.' ? new Date() : null; },
         timeSortKey(value) { return value ? '0900' : '9999'; },
         timeToPickerValue(value) { return String(value || '').match(/^(\d{1,2}:\d{2})/)?.[1] || ''; },
         dateToPickerValue(date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; },
@@ -97,7 +97,7 @@ test('la carte « Aujourd’hui » affiche l’heure d’un billet quand elle es
     const context = {
         appData: { tripStart: '2027-04-16', vols: [], transports: [], programme: [], billets: [{ nom: 'Visite guidée', date: '16 avr.', heure: '10:30' }] },
         tripYear() { return 2027; },
-        parseFrenchShortDate(value) { return value === '16 avr.' ? new Date() : null; },
+        resolveTripDate(value) { return value === '16 avr.' ? new Date() : null; },
         timeToPickerValue(value) { return String(value || '').match(/^(\d{1,2}:\d{2})/)?.[1] || ''; },
         dateToPickerValue(date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; },
         Date,

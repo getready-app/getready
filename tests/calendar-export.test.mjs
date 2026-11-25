@@ -85,7 +85,7 @@ test('l’action d’export ajoute les vols comme événements sans durée inven
             vols: [{ id: 22, date: '16 avr.', type: 'Aller', compagnie: 'Air Test', num1: 'AT123', dep: 'CDG', depCity: 'Paris', depTime: '08:10', arr: 'LIS', arrCity: 'Lisbonne', arrTime: '10:00' }]
         },
         tripYear() { return 2027; },
-        parseFrenchShortDate() { return new Date(2027, 3, 16); },
+        resolveTripDate() { return new Date(2027, 3, 16); },
         timeToPickerValue(value) { return String(value || '').match(/^(\d{1,2}:\d{2})/)?.[1] || ''; },
         Blob: class { constructor(parts, options) { this.content = parts.join(''); this.type = options.type; } },
         URL: { createObjectURL(blob) { downloadedBlob = blob; return 'blob:calendar'; }, revokeObjectURL() {} },
@@ -123,7 +123,7 @@ test('les billets datés sont exportés sur la journée entière avec leurs dét
             ]
         },
         tripYear() { return 2027; },
-        parseFrenchShortDate(value) { return value === '16 avr.' ? new Date(2027, 3, 16) : null; },
+        resolveTripDate(value) { return value === '16 avr.' ? new Date(2027, 3, 16) : null; },
         timeToPickerValue(value) { return String(value || '').match(/^(\d{1,2}:\d{2})/)?.[1] || ''; },
         Blob: class { constructor(parts, options) { this.content = parts.join(''); this.type = options.type; } },
         URL: { createObjectURL(blob) { downloadedBlob = blob; return 'blob:calendar'; }, revokeObjectURL() {} },
@@ -157,7 +157,7 @@ test('l’heure facultative d’un billet est exportée sans inventer sa durée'
             billets: [{ id: 41, nom: 'Visite guidée', date: '16 avr.', heure: '10:30', lieu: 'Place, Lisbonne', reference: 'R42', statut: 'a-reserver' }]
         },
         tripYear() { return 2027; },
-        parseFrenchShortDate() { return new Date(2027, 3, 16); },
+        resolveTripDate() { return new Date(2027, 3, 16); },
         timeToPickerValue(value) { return String(value || '').match(/^(\d{1,2}:\d{2})/)?.[1] || ''; },
         Blob: class { constructor(parts, options) { this.content = parts.join(''); this.type = options.type; } },
         URL: { createObjectURL(blob) { downloadedBlob = blob; return 'blob:calendar'; }, revokeObjectURL() {} },
@@ -181,7 +181,7 @@ test('l’export indique qu’aucun événement daté n’est exportable', () =>
     const status = { textContent: '' };
     const context = {
         appData: { tripTitle: 'Séjour', programme: [], transports: [], vols: [], billets: [{ nom: 'Sans date', date: '' }] },
-        tripYear() { return 2027; }, parseFrenchShortDate() { return null; }, timeToPickerValue() { return ''; },
+        tripYear() { return 2027; }, resolveTripDate() { return null; }, timeToPickerValue() { return ''; },
         document: { getElementById() { return status; } }
     };
     vm.runInNewContext(`${calendarHelpers}\n${calendarExportAction}\nexportItineraryCalendar();`, context);

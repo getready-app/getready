@@ -59,33 +59,74 @@ const FR_MONTHS = [
     ['juin', 5], ['juil', 6], ['aout', 7], ['sept', 8], ['oct', 9], ['nov', 10], ['dec', 11]
 ];
 
-function parseFrenchShortDate(dateStr, year) {
+function parseFrenchDayMonth(dateStr) {
     if (!dateStr) return null;
     const cleaned = stripAccents(String(dateStr).toLowerCase()).replace(/[^a-z0-9\s]/g, ' ');
-    const m = cleaned.match(/(\d{1,2})\s*(?:er)?\s+([a-z]+)/);
+    const m = cleaned.match(/(\d{1,2})\s*(?:er)?\s+([a-z]+)(?:\s+(\d{4}))?/);
     if (!m) return null;
     const day = parseInt(m[1], 10);
     const monthWord = m[2];
     const found = FR_MONTHS.find(([prefix]) => monthWord.startsWith(prefix) || prefix.startsWith(monthWord));
     if (!found || day < 1 || day > 31) return null;
-    const d = new Date(year, found[1], day);
-    return isNaN(d.getTime()) ? null : d;
+    return { day, month: found[1], year: m[3] ? parseInt(m[3], 10) : null };
+}
+
+// Construit une date locale en refusant les dates impossibles (31 févr., 31 avr.…).
+function buildCalendarDate(year, monthIndex, day) {
+    const date = new Date(year, monthIndex, day);
+    return date.getFullYear() === year && date.getMonth() === monthIndex && date.getDate() === day ? date : null;
+}
+
+function parseFrenchShortDate(dateStr, year) {
+    const parts = parseFrenchDayMonth(dateStr);
+    return parts ? buildCalendarDate(parts.year ?? year, parts.month, parts.day) : null;
+}
+
+// Date complète sans ambiguïté : « 2027-01-02 » ou « 02/01/2027 ».
+function parseExactDate(value) {
+    const text = String(value || '').trim();
+    const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (iso) return buildCalendarDate(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+    const numeric = text.match(/^(\d{1,2})[/. -](\d{1,2})[/. -](\d{4})$/);
+    if (numeric) return buildCalendarDate(Number(numeric[3]), Number(numeric[2]) - 1, Number(numeric[1]));
+    return null;
+}
+
+// Une date « jour + mois » sans année prend l'année qui la place pendant le
+// séjour : pour un séjour du 28 déc. 2026 au 3 janv. 2027, « 2 janv. » est le
+// 2 janvier 2027. Hors du séjour, on garde l'année la plus proche des dates du
+// séjour ; sans dates de séjour, l'année en cours comme auparavant.
+function inferTripDate(day, monthIndex, data) {
+    const start = parseExactDate(data?.tripStart);
+    const end = parseExactDate(data?.tripEnd);
+    if (!start && !end) return buildCalendarDate(new Date().getFullYear(), monthIndex, day);
+    const from = start || end;
+    const to = end && end >= from ? end : from;
+    const years = [...new Set([from.getFullYear() - 1, from.getFullYear(), to.getFullYear(), to.getFullYear() + 1])];
+    const candidates = years.map(year => buildCalendarDate(year, monthIndex, day)).filter(Boolean);
+    // Une date qui n'existe pendant aucune année du séjour (29 févr. hors année
+    // bissextile) est refusée plutôt que déplacée dans une autre année.
+    if (!candidates.some(date => date.getFullYear() >= from.getFullYear() && date.getFullYear() <= to.getFullYear())) return null;
+    const inside = candidates.find(date => date >= from && date <= to);
+    if (inside) return inside;
+    const distance = date => date < from ? from - date : date - to;
+    return candidates.reduce((best, date) => distance(date) < distance(best) ? date : best);
+}
+
+// Point d'entrée unique pour lire une date saisie dans un séjour.
+function resolveTripDate(value, data = typeof appData === 'undefined' ? null : appData) {
+    const text = String(value || '').trim();
+    if (!text) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text) || /^\d{1,2}[/. -]\d{1,2}[/. -]\d{4}$/.test(text)) return parseExactDate(text);
+    const numeric = text.match(/^(\d{1,2})[/. -](\d{1,2})$/);
+    if (numeric) return inferTripDate(Number(numeric[1]), Number(numeric[2]) - 1, data);
+    const parts = parseFrenchDayMonth(text);
+    if (!parts) return null;
+    return parts.year ? buildCalendarDate(parts.year, parts.month, parts.day) : inferTripDate(parts.day, parts.month, data);
 }
 
 function parsePickerDate(value) {
-    const text = String(value || '').trim();
-    if (!text) return null;
-    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
-        const date = new Date(`${text}T00:00:00`);
-        return Number.isNaN(date.getTime()) || dateToPickerValue(date) !== text ? null : date;
-    }
-    const numericDate = text.match(/^(\d{1,2})[/. -](\d{1,2})(?:[/. -](\d{4}))?$/);
-    if (numericDate) {
-        const year = numericDate[3] ? Number(numericDate[3]) : tripYear();
-        const date = new Date(year, Number(numericDate[2]) - 1, Number(numericDate[1]));
-        return date.getDate() === Number(numericDate[1]) && date.getMonth() === Number(numericDate[2]) - 1 ? date : null;
-    }
-    return parseFrenchShortDate(text, tripYear());
+    return resolveTripDate(value);
 }
 
 function dateToPickerValue(date) {
@@ -150,26 +191,25 @@ function isSameDay(a, b) {
 }
 
 function collectScheduleItems() {
-    const year = tripYear();
     const items = [];
     (appData.vols || []).forEach(v => {
-        const d = parseFrenchShortDate(v.date, year);
+        const d = resolveTripDate(v.date);
         if (d) items.push({ date: d, time: v.depTime || '', sortKey: timeSortKey(v.depTime), icon: 'fa-plane', label: `${v.depCity || ''} → ${v.arrCity || ''}`, sub: `Vol ${v.num1 || ''}` });
     });
     (appData.transports || []).forEach(t => {
-        const d = parseFrenchShortDate(t.date, year);
+        const d = resolveTripDate(t.date);
         if (d) items.push({ date: d, time: t.depTime || '', sortKey: timeSortKey(t.depTime), icon: 'fa-train', label: `${t.depStation || ''} → ${t.arrStation || ''}`, sub: t.train || t.type || '' });
     });
     (appData.programme || []).forEach(prog => {
         (prog.activites || []).forEach(act => {
-            const d = parseFrenchShortDate(act.date, year);
+            const d = resolveTripDate(act.date);
             if (d) items.push({ date: d, time: act.heure || '', sortKey: timeSortKey(act.heure), icon: 'fa-location-dot', label: act.texte || '', sub: prog.ville || '', type: 'activity', programmeId: prog.id, activityDate: act.date });
         });
     });
     (appData.billets || []).forEach(billet => {
         const status = getBilletStatus(billet);
         if (status === 'annule') return;
-        const d = parseFrenchShortDate(billet.date, year);
+        const d = resolveTripDate(billet.date);
         if (!d) return;
         const details = [getBilletStatusLabel(status), billet.lieu, billet.reference && `Réf. ${billet.reference}`].filter(Boolean);
         items.push({
@@ -187,13 +227,12 @@ function collectScheduleItems() {
 // La température actuelle n'est utile que pendant une étape en cours.
 // Pour une destination future, mieux vaut ne pas afficher la météo du jour.
 function getCurrentDestination() {
-    const year = tripYear();
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     let current = null;
     (appData.programme || []).forEach(prog => {
-        const start = parseFrenchShortDate(prog.dateStart, year);
-        const end = parseFrenchShortDate(prog.dateEnd, year);
+        const start = resolveTripDate(prog.dateStart);
+        const end = resolveTripDate(prog.dateEnd);
         if (!start || !end) return;
         const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
         const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
@@ -953,10 +992,9 @@ function buildItineraryCalendar(events, tripTitle, generatedAt = new Date()) {
 function exportItineraryCalendar() {
     const status = document.getElementById('calendar-export-status');
     const events = [];
-    const year = tripYear();
     (appData.programme || []).forEach((destination, destinationIndex) => {
         (destination.activites || []).forEach((activity, activityIndex) => {
-            const date = parseFrenchShortDate(activity.date, year);
+            const date = resolveTripDate(activity.date);
             if (!date) return;
             const dateValue = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
             events.push({
@@ -971,7 +1009,7 @@ function exportItineraryCalendar() {
         });
     });
     (appData.vols || []).forEach((flight, index) => {
-        const date = parseFrenchShortDate(flight.date, year);
+        const date = resolveTripDate(flight.date);
         if (!date) return;
         const dateValue = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
         const route = [flight.depCity || flight.dep, flight.arrCity || flight.arr].filter(Boolean).join(' → ');
@@ -986,7 +1024,7 @@ function exportItineraryCalendar() {
         });
     });
     (appData.transports || []).forEach((transport, index) => {
-        const date = parseFrenchShortDate(transport.date, year);
+        const date = resolveTripDate(transport.date);
         if (!date) return;
         const dateValue = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
         const time = timeToPickerValue(transport.depTime);
@@ -1008,7 +1046,7 @@ function exportItineraryCalendar() {
     (appData.billets || []).forEach((billet, index) => {
         const status = getBilletStatus(billet);
         if (status === 'annule') return;
-        const date = parseFrenchShortDate(billet.date, year);
+        const date = resolveTripDate(billet.date);
         if (!date) return;
         const dateValue = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
         const details = [
@@ -1602,7 +1640,7 @@ function renderDashboardUpcomingActivities() {
         const hasActivities = programmeEntries.some(destination => Array.isArray(destination?.activites) && destination.activites.length);
         const hasUndatedActivities = programmeEntries.some(destination =>
             (Array.isArray(destination?.activites) ? destination.activites : [])
-                .some(activity => !parseFrenchShortDate(activity.date, tripYear()))
+                .some(activity => !resolveTripDate(activity.date))
         );
         const message = !hasActivities
             ? 'Aucune activité planifiée pour le moment.'
@@ -3010,8 +3048,8 @@ let itineraryInitialFocusSet = false;
 
 function sortedItineraryDays(prog) {
     return (prog.jours || []).slice().sort((a, b) => {
-        const da = parseFrenchShortDate(a, tripYear());
-        const db = parseFrenchShortDate(b, tripYear());
+        const da = resolveTripDate(a);
+        const db = resolveTripDate(b);
         if (da && db) return da - db;
         if (da) return -1;
         if (db) return 1;
@@ -3025,10 +3063,10 @@ function bestItineraryDay(prog) {
     const today = new Date();
     const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     return days.find(day => {
-        const parsed = parseFrenchShortDate(day, tripYear());
+        const parsed = resolveTripDate(day);
         return parsed && new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()).getTime() === todayDate.getTime();
     }) || days.find(day => {
-        const parsed = parseFrenchShortDate(day, tripYear());
+        const parsed = resolveTripDate(day);
         return parsed && parsed >= todayDate;
     }) || days[0];
 }
@@ -3050,15 +3088,15 @@ function focusInitialItineraryDay() {
     const today = new Date();
     const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     allDays.sort((a, b) => {
-        const da = parseFrenchShortDate(a.date, tripYear());
-        const db = parseFrenchShortDate(b.date, tripYear());
+        const da = resolveTripDate(a.date);
+        const db = resolveTripDate(b.date);
         return (da || 0) - (db || 0);
     });
     const initial = allDays.find(({ date }) => {
-        const parsed = parseFrenchShortDate(date, tripYear());
+        const parsed = resolveTripDate(date);
         return parsed && new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()).getTime() === todayDate.getTime();
     }) || allDays.find(({ date }) => {
-        const parsed = parseFrenchShortDate(date, tripYear());
+        const parsed = resolveTripDate(date);
         return parsed && parsed >= todayDate;
     }) || allDays[0];
 
@@ -3428,7 +3466,7 @@ function renderDestinationDayBar(progId) {
     const hotel = prog.hotel ? esc(prog.hotel) : 'Hébergement à préciser';
 
     const daysHtml = jours.length ? jours.map((date, index) => {
-        const parsed = parseFrenchShortDate(date, tripYear());
+        const parsed = resolveTripDate(date);
         const weekday = parsed ? parsed.toLocaleDateString('fr-FR', { weekday: 'short' }).replace('.', '') : 'jour';
         const dayNumber = parsed ? parsed.toLocaleDateString('fr-FR', { day: '2-digit' }) : String(index + 1).padStart(2, '0');
         const month = parsed ? parsed.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '') : date;
@@ -4705,20 +4743,7 @@ function showBilletsToBook() {
 }
 
 function billetDateForSort(value) {
-    const parsed = parsePickerDate(value);
-    if (!parsed || /^\d{4}-\d{2}-\d{2}$/.test(String(value || '').trim())) return parsed;
-    const tripStart = parsePickerDate(appData.tripStart);
-    const tripEnd = parsePickerDate(appData.tripEnd);
-    if (!tripStart || !tripEnd || tripEnd < tripStart) return parsed;
-
-    const years = new Set([tripStart.getFullYear() - 1, tripStart.getFullYear(), tripEnd.getFullYear(), tripEnd.getFullYear() + 1]);
-    const candidates = [...years].map(year => new Date(year, parsed.getMonth(), parsed.getDate()))
-        .filter(date => date.getMonth() === parsed.getMonth() && date.getDate() === parsed.getDate());
-    const insideTrip = candidates.find(date => date >= tripStart && date <= tripEnd);
-    if (insideTrip) return insideTrip;
-
-    const distance = date => date < tripStart ? tripStart - date : date > tripEnd ? date - tripEnd : 0;
-    return candidates.sort((a, b) => distance(a) - distance(b))[0] || parsed;
+    return resolveTripDate(value);
 }
 
 function sortBillets(billets, sort = 'date') {

@@ -9,20 +9,15 @@ const start = appSource.indexOf('function billetDateForSort(');
 const end = appSource.indexOf('\nfunction renderBillets()', start);
 assert.ok(start >= 0 && end > start, 'expected reservation date sorting helpers to be present');
 const sortHelper = appSource.slice(start, end);
+const dateHelpersStart = appSource.indexOf('function stripAccents(');
+const dateHelpersEnd = appSource.indexOf('\nfunction parsePickerDate(', dateHelpersStart);
+assert.ok(dateHelpersStart >= 0 && dateHelpersEnd > dateHelpersStart, 'expected trip date helpers to be present');
+const dateHelpers = appSource.slice(dateHelpersStart, dateHelpersEnd);
 
 function sort(billets, order = 'date', tripStart = '2027-04-10', tripEnd = '2027-04-20') {
-    return Array.from(vm.runInNewContext(`${sortHelper}\nsortBillets(${JSON.stringify(billets)}, ${JSON.stringify(order)}).map(item => item.nom);`, {
+    return Array.from(vm.runInNewContext(`${dateHelpers}\n${sortHelper}\nsortBillets(${JSON.stringify(billets)}, ${JSON.stringify(order)}).map(item => item.nom);`, {
         Intl,
         appData: { tripStart, tripEnd },
-        parsePickerDate(value) {
-            const iso = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-            if (iso) return new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
-            const match = String(value || '').match(/^(\d{1,2})\s+avr\.?$/i);
-            const crossYearMatch = String(value || '').match(/^(\d{1,2})\s+(janv|dec)\.?$/i);
-            if (match) return new Date(Number(tripStart.slice(0, 4)), 3, Number(match[1]));
-            if (crossYearMatch) return new Date(Number(tripStart.slice(0, 4)), crossYearMatch[2] === 'janv' ? 0 : 11, Number(crossYearMatch[1]));
-            return null;
-        },
         timeToPickerValue(value) {
             const match = String(value || '').match(/^(\d{1,2}):(\d{2})/);
             return match ? `${String(match[1]).padStart(2, '0')}:${match[2]}` : '';
