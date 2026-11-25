@@ -7,15 +7,18 @@
 //    touche pas, laissé au réseau normal.
 // CACHE_VERSION doit être incrémenté à chaque modification de ce fichier pour
 // forcer le nettoyage de l'ancien cache.
-const CACHE_VERSION = 'v137';
+const CACHE_VERSION = 'v138';
 const CACHE_NAME = `cap-commun-cache-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
     './',
     './index.html',
     './manifest.json',
+    './css/app.css?v=1',
     './css/styles.css',
     './css/getready-shell.css',
+    './css/epure.css',
+    './css/epure-force.css',
     './js/app.js',
     './js/firebase-sync.js',
     './js/flight-api-config.js',

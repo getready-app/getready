@@ -806,7 +806,10 @@ function getAutomaticTravelBackground() {
 function applyAppearancePreferences() {
     const preferences = appData.preferences || {};
     const theme = ['sun', 'ocean', 'lavender'].includes(preferences.theme) ? preferences.theme : 'sun';
-    const colorMode = preferences.colorMode === 'dark' ? 'dark' : 'light';
+    // « auto » suit le thème clair/sombre du système ; c'est le choix par défaut.
+    const colorPreference = ['light', 'dark', 'auto'].includes(preferences.colorMode) ? preferences.colorMode : 'auto';
+    const systemPrefersDark = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const colorMode = colorPreference === 'auto' ? (systemPrefersDark ? 'dark' : 'light') : colorPreference;
     const selectedBackground = ['auto', ...Object.keys(TRAVEL_BACKGROUNDS)].includes(preferences.background) ? preferences.background : 'auto';
     const motion = preferences.motion === 'reduced' || preferences.reduceMotion ? 'reduced' : 'system';
     const automatic = getAutomaticTravelBackground();
@@ -817,21 +820,20 @@ function applyAppearancePreferences() {
 
     document.documentElement.dataset.theme = theme;
     document.documentElement.dataset.colorMode = colorMode;
+    document.documentElement.dataset.colorPreference = colorPreference;
     try { document.body.classList.toggle('sidebar-collapsed', localStorage.getItem('getready_sidebar_collapsed') === 'true'); } catch {}
     const sidebarButton = document.querySelector('.nav-collapse-button');
     if (sidebarButton) sidebarButton.setAttribute('aria-expanded', String(!document.body.classList.contains('sidebar-collapsed')));
     const themeMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeMeta) themeMeta.content = colorMode === 'dark' ? '#111a24' : theme === 'ocean' ? '#eef7fa' : theme === 'lavender' ? '#f6f2fb' : '#f3f6fb';
+    if (themeMeta) themeMeta.content = colorMode === 'dark' ? '#000000' : '#f2f2f7';
     document.body.classList.toggle('reduce-motion', motion === 'reduced');
     document.body.dataset.travelBackground = backgroundKey;
-    if (hero) {
-        hero.style.backgroundImage = showTravelPhoto
-            ? `linear-gradient(90deg, rgba(16, 39, 35, .48) 0%, rgba(16, 39, 35, .22) 48%, rgba(16, 39, 35, .04) 100%), url("${background.image}")`
-            : 'none';
-    }
+    // Design épuré : la photo du voyage est montrée seule dans la carte du
+    // voyage, l'en-tête de l'accueil reste neutre.
+    if (hero) hero.style.backgroundImage = 'none';
     const heroOrbit = document.querySelector('.hero-orbit');
-    if (heroOrbit) {
-        heroOrbit.style.backgroundImage = `linear-gradient(180deg,rgba(11,36,36,.08),rgba(11,36,36,.64)),url("${background.image}")`;
+    if (heroOrbit && showTravelPhoto) {
+        heroOrbit.style.backgroundImage = `linear-gradient(180deg,rgba(0,0,0,0) 52%,rgba(0,0,0,.42)),url("${background.image}")`;
         heroOrbit.style.backgroundPosition = 'center 65%';
         heroOrbit.style.backgroundSize = 'cover';
     }
@@ -849,7 +851,7 @@ function applyAppearancePreferences() {
         button.setAttribute('aria-pressed', String(selected));
     });
     document.querySelectorAll('[data-color-mode-choice]').forEach(button => {
-        const selected = button.dataset.colorModeChoice === colorMode;
+        const selected = button.dataset.colorModeChoice === colorPreference;
         button.classList.toggle('is-selected', selected);
         button.setAttribute('aria-pressed', String(selected));
     });
@@ -892,7 +894,7 @@ function setVisualTheme(theme) {
 }
 
 function setColorMode(mode) {
-    if (!['light', 'dark'].includes(mode)) return;
+    if (!['light', 'dark', 'auto'].includes(mode)) return;
     appData.preferences.colorMode = mode;
     saveToLocalStorage();
     applyAppearancePreferences();
@@ -5015,6 +5017,10 @@ function initializeApp() {
     document.body.dataset.page = 'accueil';
     document.body.classList.add('is-editor');
     applyAppearancePreferences();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => {
+        const preference = appData?.preferences?.colorMode;
+        if (!['light', 'dark'].includes(preference)) applyAppearancePreferences();
+    });
     window.matchMedia('(min-width: 601px)').addEventListener('change', () => {
         if (document.body.dataset.page === 'accueil') applyAppearancePreferences();
     });

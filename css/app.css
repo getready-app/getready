@@ -1,0 +1,18 @@
+/* ==========================================================================
+   GetReady — point d'entrée des styles (refonte « épurée »).
+
+   Les couches (cascade layers) règlent la priorité sans guerre de sélecteurs :
+   - epure-force : uniquement des déclarations !important ; elle l'emporte sur
+                   les !important de l'ancien CSS (pour les importants, la
+                   première couche déclarée gagne).
+   - legacy      : ancien CSS conservé pendant la refonte, page par page.
+   - epure       : nouveau design system ; il l'emporte sur l'ancien CSS
+                   sans avoir besoin de !important.
+   Quand toutes les pages seront migrées, la couche legacy sera supprimée.
+   ========================================================================== */
+@layer epure-force, legacy, epure;
+
+@import url("styles.css") layer(legacy);
+@import url("getready-shell.css") layer(legacy);
+@import url("epure.css") layer(epure);
+@import url("epure-force.css") layer(epure-force);
