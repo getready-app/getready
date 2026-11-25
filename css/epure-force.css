@@ -200,3 +200,17 @@
 .prep-day-heading { border: 0 !important; background: transparent !important; }
 .prep-task { border-left: 0 !important; border-right: 0 !important; background: transparent !important; }
 #page-checklist .prep-eyebrow i { display: none !important; }
+
+/* Budget : textes et pieds de cartes hérités de l'ancien bandeau et des
+   anciennes cartes de dépenses. */
+#page-budget > .page-header .live-rate { color: var(--ep-ink-2) !important; }
+#page-budget > .page-header .live-dot { background: var(--ep-success) !important; }
+#page-budget > .page-header .budget-header-add { color: var(--ep-accent-ink) !important; background: var(--ep-accent) !important; box-shadow: none !important; }
+.expense-card { border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
+.expense-card-footer { margin: 0 !important; padding: 0 !important; border: 0 !important; background: transparent !important; }
+.expense-card .delete-btn { font-size: 13px !important; color: var(--ep-ink-3) !important; background: transparent !important; }
+.expense-paid-pill { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-fill) !important; }
+.expense-paid-pill.paid { color: var(--ep-success) !important; background: color-mix(in srgb, var(--ep-success) 14%, transparent) !important; }
+.swap-currencies,
+html[data-theme] body[data-page="budget"] #page-budget .swap-currencies { color: var(--ep-ink) !important; background: var(--ep-fill) !important; }
+.currency-tool-heading > i { display: inline-grid !important; place-items: center !important; line-height: 1 !important; color: #FFFFFF !important; background: var(--ep-tile-coral) !important; }

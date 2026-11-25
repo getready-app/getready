@@ -3982,11 +3982,11 @@ function updateBudgetUI() {
             : '';
         list.innerHTML += `
             <div class="expense-card">
-                    <button class="delete-btn" ${actionAttrs('deleteItem', ['budget', exp.id])} aria-label="Supprimer cette dépense" style="top: 16px; right: 15px;"><i class="fa-solid fa-xmark"></i></button>
+                    <button class="delete-btn" ${actionAttrs('deleteItem', ['budget', exp.id])} aria-label="Supprimer cette dépense"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                 <div class="expense-card-top">
                 <div class="expense-info">
                     <h4>${esc(exp.nom)}</h4>
-                        <p><i class="fa-solid ${icon}" style="margin-right:4px;"></i>${esc(cat)}${converted === null ? ' · conversion indisponible' : ` · ${formatCurrency(converted, baseCurrency)}`}</p>
+                        <p><i class="fa-solid ${icon}" aria-hidden="true"></i>${esc(cat)}${converted === null ? ' · conversion indisponible' : ` · ${formatCurrency(converted, baseCurrency)}`}</p>
                     </div>
                     <div class="expense-amounts">
                     <span class="expense-eur">${formatCurrency(amount, currency)}</span>
@@ -4051,7 +4051,7 @@ function renderBudgetPeopleManageList() {
     const container = document.getElementById('budget-people-list');
     if (!container) return;
     if (appData.budgetPeople.length === 0) {
-        container.innerHTML = `<p style="font-size:0.82rem; color:var(--text-muted); margin:0;">Aucun prénom pour l'instant — ajoute-en un ci-dessous.</p>`;
+        container.innerHTML = `<p class="budget-people-empty">Aucun prénom pour l'instant — ajoute-en un ci-dessous.</p>`;
         return;
     }
     container.innerHTML = appData.budgetPeople.map((name, i) => `
@@ -4216,9 +4216,9 @@ function renderBudgetSplit(paidByPerson, settlements) {
     }
 
     const rowsHtml = names.map(name =>
-        `<div style="display:flex; justify-content:space-between; font-size:0.88rem; padding:4px 0;">
+        `<div class="budget-advance-row">
             <span>${esc(name)}</span>
-            <span style="font-weight:700;">${formatCurrency(paidByPerson[name], currency)}</span>
+            <strong>${formatCurrency(paidByPerson[name], currency)}</strong>
         </div>`
     ).join('');
 
@@ -4227,8 +4227,8 @@ function renderBudgetSplit(paidByPerson, settlements) {
         : `<div class="budget-settlement-balanced">Comptes équilibrés 👌</div>`;
 
     card.innerHTML = `
-        <div class="card" style="padding:14px 16px; margin-bottom:16px;">
-            <div class="section-title" style="margin-bottom:6px;">Avances payées</div>
+        <div class="card budget-split">
+            <div class="section-title">Avances payées</div>
             ${rowsHtml}
             <div class="budget-settlement-list" aria-label="Remboursements entre participants">${transferHtml}</div>
         </div>

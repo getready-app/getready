@@ -16,7 +16,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="css/app.css?v=3">
+    <link rel="stylesheet" href="css/app.css?v=4">
 </head>
 <body>
 
@@ -261,16 +261,16 @@
                 <p>Chaque dépense peut être saisie dans sa devise d'origine.</p>
             </div>
 
-            <div class="card" style="padding:14px 16px; margin-bottom:16px;">
-                <div class="section-title" style="margin-bottom:8px;">Qui participe ?</div>
-                <div id="budget-people-list" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;"></div>
-                <div id="budget-people-add-row" style="display:flex; gap:8px; align-items:center;">
-                    <input type="text" id="budget-people-input" placeholder="Ajouter un prénom..." aria-label="Nom du participant" style="flex:1; padding:10px 12px; border-radius:10px; border:1px solid #ddd; font-size:0.95rem;" data-action="handleBudgetPersonEnter" data-action-event="keydown" data-action-event-object>
-                    <button type="button" data-action="addBudgetPerson" style="border:1.5px solid var(--accent-primary); background:none; color:var(--accent-primary); border-radius:20px; padding:10px 18px; font-weight:700; cursor:pointer; white-space:nowrap;">+ Ajouter</button>
+            <div class="card budget-people-card">
+                <div class="section-title">Qui participe ?</div>
+                <div id="budget-people-list" class="budget-people-list"></div>
+                <div id="budget-people-add-row" class="budget-people-add-row">
+                    <input type="text" id="budget-people-input" placeholder="Ajouter un prénom…" aria-label="Nom du participant" data-action="handleBudgetPersonEnter" data-action-event="keydown" data-action-event-object>
+                    <button type="button" class="budget-people-add-button" data-action="addBudgetPerson"><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter</button>
                 </div>
             </div>
 
-            <h2 class="section-title" style="margin-bottom: 10px;">Dépenses</h2>
+            <h2 class="section-title budget-expenses-title">Dépenses</h2>
             <div class="budget-summary-row">
                 <div class="budget-stat">
                     <div class="budget-stat-value" id="budget-total-paid">0 €</div>
@@ -1092,7 +1092,7 @@
     </div>
 
     <script src="js/flight-api-config.js"></script>
-    <script type="module" src="js/app.js?v=115"></script>
+    <script type="module" src="js/app.js?v=116"></script>
 
     <!-- ================= SERVICE WORKER (hors-ligne) ================= -->
     <script src="js/pwa.js"></script>
