@@ -993,3 +993,426 @@ a { color: var(--ep-accent-text); }
 body.reduce-motion * { transition: none; animation: none; }
 
 @keyframes ep-page-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ==========================================================================
+   8. En-têtes de pages (Itinéraire, Préparatifs, Budget, Carnet) :
+      grand titre façon iOS sur fond neutre, plus de bandeau coloré.
+   ========================================================================== */
+.page:not(#page-accueil) > .page-header,
+#page-checklist > .prep-page-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: auto;
+    max-width: 1120px;
+    min-height: 0;
+    margin: 0 auto;
+    padding: 28px clamp(16px, 3vw, 40px) 6px;
+    border: 0;
+    border-radius: 0;
+    color: var(--ep-ink);
+    background: none;
+    box-shadow: none;
+    text-align: left;
+}
+.page:not(#page-accueil) > .page-header h1,
+#page-checklist > .prep-page-header h1 {
+    margin: 0;
+    color: var(--ep-ink);
+    font-family: var(--ep-font);
+    font-size: clamp(28px, 3.4vw, 34px);
+    font-weight: 700;
+    letter-spacing: -.03em;
+    line-height: 1.1;
+    text-shadow: none;
+}
+.page:not(#page-accueil) > .page-header p,
+#page-checklist > .prep-page-header p {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--ep-ink-2);
+    font-size: 15px;
+    text-shadow: none;
+}
+.page:not(#page-accueil) > .content-container {
+    width: auto;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 12px clamp(16px, 3vw, 40px) 110px;
+    background: none;
+}
+
+/* Bouton flottant « + » : la seule action flottante, en couleur d'accent */
+.btn-add-float {
+    width: 52px;
+    height: 52px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-accent-ink);
+    background: var(--ep-accent);
+    box-shadow: var(--ep-shadow-pop);
+    font-size: 19px;
+}
+.btn-add-float:hover { background: color-mix(in srgb, var(--ep-accent) 88%, #000); transform: none; }
+
+/* Boutons secondaires en « pilule » (exports, cartes) */
+.calendar-export-button,
+.itinerary-place-map,
+.itinerary-day-map-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 34px;
+    padding: 0 13px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-accent-text);
+    background: var(--ep-accent-soft);
+    box-shadow: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.itinerary-calendar-export { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+#calendar-export-status { color: var(--ep-ink-2); font-size: 13px; }
+
+/* Titres de sections internes (« Ton voyage / Choisis une ville »…) */
+.itinerary-route-heading,
+.itinerary-section-title,
+.itinerary-plan-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 18px 2px 10px;
+    padding: 0;
+    border: 0;
+    background: none;
+}
+.itinerary-route-heading span,
+.itinerary-section-title > div > span,
+.itinerary-plan-heading > div > span,
+.itinerary-place-overline,
+.itinerary-day-map-heading > span {
+    display: block;
+    color: var(--ep-ink-2);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: lowercase;
+}
+.itinerary-route-heading span::first-letter,
+.itinerary-section-title > div > span::first-letter,
+.itinerary-plan-heading > div > span::first-letter,
+.itinerary-place-overline::first-letter,
+.itinerary-day-map-heading > span::first-letter { text-transform: uppercase; }
+.itinerary-route-heading h2,
+.itinerary-section-title h3,
+.itinerary-plan-heading h3 {
+    margin: 0;
+    color: var(--ep-ink);
+    font-family: var(--ep-font);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+}
+.itinerary-day-total { color: var(--ep-ink-2); font-size: 13px; font-weight: 500; }
+.itinerary-route-hint { margin: -4px 2px 10px; color: var(--ep-ink-3); font-size: 13px; }
+
+/* ==========================================================================
+   9. Itinéraire
+   ========================================================================== */
+.itinerary-planner { margin: 0; padding: 0; background: none; }
+
+/* Villes : cartes blanches qui défilent, l'étape choisie est entourée */
+.itinerary-city-carousel {
+    display: flex;
+    gap: 12px;
+    margin: 0 -4px;
+    padding: 4px 4px 14px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ep-fill-strong) transparent;
+}
+.itinerary-city-slide {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 230px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    scroll-snap-align: start;
+}
+.itinerary-city-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: 100%;
+    min-height: 0;
+    padding: 14px;
+    border: 0;
+    border-radius: var(--ep-radius);
+    color: var(--ep-ink);
+    background: var(--ep-surface);
+    box-shadow: var(--ep-shadow);
+    text-align: left;
+    transform: none;
+}
+.itinerary-city-card:hover { background: var(--ep-surface-2); transform: none; }
+.itinerary-city-slide.is-active .itinerary-city-card { box-shadow: var(--ep-shadow), inset 0 0 0 2px var(--ep-accent); }
+.itinerary-city-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ep-ink-2);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: lowercase;
+}
+.itinerary-city-index {
+    display: inline-grid;
+    place-items: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 7px;
+    color: #FFFFFF;
+    background: var(--ep-tile-teal);
+    font-size: 11.5px;
+    font-weight: 700;
+}
+.itinerary-city-slide.is-active .itinerary-city-index { background: var(--ep-accent); color: var(--ep-accent-ink); }
+.itinerary-city-card strong { color: var(--ep-ink); font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+.itinerary-city-dates,
+.itinerary-city-foot { display: flex; align-items: center; gap: 6px; color: var(--ep-ink-2); font-size: 13px; }
+.itinerary-city-dates i,
+.itinerary-city-foot i { color: var(--ep-ink-3); }
+.itinerary-city-foot { justify-content: space-between; width: 100%; padding-top: 8px; border-top: 1px solid var(--ep-line); }
+.itinerary-city-foot > span { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.itinerary-city-actions { padding: 0 4px; color: var(--ep-ink-3); font-size: 12.5px; background: none; border: 0; }
+
+/* Étape choisie : hébergement et dates */
+.itinerary-selected-stage { display: flex; flex-direction: column; gap: 0; margin: 0; }
+.itinerary-selected-place {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 4px 0 0;
+    padding: 12px 14px;
+    border: 0;
+    border-radius: var(--ep-radius);
+    color: var(--ep-ink);
+    background: var(--ep-surface);
+    box-shadow: var(--ep-shadow);
+}
+.itinerary-place-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.itinerary-place-copy > div { display: flex; align-items: center; gap: 10px; color: var(--ep-ink); font-weight: 600; }
+.itinerary-place-copy > div i {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    color: #FFFFFF;
+    background: var(--ep-tile-lavender);
+    font-size: 12px;
+}
+.itinerary-place-copy small { display: flex; align-items: center; gap: 6px; color: var(--ep-ink-2); font-size: 13px; }
+
+/* Choix de la journée : rangée de dates, la journée choisie en couleur d'accent */
+.itinerary-day-picker-section { margin: 0; padding: 0; border: 0; background: none; box-shadow: none; }
+.itinerary-date-rail {
+    display: flex;
+    gap: 10px;
+    margin: 0 -4px;
+    padding: 4px 4px 12px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ep-fill-strong) transparent;
+}
+.itinerary-date-card {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 84px;
+    min-height: 0;
+    padding: 10px 6px;
+    border: 0;
+    border-radius: 14px;
+    color: var(--ep-ink);
+    background: var(--ep-surface);
+    box-shadow: var(--ep-shadow);
+    text-align: center;
+    transform: none;
+}
+.itinerary-date-card:hover { background: var(--ep-surface-2); transform: none; }
+.itinerary-date-weekday { color: var(--ep-ink-2); font-size: 12px; font-weight: 600; text-transform: capitalize; }
+.itinerary-date-main { display: flex; flex-direction: column; align-items: center; line-height: 1.05; }
+.itinerary-date-main strong { color: var(--ep-ink); font-size: 24px; font-weight: 700; letter-spacing: -.03em; }
+.itinerary-date-main span { color: var(--ep-ink-2); font-size: 12.5px; }
+.itinerary-date-activity-count { margin-top: 4px; color: var(--ep-ink-3); font-size: 11px; }
+.itinerary-date-card.is-selected { color: var(--ep-accent-ink); background: var(--ep-accent); box-shadow: none; }
+.itinerary-date-card.is-selected .itinerary-date-weekday,
+.itinerary-date-card.is-selected .itinerary-date-main strong,
+.itinerary-date-card.is-selected .itinerary-date-main span,
+.itinerary-date-card.is-selected .itinerary-date-activity-count { color: var(--ep-accent-ink); }
+.itinerary-no-dates { display: flex; align-items: center; gap: 10px; padding: 14px; border-radius: var(--ep-radius); color: var(--ep-ink-2); background: var(--ep-surface); box-shadow: var(--ep-shadow); }
+
+/* Planning du jour */
+.itinerary-day-plan {
+    margin: 8px 0 0;
+    padding: 4px 16px 16px;
+    border: 0;
+    border-radius: var(--ep-radius-lg);
+    color: var(--ep-ink);
+    background: var(--ep-surface);
+    box-shadow: var(--ep-shadow);
+}
+.itinerary-plan-heading { margin: 12px 0 10px; }
+.itinerary-route-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.itinerary-route-mode-label { display: inline-flex; align-items: center; gap: 6px; color: var(--ep-ink-2); font-size: 13px; }
+.itinerary-route-mode {
+    min-height: 34px;
+    padding: 0 28px 0 12px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-ink);
+    background-color: var(--ep-fill);
+    font: 500 13.5px var(--ep-font);
+}
+.itinerary-map-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); gap: 16px; align-items: start; }
+.itinerary-map-layout:not(:has(.itinerary-day-map-preview)) { grid-template-columns: minmax(0, 1fr); }
+.itinerary-activities { display: flex; flex-direction: column; gap: 0; margin: 0; padding: 0; background: none; border: 0; }
+.itinerary-activity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    padding: 12px 2px;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+.itinerary-activity + .itinerary-activity { border-top: 1px solid var(--ep-line); }
+.itinerary-activity-time {
+    flex: none;
+    min-width: 58px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    color: var(--ep-ink);
+    background: var(--ep-fill);
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+.itinerary-activity-copy { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; color: var(--ep-ink); }
+.itinerary-activity-copy > span { flex: 1; min-width: 0; font-size: 15px; }
+.activity-map-focus-button {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-ink-2);
+    background: var(--ep-fill);
+    box-shadow: none;
+}
+.activity-map-focus-button[aria-pressed="true"] { color: var(--ep-accent-ink); background: var(--ep-accent); }
+.activity-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: none;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-accent-text);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.activity-link-btn:hover { background: var(--ep-accent-soft); }
+.itinerary-empty-activity,
+.itinerary-plan-empty { margin: 0; padding: 18px 4px; color: var(--ep-ink-2); background: none; border: 0; text-align: left; }
+.itinerary-plan-empty strong { color: var(--ep-ink); }
+.itinerary-empty-icon { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; color: #FFFFFF; background: var(--ep-tile-teal); }
+
+/* Aperçu de carte */
+.itinerary-day-map-preview {
+    margin: 0;
+    padding: 12px;
+    border: 0;
+    border-radius: var(--ep-radius);
+    background: var(--ep-surface-2);
+    box-shadow: none;
+}
+.itinerary-day-map-heading { display: flex; flex-direction: column; gap: 1px; margin-bottom: 10px; }
+.itinerary-day-map-heading strong { color: var(--ep-ink); font-size: 15px; font-weight: 600; }
+.itinerary-day-map-heading small { color: var(--ep-ink-2); font-size: 12.5px; }
+.itinerary-day-map-preview iframe { display: block; width: 100%; height: 260px; border: 0; border-radius: 12px; }
+
+/* Édition rapide (journée, activité) */
+.itinerary-activity-edit,
+.itinerary-day-edit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--ep-surface-2);
+}
+.itinerary-edit-actions,
+.itinerary-day-edit { display: flex; gap: 8px; }
+.itinerary-edit-actions button:first-child,
+.itinerary-day-edit > button:first-of-type { border: 0; border-radius: 999px; padding: 8px 14px; color: var(--ep-accent-ink); background: var(--ep-accent); font-weight: 600; }
+.itinerary-edit-actions button + button,
+.itinerary-day-edit > button + button { border: 0; border-radius: 999px; padding: 8px 14px; color: var(--ep-ink); background: var(--ep-fill); font-weight: 600; }
+
+/* État vide de l'itinéraire */
+#programme-list .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 32px 20px;
+    border: 0;
+    border-radius: var(--ep-radius-lg);
+    color: var(--ep-ink-2);
+    background: var(--ep-surface);
+    box-shadow: var(--ep-shadow);
+    text-align: center;
+}
+#programme-list .empty-state-icon { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; color: #FFFFFF; background: var(--ep-tile-teal); font-size: 19px; }
+#programme-list .empty-state h3 { margin: 4px 0 0; color: var(--ep-ink); font-size: 19px; }
+#programme-list .empty-state button { margin-top: 6px; border: 0; border-radius: 999px; padding: 10px 16px; color: var(--ep-accent-ink); background: var(--ep-accent); font-weight: 600; }
+
+@media (max-width: 860px) {
+    .itinerary-map-layout { grid-template-columns: minmax(0, 1fr); }
+    .itinerary-plan-heading { flex-direction: column; align-items: flex-start; }
+    .itinerary-city-slide { width: 210px; }
+    .itinerary-day-plan { padding: 4px 12px 12px; }
+}
+@media (max-width: 1079px) {
+    .btn-add-float { bottom: calc(82px + env(safe-area-inset-bottom)); }
+}
+.itinerary-place-copy { flex: 1 1 auto; }
+.itinerary-place-copy > div > span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.itinerary-place-map { flex: none; }
