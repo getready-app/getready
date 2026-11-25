@@ -11,10 +11,10 @@ test('la connexion propose une découverte du séjour fictif sans compte', () =>
     assert.ok(gateStart >= 0 && gateEnd > gateStart, 'expected the authentication gate to be present');
     const gate = html.slice(gateStart, gateEnd);
 
-    assert.match(gate, /<a class="auth-demo-link" href="\?demo=lisbonne">/);
+    assert.match(gate, /<a class="auth-demo-link" href="\?demo=newyork">/);
     assert.match(gate, /Découvrir GetReady sans créer de compte/);
-    assert.match(gate, /séjour fictif de Lisbonne/);
-    assert.match(gate, /changements restent sur cet appareil/);
+    assert.match(gate, /simulation de Noël à New York/);
+    assert.match(gate, /aucune réservation effectuée/);
 });
 
 test('le lien de découverte reste accessible et respecte la réduction des animations', () => {

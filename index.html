@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="css/styles.css?v=112">
-    <link rel="stylesheet" href="css/getready-shell.css?v=20">
+    <link rel="stylesheet" href="css/getready-shell.css?v=24">
 </head>
 <body>
 
@@ -53,7 +53,7 @@
         </div>
         <div class="app-topbar-actions">
             <span class="app-topbar-date" id="app-topbar-trip-date">Dates à définir</span>
-            <button type="button" class="app-topbar-new-trip" data-action="openModal" data-action-args='["modal-choose-type"]'><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Nouveau séjour</span></button>
+            <button type="button" class="app-topbar-new-trip" data-action="startNewTrip"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Nouveau séjour</span></button>
             <button type="button" class="app-topbar-edit" data-action="openEditTripModal" aria-label="Modifier les informations du séjour" title="Modifier les informations du séjour"><i class="fa-solid fa-sliders" aria-hidden="true"></i></button>
         </div>
     </header>
@@ -151,8 +151,8 @@
                 </ol>
             </section>
             <div class="dashboard-stats">
-                <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["budget"]'><span class="stat-icon stat-green"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span><span class="stat-copy"><small>BUDGET PRÉVU</small><strong id="dashboard-budget">Chargement…</strong></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow" aria-hidden="true"></i></button>
-                <button type="button" class="dashboard-stat" data-action="openDashboardReservations"><span class="stat-icon stat-violet"><i class="fa-solid fa-ticket" aria-hidden="true"></i></span><span class="stat-copy"><small>RÉSERVATIONS</small><strong id="dashboard-reservations">Chargement…</strong></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow" aria-hidden="true"></i></button>
+                <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["budget"]'><span class="stat-icon stat-green"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span><span class="stat-copy"><small>BUDGET PRÉVU</small><strong id="dashboard-budget">Chargement…</strong><small class="dashboard-stat-detail" id="dashboard-budget-detail"></small></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow" aria-hidden="true"></i></button>
+                <button type="button" class="dashboard-stat" data-action="openDashboardReservations"><span class="stat-icon stat-violet"><i class="fa-solid fa-ticket" aria-hidden="true"></i></span><span class="stat-copy"><small>RÉSERVATIONS</small><strong id="dashboard-reservations">Chargement…</strong><small class="dashboard-stat-detail" id="dashboard-reservations-detail"></small></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow" aria-hidden="true"></i></button>
                 <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["checklist"]'><span class="stat-icon stat-amber"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span><span class="stat-copy"><small>À PRÉPARER</small><strong id="dashboard-checklist">Chargement…</strong><small class="dashboard-stat-detail" id="dashboard-prep-progress"></small></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow" aria-hidden="true"></i></button>
                 <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["programme","day"]'><span class="stat-icon stat-blue"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i></span><span class="stat-copy"><small>ACTIVITÉS</small><strong id="dashboard-activities">—</strong><small class="dashboard-stat-detail" id="dashboard-activities-detail">Mise à jour du séjour</small></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow" aria-hidden="true"></i></button>
             </div>
@@ -471,7 +471,7 @@
             <span class="brand-mark"><i class="fa-solid fa-compass-drafting" aria-hidden="true"></i></span>
             <span class="brand-type">GET<span>READY</span><small>PRÊT·E À PARTIR ?</small></span>
         </a>
-        <button type="button" class="nav-new-trip" data-action="openModal" data-action-args='["modal-choose-type"]'><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Nouveau séjour</span></button>
+        <button type="button" class="nav-new-trip" data-action="startNewTrip"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Nouveau séjour</span></button>
         <button type="button" class="nav-collapse-button" data-action="toggleSidebar" data-action-event-object aria-label="Réduire le menu" aria-expanded="true"><i class="fa-solid fa-angles-left" aria-hidden="true"></i></button>
         <button type="button" class="nav-item active" data-tab="accueil" aria-label="Vue d’ensemble" aria-current="page" data-action="switchTab" data-action-args='["accueil"]' data-action-target>
             <i class="fa-solid fa-house" aria-hidden="true"></i>
@@ -1093,7 +1093,7 @@
     </div>
 
     <script src="js/flight-api-config.js"></script>
-    <script type="module" src="js/app.js?v=112"></script>
+    <script type="module" src="js/app.js?v=113"></script>
 
     <!-- ================= SERVICE WORKER (hors-ligne) ================= -->
     <script src="js/pwa.js"></script>

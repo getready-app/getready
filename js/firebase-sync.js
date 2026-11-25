@@ -841,6 +841,7 @@ async function handleUserState(user) {
     }
     activeUser = user;
     renderAccount(user);
+    window.dispatchEvent(new CustomEvent('getready:user', { detail: { displayName: user?.displayName || '' } }));
     if (userChanged && user) setAuthGate('loading', user);
     if (!user) {
         invalidateActiveSyncContext();

@@ -56,7 +56,10 @@ test('le guide reste visible tant que les informations de base ne sont pas compl
     const stateStart = appSource.indexOf('function getFirstTripSetupState(data) {');
     const stateEnd = appSource.indexOf('\nfunction openEditTripModal(', stateStart);
     assert.ok(stateStart >= 0 && stateEnd > stateStart, 'expected setup-state helper to be present');
-    const helper = appSource.slice(stateStart, stateEnd);
+    const namedStart = appSource.indexOf('function getNamedTripDestinations(data) {');
+    const namedEnd = appSource.indexOf('\nfunction renderDashboardSummary()', namedStart);
+    assert.ok(namedStart >= 0 && namedEnd > namedStart, 'expected named destinations helper to be present');
+    const helper = `${appSource.slice(namedStart, namedEnd)}\n${appSource.slice(stateStart, stateEnd)}`;
     const state = vm.runInNewContext(`${helper}\ngetFirstTripSetupState(data)`, {
         data: { tripTitle: 'Mon séjour', tripStart: '', tripEnd: '', programme: [] }
     });

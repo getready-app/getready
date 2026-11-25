@@ -1282,18 +1282,27 @@ function getDashboardChecklistProgress(data) {
 
 let dashboardSyncState = 'ready';
 let dashboardTripsSnapshot = { trips: [], selected: null, complete: false, signedOut: false, loading: true };
+let dashboardUserName = '';
 
 function renderDashboardReservationSummary() {
     const element = document.getElementById('dashboard-reservations');
     if (!element) return;
+    const detail = document.getElementById('dashboard-reservations-detail');
     if (dashboardSyncState === 'loading') {
         element.textContent = 'Chargement…';
         element.title = 'Mise à jour des réservations du séjour.';
         element.setAttribute('aria-label', 'Chargement des réservations du séjour.');
+        if (detail) detail.textContent = 'Mise à jour du carnet';
         return;
     }
     const reservations = (appData.billets || []).filter(item => getBilletStatus(item) !== 'annule');
     const pendingCount = reservations.filter(item => getBilletStatus(item) === 'a-reserver').length;
+    const confirmedCount = reservations.length - pendingCount;
+    if (detail) {
+        detail.textContent = reservations.length
+            ? `${confirmedCount} confirmée${confirmedCount > 1 ? 's' : ''} · ${pendingCount} à réserver`
+            : 'Rien d’enregistré';
+    }
     if (pendingCount) {
         element.textContent = `${pendingCount} à réserver`;
         element.title = `${pendingCount} réservation${pendingCount > 1 ? 's' : ''} à effectuer.`;
@@ -1324,12 +1333,14 @@ function renderDashboardSummary() {
     const baseCurrency = appData.budgetCurrency || 'EUR';
     const isLoading = dashboardSyncState === 'loading';
     let budgetConversionUnavailable = false;
+    let paidBudget = 0;
     const plannedBudget = (appData.budget || []).reduce((sum, expense) => {
         const converted = convertCurrency(Number(expense.amount ?? expense.eur) || 0, expense.currency || 'EUR', baseCurrency);
         if (converted === null) {
             budgetConversionUnavailable = true;
             return sum;
         }
+        if (expense.paid) paidBudget += converted;
         return sum + converted;
     }, 0);
     const preparation = getDashboardChecklistProgress(appData);
@@ -1349,7 +1360,14 @@ function renderDashboardSummary() {
         ? 'Budget non renseigné. Ouvrir la section Budget pour ajouter une dépense.'
         : budgetConversionUnavailable
             ? 'Budget prévu indisponible, certains taux de conversion manquent.'
-            : `Budget prévu : ${formatCurrency(plannedBudget, baseCurrency)}`);
+            : `Budget prévu : ${formatCurrency(plannedBudget, baseCurrency)}, dont ${formatCurrency(paidBudget, baseCurrency)} payé et ${formatCurrency(Math.max(plannedBudget - paidBudget, 0), baseCurrency)} restant.`);
+    const budgetDetail = document.getElementById('dashboard-budget-detail');
+    if (budgetDetail) {
+        budgetDetail.textContent = isLoading ? 'Mise à jour du budget'
+            : !hasBudgetEntries ? 'Aucune dépense'
+                : budgetConversionUnavailable ? 'Taux de conversion manquant'
+                    : `${formatCurrency(paidBudget, baseCurrency)} payé · ${formatCurrency(Math.max(plannedBudget - paidBudget, 0), baseCurrency)} restant`;
+    }
     const checklistElement = document.getElementById('dashboard-checklist');
     if (checklistElement) checklistElement.textContent = isLoading ? 'Chargement…' : preparation.total ? `${preparation.remaining} à faire` : 'Aucune tâche';
     const preparationProgress = document.getElementById('dashboard-prep-progress');
@@ -1605,14 +1623,16 @@ function renderDashboardUpcomingActivities() {
         const time = timeToPickerValue(item.time);
         const place = item.sub || 'Lieu à préciser';
         const label = item.label || 'Activité du séjour';
-        const context = [date, time, place].filter(Boolean).join(' · ');
+        const tripLabel = String(appData.tripTitle || '').trim();
+        const placeLine = [place, tripLabel].filter(Boolean).join(' · ');
+        const context = [date, time, placeLine].filter(Boolean).join(' · ');
         const timeLabel = time ? ' · ' + esc(time) : '';
         return '<button type="button" class="dashboard-upcoming-item" ' +
             actionAttrs('openDashboardActivity', [item.programmeId, item.activityDate]) +
             ' aria-label="' + esc('Ouvrir ' + label + ' dans l’itinéraire · ' + context) + '">' +
             '<span class="dashboard-upcoming-icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>' +
             '<span class="dashboard-upcoming-copy"><small>' + esc(date) + timeLabel + '</small>' +
-            '<strong>' + esc(label) + '</strong><span>' + esc(place) + '</span></span>' +
+            '<strong>' + esc(label) + '</strong><span>' + esc(placeLine) + '</span></span>' +
             '<i class="fa-solid fa-arrow-right dashboard-upcoming-arrow" aria-hidden="true"></i></button>';
     }).join('');
 }
@@ -1652,7 +1672,7 @@ function renderDashboardTrips({ trips = [], selected = null, complete = true, si
     }
     if (!trips.length) {
         grid.innerHTML = complete
-            ? `<div class="dashboard-trips-empty is-actionable"><p class="dashboard-trips-empty-copy">Aucun séjour enregistré pour ce compte. Commencez par définir les dates et la destination.</p><button type="button" class="dashboard-trips-empty-action" ${actionAttrs('openModal', ['modal-choose-type'])}>Créer mon premier séjour</button></div>`
+            ? `<div class="dashboard-trips-empty is-actionable"><p class="dashboard-trips-empty-copy">Aucun séjour enregistré pour ce compte. Commencez par définir les dates et la destination.</p><button type="button" class="dashboard-trips-empty-action" ${actionAttrs('startNewTrip', [])}>Créer mon premier séjour</button></div>`
             : `<div class="dashboard-trips-empty is-actionable" role="status"><p class="dashboard-trips-empty-copy">Impossible de récupérer la liste des séjours. Vérifiez la connexion ou l’accès à votre compte.</p><button type="button" class="dashboard-trips-empty-action" ${actionAttrs('switchDashboardTab', ['settings'])}>Voir les réglages</button></div>`;
         status.textContent = complete ? 'Aucun séjour' : 'Chargement impossible';
         return;
@@ -1900,6 +1920,37 @@ function switchTab(tabId, el) {
     }
 }
 
+function getDashboardGreeting(now = new Date(), name = '') {
+    const firstName = String(name || '').trim().split(/\s+/)[0] || '';
+    const salutation = now.getHours() >= 18 || now.getHours() < 5 ? 'Bonsoir' : 'Bonjour';
+    return firstName ? `${salutation} ${firstName} !` : `${salutation} !`;
+}
+
+function renderDashboardGreeting() {
+    const title = document.getElementById('dashboard-intro-title');
+    if (title) title.textContent = getDashboardGreeting(new Date(), dashboardUserName);
+}
+
+window.addEventListener('getready:user', event => {
+    dashboardUserName = String(event.detail?.displayName || '').trim();
+    renderDashboardGreeting();
+});
+
+function startNewTrip() {
+    if (DEMO_PREVIEW) {
+        if (window.confirm('La démonstration ne crée pas de vrai séjour.\nSe connecter pour créer votre propre séjour ?')) {
+            window.location.href = window.location.pathname;
+        }
+        return;
+    }
+    const createButton = document.getElementById('cloud-create-trip');
+    if (createButton && !createButton.disabled) {
+        createButton.click();
+        return;
+    }
+    switchDashboardTab('settings');
+}
+
 // --- GESTION DES DATES & COMPTE À REBOURS ---
 function updateCountdown() {
     const dateDepart = parsePickerDate(appData.tripStart);
@@ -1974,7 +2025,7 @@ function updateCountdown() {
         Famille: 'VOTRE CARNET DE FAMILLE', Équipe: 'VOTRE CARNET D’ÉQUIPE', Autre: 'VOTRE CARNET DE SÉJOUR'
     };
     document.getElementById('dashboard-overline').textContent = groupLabels[appData.tripGroup] || groupLabels.Autre;
-    document.getElementById('dashboard-intro-title').textContent = 'Bonjour !';
+    renderDashboardGreeting();
     let introCopy = 'Voici où en est votre prochain voyage.';
     if (!dateDepart && !dateFin) {
         introCopy = 'Commencez par choisir les dates et une première destination.';
@@ -5049,6 +5100,7 @@ const ACTIONS = {
     switchTab,
     openDashboardReservations,
     openTripSwitcherOrEdit,
+    startNewTrip,
     resetDemoScenario,
     openEditTripModal,
     saveTripDates,

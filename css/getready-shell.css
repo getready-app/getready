@@ -550,9 +550,9 @@ html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy p
     --gr-radius-card:21px;
     --gr-radius-control:13px;
     --gr-shadow:0 18px 48px rgba(30,61,51,.085);
-    --gr-rail:#173c35;
+    --gr-rail:var(--gr-forest-ink,#173c35);
     --gr-rail-ink:#f4f8f4;
-    --gr-rail-muted:#aec5bb;
+    --gr-rail-muted:var(--gr-rail-muted-tone,#aec5bb);
 }
 html[data-color-mode="dark"] {
     --gr-rail:#101e22;
@@ -580,16 +580,16 @@ html[data-theme] body[data-page] .nav-bar {
 }
 html[data-theme] body[data-page] .nav-brand { margin:8px 5px 24px!important; }
 html[data-theme] body[data-page] .nav-brand .brand-mark {
-    color:#173c35!important;
-    background:#c9ecd9!important;
+    color:var(--gr-forest-ink,#173c35)!important;
+    background:var(--gr-mint,#c9ecd9)!important;
     box-shadow:0 8px 22px rgba(4,18,15,.2);
 }
 html[data-theme] body[data-page] .nav-brand .brand-type,
 html[data-theme] body[data-page] .nav-brand .brand-type span { color:var(--gr-rail-ink)!important; }
 html[data-theme] body[data-page] .nav-brand .brand-type small { color:var(--gr-rail-muted)!important; }
 html[data-theme] body[data-page] .nav-new-trip {
-    color:#183d35;
-    background:#d8f0e1;
+    color:var(--gr-forest-ink,#183d35);
+    background:var(--gr-mint-chip,#d8f0e1);
     box-shadow:0 9px 22px rgba(5,24,19,.19);
 }
 html[data-theme] body[data-page] .nav-collapse-button {
@@ -608,9 +608,9 @@ html[data-theme] body[data-page] .nav-item i { color:inherit!important; }
 html[data-theme] body[data-page] .nav-item.active {
     color:#f4fff8!important;
     background:rgba(207,240,221,.16)!important;
-    box-shadow:inset 3px 0 #c9ecd9!important;
+    box-shadow:inset 3px 0 var(--gr-mint,#c9ecd9)!important;
 }
-html[data-theme] body[data-page] .nav-item.active i { color:#c9ecd9!important; }
+html[data-theme] body[data-page] .nav-item.active i { color:var(--gr-mint,#c9ecd9)!important; }
 html[data-theme] body[data-page] .nav-item:not(.active):hover {
     color:var(--gr-rail-ink)!important;
     background:rgba(255,255,255,.075)!important;
@@ -622,27 +622,27 @@ html[data-theme] body[data-page] .nav-item:not(.active):hover {
     min-height:278px;
     padding:22px;
     border:1px solid rgba(210,241,224,.13);
-    background:linear-gradient(125deg,#163e37 0%,#20594c 68%,#286455 100%);
+    background:linear-gradient(125deg,var(--gr-forest-a,#163e37) 0%,var(--gr-forest-b,#20594c) 68%,var(--gr-forest-c,#286455) 100%);
     box-shadow:0 22px 52px rgba(19,65,54,.2);
 }
-#page-accueil .hero-eyebrow { color:#bce6d0; }
-#page-accueil .hero-eyebrow span { background:#f1bd79; box-shadow:0 0 0 5px rgba(241,189,121,.14); }
+#page-accueil .hero-eyebrow { color:var(--gr-mint-text,#bce6d0); }
+#page-accueil .hero-eyebrow span { background:var(--gr-sun,#f1bd79); box-shadow:0 0 0 5px rgba(241,189,121,.14); }
 #page-accueil .trip-title { color:#f5faf6; }
 #page-accueil .trip-dates,
 #page-accueil .trip-primary-location { color:rgba(236,247,240,.75); }
-#page-accueil .trip-primary-location i { color:#f1bd79; }
+#page-accueil .trip-primary-location i { color:var(--gr-sun,#f1bd79); }
 #page-accueil .trip-context {
     border:1px solid rgba(209,239,222,.17);
-    color:#d8f0e1;
+    color:var(--gr-mint-chip,#d8f0e1);
     background:rgba(8,29,25,.26);
 }
 #page-accueil .trip-preparation-progress { color:rgba(236,247,240,.77); }
 #page-accueil .trip-progress-track { background:rgba(255,255,255,.17); }
-#page-accueil .trip-progress-track>span { background:linear-gradient(90deg,#f1bd79,#f5d59f); }
+#page-accueil .trip-progress-track>span { background:linear-gradient(90deg,var(--gr-sun,#f1bd79),var(--gr-sun-light,#f5d59f)); }
 #page-accueil .hero-primary-cta {
     min-height:43px;
-    color:#173c35;
-    background:#e3f4e9;
+    color:var(--gr-forest-ink,#173c35);
+    background:var(--gr-mint-button,#e3f4e9);
     box-shadow:0 9px 22px rgba(5,25,20,.15);
 }
 #page-accueil .hero-primary-cta:hover { background:#fff; transform:translateY(-1px); }
@@ -652,7 +652,7 @@ html[data-theme] body[data-page] .nav-item:not(.active):hover {
     backdrop-filter:blur(16px);
 }
 #page-accueil .hero-countdown-label { color:rgba(230,245,236,.68); }
-#page-accueil .countdown-number { color:#f5d59f; }
+#page-accueil .countdown-number { color:var(--gr-sun-light,#f5d59f); }
 #page-accueil .countdown-text { color:rgba(236,247,240,.72); }
 #page-accueil .hero-orbit { min-height:224px; border:1px solid rgba(255,255,255,.16); }
 #page-accueil .hero-orbit::after { inset:28% 0 0; background:linear-gradient(0deg,rgba(9,30,26,.78),transparent); }
@@ -670,7 +670,7 @@ html[data-theme] body[data-page="infos"] #page-infos > .page-header {
     padding:34px clamp(22px,4vw,58px) 30px!important;
     border-radius:0 0 32px 32px!important;
     color:#f5faf6!important;
-    background:linear-gradient(118deg,#143831 0%,#1d5145 62%,#286454 100%)!important;
+    background:linear-gradient(118deg,var(--gr-forest-a,#143831) 0%,var(--gr-forest-b,#1d5145) 62%,var(--gr-forest-c,#286454) 100%)!important;
     box-shadow:0 18px 42px rgba(20,66,55,.17)!important;
 }
 html[data-theme] body[data-page="programme"] #page-programme > .page-header::before,
@@ -717,7 +717,7 @@ html[data-theme] body[data-page="budget"] #page-budget > .page-header h1::before
 html[data-theme] body[data-page="infos"] #page-infos > .page-header h1::before {
     display:block;
     margin:0 0 9px;
-    color:#bce6d0;
+    color:var(--gr-mint-text,#bce6d0);
     content:"";
     font-size:.58rem;
     font-weight:800;
@@ -734,14 +734,14 @@ html[data-theme] body[data-page="infos"] #page-infos > .page-header p {
     font-size:.92rem;
     text-shadow:none!important;
 }
-html[data-theme] body[data-page="budget"] #page-budget > .page-header .live-rate { color:#e7f4eb!important; }
-html[data-theme] body[data-page="budget"] #page-budget > .page-header .live-dot { background:#f1bd79!important; }
+html[data-theme] body[data-page="budget"] #page-budget > .page-header .live-rate { color:var(--gr-mint-button,#e7f4eb)!important; }
+html[data-theme] body[data-page="budget"] #page-budget > .page-header .live-dot { background:var(--gr-sun,#f1bd79)!important; }
 html[data-theme] body[data-page="budget"] #page-budget > .page-header .budget-header-add {
     border:1px solid rgba(255,255,255,.2);
-    color:#173c35;
-    background:#e3f4e9;
+    color:var(--gr-forest-ink,#173c35);
+    background:var(--gr-mint-button,#e3f4e9);
 }
-html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-eyebrow { color:#bce6d0; }
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-eyebrow { color:var(--gr-mint-text,#bce6d0); }
 html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-card {
     border-color:rgba(255,255,255,.17);
     color:#f5faf6;
@@ -751,10 +751,10 @@ html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header
 }
 html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-top > span,
 html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-bottom > span:first-child { color:#f5faf6!important; }
-html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-top > strong { color:#f4d29d!important; }
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-top > strong { color:var(--gr-sun-light,#f4d29d)!important; }
 html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-bottom > span:last-child { color:rgba(235,247,239,.72)!important; }
 html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-track { background:rgba(255,255,255,.17); }
-html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-track > span { background:linear-gradient(90deg,#f4c879,#f4dda9); }
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-track > span { background:linear-gradient(90deg,var(--gr-sun,#f4c879),var(--gr-sun-light,#f4dda9)); }
 html[data-theme] body[data-page="programme"] #page-programme > .content-container,
 html[data-theme] body[data-page="budget"] #page-budget > .content-container,
 html[data-theme] body[data-page="infos"] #page-infos > .content-container { padding-top:28px; }
@@ -767,7 +767,7 @@ html[data-theme] body[data-page="settings"] #page-settings .settings-hero {
     padding:37px clamp(22px,4vw,58px) 33px!important;
     border-radius:0 0 32px 32px;
     color:#f5faf6!important;
-    background:linear-gradient(118deg,#143831 0%,#1d5145 62%,#286454 100%)!important;
+    background:linear-gradient(118deg,var(--gr-forest-a,#143831) 0%,var(--gr-forest-b,#1d5145) 62%,var(--gr-forest-c,#286454) 100%)!important;
     box-shadow:0 18px 42px rgba(20,66,55,.17)!important;
 }
 html[data-theme] body[data-page="settings"] #page-settings .settings-hero::before {
@@ -794,7 +794,7 @@ html[data-theme] body[data-page="settings"] #page-settings .settings-hero::after
 }
 html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy h1 { color:#f5faf6!important; font-size:clamp(2rem,3.6vw,3.15rem)!important; letter-spacing:-.065em; }
 html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy p { color:rgba(235,247,239,.77)!important; font-size:.92rem; }
-html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy .settings-eyebrow { color:#bce6d0; }
+html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy .settings-eyebrow { color:var(--gr-mint-text,#bce6d0); }
 html[data-theme] body[data-page="settings"] #page-settings .settings-hero-mark { color:rgba(220,244,231,.18)!important; }
 html[data-theme] body[data-page="settings"] #page-settings .settings-content { padding-top:28px; }
 
@@ -809,11 +809,11 @@ html[data-theme] body[data-page="settings"] #page-settings .settings-content { p
     transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
 }
 html[data-theme] body[data-page] .btn-add-float {
-    color:#173c35;
-    background:#d6f0df;
+    color:var(--gr-forest-ink,#173c35);
+    background:var(--gr-mint-chip,#d6f0df);
     box-shadow:0 12px 30px rgba(13,54,42,.24);
 }
-html[data-theme] body[data-page] .btn-add-float:hover { color:#173c35; background:#f0f9f3; transform:translateY(-3px); }
+html[data-theme] body[data-page] .btn-add-float:hover { color:var(--gr-forest-ink,#173c35); background:#f0f9f3; transform:translateY(-3px); }
 @media (hover:hover) and (pointer:fine) {
     .dashboard-stat:hover,.dashboard-priority-item:hover,.dashboard-upcoming-item:hover,
     .expense-card:hover,.checklist-item:hover,.settings-background-choice:hover,.settings-theme-choice:hover {
@@ -844,7 +844,7 @@ html[data-theme] body[data-page] .btn-add-float:hover { color:#173c35; backgroun
         background:rgba(208,241,222,.15)!important;
         box-shadow:none!important;
     }
-    html[data-theme] body[data-page] .nav-item.active i { color:#d6f0df!important; }
+    html[data-theme] body[data-page] .nav-item.active i { color:var(--gr-mint-chip,#d6f0df)!important; }
     html[data-theme] body[data-page] .nav-item span.nav-label-compact { display:inline!important; color:inherit!important; }
 }
 @media (max-width:700px) {
@@ -906,4 +906,89 @@ html .input-group textarea:focus-visible {
     outline:3px solid color-mix(in srgb,var(--gr-accent) 28%,transparent);
     outline-offset:2px;
     box-shadow:0 0 0 3px color-mix(in srgb,var(--gr-accent) 10%,transparent);
+}
+
+/* ==========================================================================
+   Dashboard 2.0 — palette du cahier des charges (palette « Escapade »).
+   Ocean Teal #167E76 en couleur principale ; corail #F08B68, lavande #7965BD
+   et jaune doux #E9B85B en accents. Les teintes utilisées pour du texte sont
+   assombries juste assez pour garder un contraste AA (4,5:1) sur fond clair.
+   Les palettes « Grand large » et « Douceur » ne sont pas modifiées.
+   ========================================================================== */
+:root {
+    --gr-brand-teal:#167E76;
+    --gr-brand-coral:#F08B68;
+    --gr-brand-lavender:#7965BD;
+    --gr-brand-yellow:#E9B85B;
+}
+:root[data-theme="sun"] {
+    --theme-bg:#F5F8F7;
+    --theme-surface:#FFFFFF;
+    --theme-line:#DCE7E5;
+    --theme-ink:#1E3437;
+    --theme-muted:#55696C;
+    --theme-primary:#B9502F;      /* corail lisible (4,9:1 sur blanc) */
+    --theme-secondary:#167E76;    /* Ocean Teal, couleur principale */
+    --theme-tertiary:#7965BD;     /* lavande */
+    --theme-highlight:#E9B85B;    /* jaune doux */
+    --theme-soft:#FDEEE8;         /* corail très clair */
+    --theme-soft-cool:#E3F1EF;    /* teal très clair */
+    --theme-header-a:#A9492D;
+    --theme-header-b:#B9502F;
+    --theme-header-c:#167E76;
+    /* Rail, carte du voyage et bannières : teal profond au lieu du vert forêt. */
+    --gr-forest-ink:#0F3A37;
+    --gr-forest-a:#0E3835;
+    --gr-forest-b:#11524D;
+    --gr-forest-c:#146A63;
+    --gr-mint:#C4E8E3;
+    --gr-mint-text:#B8E3DD;
+    --gr-mint-chip:#D6EFEB;
+    --gr-mint-button:#E2F4F1;
+    --gr-rail-muted-tone:#A9C9C4;
+    --gr-sun:#E9B85B;
+    --gr-sun-light:#F2D08F;
+}
+:root[data-theme="sun"][data-color-mode="dark"] {
+    --theme-bg:#101819;
+    --theme-surface:#182325;
+    --theme-line:#2D3D3F;
+    --theme-ink:#EDF4F3;
+    --theme-muted:#A6B7B6;
+    --theme-soft:#33241F;
+    --theme-soft-cool:#16302E;
+    --gr-rail:#0C1F1E;
+}
+
+/* Dashboard 2.0 — indicateurs lisibles : le texte occupe toute la largeur
+   disponible et la grille passe à 2 colonnes tant que 4 cartes seraient
+   trop étroites (sidebar + colonne latérale sur les écrans moyens). */
+#page-accueil .dashboard-stat .stat-copy { flex:1 1 auto; min-width:0; }
+@media (min-width:601px) and (max-width:1599px) {
+    #page-accueil .dashboard-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+#page-accueil .dashboard-stat .dashboard-stat-detail {
+    display:-webkit-box;
+    overflow:hidden;
+    white-space:normal;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:2;
+}
+
+/* Dashboard 2.0 — carte du voyage principal : sur les écrans moyens, le bouton
+   passe sous les informations pour laisser toute la largeur au contexte
+   (type, groupe, participants) et à la progression des préparatifs. */
+@media (min-width:1080px) and (max-width:1599px) {
+    body[data-page="accueil"] #page-accueil .hero-copy {
+        grid-template-columns:minmax(0,1fr);
+        grid-template-areas:
+            "eyebrow"
+            "title"
+            "location"
+            "context"
+            "progress"
+            "action";
+        align-content:center;
+    }
+    body[data-page="accueil"] #page-accueil .hero-primary-cta { justify-self:start; margin-top:8px; }
 }

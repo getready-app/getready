@@ -26,20 +26,26 @@ const setupStateStart = appSource.indexOf('function getFirstTripSetupState(data)
 const setupStateEnd = appSource.indexOf('\nfunction openEditTripModal(', setupStateStart);
 assert.ok(setupStateStart >= 0 && setupStateEnd > setupStateStart, 'expected the first-trip setup helper to be present');
 const setupStateSource = appSource.slice(setupStateStart, setupStateEnd);
+const namedDestinationsStart = appSource.indexOf('function getNamedTripDestinations(data) {');
+const namedDestinationsEnd = appSource.indexOf('\nfunction renderDashboardSummary()', namedDestinationsStart);
+assert.ok(namedDestinationsStart >= 0 && namedDestinationsEnd > namedDestinationsStart, 'expected the named destinations helper to be present');
+const namedDestinationsSource = appSource.slice(namedDestinationsStart, namedDestinationsEnd);
 
-function renderSummary(budget, budgetCurrency = 'EUR', rates = { EUR: 1 }, billets = [], checklist = [], programme = [], checklistsJour = {}, syncState = 'ready') {
+function renderSummary(budget, budgetCurrency = 'EUR', rates = { EUR: 1 }, billets = [], checklist = [], programme = [], checklistsJour = {}, syncState = 'ready', tripDetails = {}) {
     const values = new Map([
         ['dashboard-activities', { textContent: '' }],
         ['dashboard-activities-detail', { textContent: '' }],
         ['dashboard-reservations', { textContent: '', title: '', setAttribute(name, value) { this[name] = value; } }],
         ['dashboard-budget', { textContent: '', title: '', setAttribute(name, value) { this[name] = value; } }],
+        ['dashboard-budget-detail', { textContent: '' }],
+        ['dashboard-reservations-detail', { textContent: '' }],
         ['dashboard-checklist', { textContent: '' }],
         ['dashboard-prep-progress', { textContent: '' }],
         ['dashboard-priority-count', { textContent: '' }],
         ['dashboard-priority-list', { innerHTML: '', setAttribute(name, value) { this[name] = value; } }]
     ]);
     const sandbox = {
-        appData: { programme, budget, budgetCurrency, checklist, checklistsJour, billets },
+        appData: { ...tripDetails, programme, budget, budgetCurrency, checklist, checklistsJour, billets },
         dashboardSyncState: syncState,
         convertCurrency(amount, from, to) {
             if (from === to) return amount;
@@ -50,6 +56,8 @@ function renderSummary(budget, budgetCurrency = 'EUR', rates = { EUR: 1 }, bille
         getBilletStatus(billet) { return ['a-reserver', 'confirme', 'annule'].includes(billet?.statut) ? billet.statut : 'confirme'; },
         actionAttrs(action, args) { return `data-action="${action}" data-action-args='${JSON.stringify(args)}'`; },
         esc(value) { return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;'); },
+        parsePickerDate() { return null; },
+        sortBillets(items) { return items; },
         document: { getElementById(id) { return values.get(id); } }
     };
     vm.runInNewContext(`${setupStateSource}\n${checklistProgressSource}\n${reservationSummarySource}\n${renderDashboardSummarySource}\ndashboardSyncState = ${JSON.stringify(syncState)};\nrenderDashboardSummary();`, sandbox);
@@ -74,7 +82,41 @@ test('le budget du tableau de bord additionne les montants convertibles dans la 
     ], 'EUR', { EUR: 1, USD: 2 }).get('dashboard-budget');
 
     assert.equal(budget.textContent, '40.00 EUR');
-    assert.equal(budget['aria-label'], 'Budget prévu : 40.00 EUR');
+    assert.equal(budget['aria-label'], 'Budget prévu : 40.00 EUR, dont 0.00 EUR payé et 40.00 EUR restant.');
+});
+
+test('la carte Budget distingue le payé du restant dans la devise du séjour', () => {
+    const values = renderSummary([
+        { amount: 30, currency: 'EUR', paid: true },
+        { amount: 20, currency: 'USD', paid: false }
+    ], 'EUR', { EUR: 1, USD: 2 });
+
+    assert.equal(values.get('dashboard-budget-detail').textContent, '30.00 EUR payé · 10.00 EUR restant');
+});
+
+test('la carte Budget ne calcule pas de payé ni de restant sans taux de conversion', () => {
+    const values = renderSummary([
+        { amount: 30, currency: 'EUR', paid: true },
+        { amount: 20, currency: 'JPY' }
+    ], 'EUR', { EUR: 1 });
+
+    assert.equal(values.get('dashboard-budget-detail').textContent, 'Taux de conversion manquant');
+    assert.doesNotMatch(values.get('dashboard-budget-detail').textContent, /restant/);
+});
+
+test('la carte Réservations distingue les réservations confirmées de celles à réserver', () => {
+    const values = renderSummary([], 'EUR', { EUR: 1 }, [
+        { nom: 'Train', statut: 'confirme' },
+        { nom: 'Musée', statut: 'a-reserver' },
+        { nom: 'Bateau', statut: 'annule' }
+    ]);
+
+    assert.equal(values.get('dashboard-reservations-detail').textContent, '1 confirmée · 1 à réserver');
+    const empty = renderSummary([], 'EUR', { EUR: 1 }, []);
+    assert.equal(empty.get('dashboard-reservations-detail').textContent, 'Rien d’enregistré');
+    const loading = renderSummary([], 'EUR', { EUR: 1 }, [], [], [], {}, 'loading');
+    assert.equal(loading.get('dashboard-reservations-detail').textContent, 'Mise à jour du carnet');
+    assert.equal(loading.get('dashboard-budget-detail').textContent, 'Mise à jour du budget');
 });
 
 test('le tableau de bord signale les réservations à effectuer et ignore les autres statuts', () => {
@@ -95,13 +137,21 @@ test('le tableau de bord signale les réservations à effectuer et ignore les au
 });
 
 test('le tableau de bord indique qu’il est à jour quand aucune action ne reste à faire', () => {
+    const completeTrip = { tripTitle: 'Séjour à Rome', tripStart: '2027-06-10', tripEnd: '2027-06-15' };
     const values = renderSummary([], 'EUR', { EUR: 1 }, [
         { nom: 'Train', statut: 'confirme' },
         { nom: 'Ancienne réservation' }
-    ]);
+    ], [], [{ id: 'rome', ville: 'Rome', activites: [{ date: '11 juin', texte: 'Colisée' }] }], {}, 'ready', completeTrip);
 
     assert.equal(values.get('dashboard-priority-count').textContent, 'Tout est à jour');
     assert.match(values.get('dashboard-priority-list').innerHTML, /Aucune action prioritaire/);
+});
+
+test('sans action prioritaire, un séjour incomplet renvoie vers le guide au lieu de se dire à jour', () => {
+    const values = renderSummary([], 'EUR', { EUR: 1 }, [{ nom: 'Train', statut: 'confirme' }]);
+
+    assert.equal(values.get('dashboard-priority-count').textContent, 'Séjour à compléter');
+    assert.match(values.get('dashboard-priority-list').innerHTML, /guide de démarrage/);
 });
 
 test('la carte Réservations ne transforme pas une liste vide ou annulée en faux zéro', () => {
@@ -128,10 +178,10 @@ test('pendant la synchronisation le tableau de bord indique le chargement au lie
 test('la priorité réservation ouvre le carnet directement sur les réservations à faire', () => {
     const priorities = renderSummary([], 'EUR', { EUR: 1 }, [{ nom: 'Visite', statut: 'a-reserver' }]).get('dashboard-priority-list').innerHTML;
     assert.match(priorities, /data-action="switchDashboardTab" data-action-args='\["infos","billets"\]'/);
-    const focusStart = appSource.indexOf("if (tabId === 'infos' && itineraryFocus === 'billets')");
+    const focusStart = appSource.indexOf("if (tabId === 'infos' && ['billets', 'reservations'].includes(itineraryFocus))");
     const focusEnd = appSource.indexOf('\n    window.scrollTo', focusStart);
     assert.ok(focusStart >= 0 && focusEnd > focusStart);
-    assert.match(appSource.slice(focusStart, focusEnd), /showBilletsToBook\(\);/);
+    assert.match(appSource.slice(focusStart, focusEnd), /if \(itineraryFocus === 'billets'\) showBilletsToBook\(\);/);
     assert.match(appSource, /document\.getElementById\('billets-list'\)/);
 });
 
@@ -168,10 +218,10 @@ test('les prochaines activités affichent date, heure, étape et ouvrent le jour
     const activity = { type: 'activity', date: futureDate, time: '10:30', sortKey: '1030', label: 'Musée', sub: 'Rome', programmeId: 'rome', activityDate: '18 nov.' };
     const list = { innerHTML: '', setAttribute(name, value) { this[name] = value; } };
     const status = { textContent: '' };
-    vm.runInNewContext(`${upcomingActivitiesSource}\nrenderDashboardUpcomingActivities();`, {
+    vm.runInNewContext(`${namedDestinationsSource}\n${upcomingActivitiesSource}\nrenderDashboardUpcomingActivities();`, {
         Date,
         dashboardSyncState: 'ready',
-        appData: { programme: [{ id: 'rome', activites: [{ date: '18 nov.' }] }] },
+        appData: { tripTitle: 'Escapade romaine', programme: [{ id: 'rome', activites: [{ date: '18 nov.' }] }] },
         document: { getElementById(id) { return id === 'dashboard-upcoming-list' ? list : id === 'dashboard-upcoming-status' ? status : null; }, querySelector() { return null; } },
         collectScheduleItems() { return [activity]; },
         timeToPickerValue(value) { return value; },
@@ -183,14 +233,14 @@ test('les prochaines activités affichent date, heure, étape et ouvrent le jour
     assert.equal(status.textContent, '1 prochaine activité');
     assert.match(list.innerHTML, /Musée/);
     assert.match(list.innerHTML, /10:30/);
-    assert.match(list.innerHTML, /Rome/);
+    assert.match(list.innerHTML, /Rome · Escapade romaine/);
     assert.match(list.innerHTML, /data-action="openDashboardActivity" data-action-args='\["rome","18 nov\."\]'/);
 });
 
 test('le module des activités sans données propose un accès à l’itinéraire', () => {
     const list = { innerHTML: '', setAttribute(name, value) { this[name] = value; } };
     const status = { textContent: '' };
-    vm.runInNewContext(`${upcomingActivitiesSource}\nrenderDashboardUpcomingActivities();`, {
+    vm.runInNewContext(`${namedDestinationsSource}\n${upcomingActivitiesSource}\nrenderDashboardUpcomingActivities();`, {
         Date,
         dashboardSyncState: 'ready',
         appData: { programme: [] },
@@ -210,7 +260,7 @@ test('le module des activités sans données propose un accès à l’itinérair
 test('le module des activités affiche un état de chargement sans lire les données', () => {
     const list = { innerHTML: '', setAttribute(name, value) { this[name] = value; } };
     const status = { textContent: '' };
-    vm.runInNewContext(`${upcomingActivitiesSource}\nrenderDashboardUpcomingActivities();`, {
+    vm.runInNewContext(`${namedDestinationsSource}\n${upcomingActivitiesSource}\nrenderDashboardUpcomingActivities();`, {
         dashboardSyncState: 'loading',
         document: { getElementById(id) { return id === 'dashboard-upcoming-list' ? list : id === 'dashboard-upcoming-status' ? status : null; } },
         collectScheduleItems() { throw new Error('activities should not be read while loading'); }
@@ -252,7 +302,8 @@ test('les cartes Mes séjours indiquent le séjour principal et un état partiel
     ]);
     const renderTrips = appSource.slice(start, end);
     vm.runInNewContext(`${renderTrips}\nrenderDashboardTrips({ trips: [{ ownerUid: 'owner', tripId: 'legacy', title: '<Voyage>', isOwner: true }], selected: { ownerUid: 'owner', tripId: 'legacy' }, complete: false });`, {
-        document: { getElementById(id) { return values.get(id); } },
+        DEMO_PREVIEW: false,
+        document: { getElementById(id) { return values.get(id); }, querySelector() { return null; } },
         esc(value) { return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;'); }
     });
 
@@ -429,4 +480,45 @@ test('l’ajout et la suppression d’une réservation actualisent les priorité
     assert.ok(deleteStart >= 0 && deleteEnd > deleteStart);
     const deleteBillets = appSource.slice(deleteStart, deleteEnd).match(/if \(category === 'billets'\) \{[\s\S]*?\n        \}/)?.[0] || '';
     assert.match(deleteBillets, /renderDashboardSummary\(\);/);
+});
+
+const greetingStart = appSource.indexOf('function getDashboardGreeting(');
+const greetingEnd = appSource.indexOf('\nfunction renderDashboardGreeting(', greetingStart);
+const startTripStart = appSource.indexOf('function startNewTrip() {');
+const startTripEnd = appSource.indexOf('\n// --- GESTION DES DATES', startTripStart);
+
+test('la salutation s’adapte au moment de la journée et au prénom quand il est connu', () => {
+    assert.ok(greetingStart >= 0 && greetingEnd > greetingStart);
+    const greet = vm.runInNewContext(`${appSource.slice(greetingStart, greetingEnd)}\ngetDashboardGreeting`, {});
+    assert.equal(greet(new Date(2026, 0, 1, 9), ''), 'Bonjour !');
+    assert.equal(greet(new Date(2026, 0, 1, 20), ''), 'Bonsoir !');
+    assert.equal(greet(new Date(2026, 0, 1, 9), '  Mohamed Aiteur '), 'Bonjour Mohamed !');
+});
+
+test('Nouveau séjour ouvre la vraie création de séjour et jamais l’ajout de transport', () => {
+    assert.ok(startTripStart >= 0 && startTripEnd > startTripStart);
+    const helper = appSource.slice(startTripStart, startTripEnd);
+    const calls = [];
+    vm.runInNewContext(`${helper}\nstartNewTrip();`, {
+        DEMO_PREVIEW: false,
+        document: { getElementById(id) { return id === 'cloud-create-trip' ? { disabled: false, click() { calls.push('create'); } } : null; } },
+        switchDashboardTab(tab) { calls.push(['switch', tab]); },
+        window: { confirm() { throw new Error('no confirm outside demo'); } }
+    });
+    assert.deepEqual(calls, ['create']);
+
+    const demoCalls = [];
+    const location = { pathname: '/', href: '/?demo=newyork' };
+    vm.runInNewContext(`${helper}\nstartNewTrip();`, {
+        DEMO_PREVIEW: true,
+        document: { getElementById() { demoCalls.push('lookup'); return null; } },
+        switchDashboardTab() { demoCalls.push('switch'); },
+        window: { confirm() { demoCalls.push('confirm'); return true; }, location }
+    });
+    assert.deepEqual(demoCalls, ['confirm']);
+    assert.equal(location.href, '/');
+
+    assert.doesNotMatch(htmlSource, /class="(app-topbar-new-trip|nav-new-trip)" data-action="openModal"/);
+    assert.match(htmlSource, /class="app-topbar-new-trip" data-action="startNewTrip"/);
+    assert.match(htmlSource, /class="nav-new-trip" data-action="startNewTrip"/);
 });
