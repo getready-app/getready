@@ -249,3 +249,33 @@ html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy p
 #page-settings .settings-theme-choice { background: var(--ep-surface-2) !important; }
 #page-settings .settings-theme-choice[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--ep-accent) !important; }
 #page-settings :is(.settings-primary-column, .settings-side-column, .settings-panel) { width: auto !important; max-width: none !important; }
+
+/* Fenêtres et écran de connexion : anciennes bordures, couleurs et fonds. */
+.modal-content { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-surface) !important; }
+.btn-modal.save { color: var(--ep-accent-ink) !important; background: var(--ep-accent) !important; border: 0 !important; box-shadow: none !important; }
+.btn-modal.cancel { color: var(--ep-ink) !important; background: var(--ep-fill) !important; border: 0 !important; box-shadow: none !important; }
+#modal-choose-type .modal-buttons:first-of-type .btn-modal,
+#modal-choose-info-type .modal-buttons:first-of-type .btn-modal { color: var(--ep-ink) !important; background: var(--ep-surface-2) !important; box-shadow: inset 0 0 0 1px var(--ep-line) !important; }
+.modal :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]), select, textarea) { border: 0 !important; color: var(--ep-ink) !important; background-color: var(--ep-fill) !important; }
+.payeur-toggle-chip { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-fill) !important; }
+.payeur-toggle-chip.selected { color: var(--ep-accent-ink) !important; background: var(--ep-accent) !important; }
+.auth-gate { color: var(--ep-ink) !important; background: var(--ep-bg) !important; }
+.auth-gate::before,
+.auth-gate::after { display: none !important; content: none !important; }
+.auth-gate-card { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-surface) !important; }
+.auth-gate #auth-gate-title { color: var(--ep-ink) !important; }
+.auth-gate :is(.auth-gate-description, .auth-gate-eyebrow, .auth-gate-loading) { color: var(--ep-ink-2) !important; }
+.budget-beneficiary-option { border: 0 !important; padding: 0 !important; background: none !important; box-shadow: none !important; }
+#bud-beneficiaires-picker { flex-direction: column !important; align-items: flex-start !important; }
+.auth-gate-eyebrow i { display: none !important; }
+.billet-link,
+.info-source-link { color: var(--ep-accent-text) !important; }
+#page-accueil .dashboard-travel-details :is(p, .card-subtitle, .date-badge-month) { color: var(--ep-ink-2) !important; }
+#page-accueil .dashboard-calendar-weekdays span { color: var(--ep-ink-2) !important; }
+.notebook-directions { color: var(--ep-accent-ink) !important; background: var(--ep-accent) !important; }
+.budget-people-add-button { color: var(--ep-accent-text) !important; background: var(--ep-accent-soft) !important; }
+#page-accueil .dashboard-travel-details .date-badge { background: var(--ep-fill) !important; border: 0 !important; }
+#page-accueil .dashboard-travel-details .date-badge-day { color: var(--ep-ink) !important; }
+#page-accueil .dashboard-travel-details .date-badge-month { color: var(--ep-ink-2) !important; }
+#modal-choose-type .modal-buttons:first-of-type .btn-modal,
+#modal-choose-info-type .modal-buttons:first-of-type .btn-modal { justify-content: flex-start !important; gap: 12px !important; }
