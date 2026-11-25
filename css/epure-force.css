@@ -166,3 +166,37 @@
 @media (min-width: 601px) {
     .itinerary-place-map { width: auto !important; }
 }
+
+/* Préparatifs : la carte d'avancement et les filtres avaient des couleurs
+   imposées par l'ancien bandeau sombre. */
+#page-checklist > .prep-page-header .prep-progress-card {
+    border: 0 !important;
+    color: var(--ep-ink) !important;
+    background: var(--ep-surface) !important;
+    box-shadow: var(--ep-shadow) !important;
+    backdrop-filter: none !important;
+}
+#page-checklist > .prep-page-header .prep-progress-top > span,
+#page-checklist > .prep-page-header .prep-progress-bottom > span:first-child,
+#page-checklist > .prep-page-header .prep-progress-bottom > span:last-child { color: var(--ep-ink-2) !important; }
+#page-checklist > .prep-page-header .prep-progress-top > strong { color: var(--ep-ink) !important; }
+#page-checklist > .prep-page-header .prep-progress-track { background: var(--ep-fill) !important; }
+#page-checklist > .prep-page-header .prep-progress-track > span { background: var(--ep-accent) !important; }
+#page-checklist > .prep-page-header .prep-eyebrow { color: var(--ep-ink-2) !important; }
+#page-checklist .prep-workspace .checklist-selector-btn { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-surface) !important; box-shadow: var(--ep-shadow) !important; }
+#page-checklist .prep-workspace .checklist-selector-btn i { color: var(--ep-ink-3) !important; }
+#page-checklist .prep-workspace .checklist-selector-btn small { color: var(--ep-ink-2) !important; background: var(--ep-fill) !important; }
+#page-checklist .prep-workspace .checklist-selector-btn.active { color: var(--ep-accent-ink) !important; background: var(--ep-accent) !important; box-shadow: none !important; }
+#page-checklist .prep-workspace .checklist-selector-btn.active :is(i, small) { color: var(--ep-accent-ink) !important; }
+#page-checklist .prep-workspace .checklist-selector-btn.active small { background: rgba(255, 255, 255, .22) !important; }
+.prep-filter-btn { border: 0 !important; color: var(--ep-ink) !important; background: transparent !important; box-shadow: none !important; }
+.prep-filter-btn b { color: var(--ep-ink-2) !important; background: none !important; border: 0 !important; }
+.prep-filter-btn.is-active { background: var(--ep-surface) !important; box-shadow: 0 1px 3px rgba(0, 0, 0, .12) !important; }
+:root[data-color-mode="dark"] .prep-filter-btn.is-active { background: var(--ep-surface-2) !important; }
+.prep-filter-btn.is-active b { color: var(--ep-accent-text) !important; }
+.prep-category,
+.prep-day-category { border: 0 !important; background: var(--ep-surface) !important; }
+.prep-category-heading,
+.prep-day-heading { border: 0 !important; background: transparent !important; }
+.prep-task { border-left: 0 !important; border-right: 0 !important; background: transparent !important; }
+#page-checklist .prep-eyebrow i { display: none !important; }

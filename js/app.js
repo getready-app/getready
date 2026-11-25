@@ -3709,7 +3709,7 @@ function checklistCategoryIcon(category) {
     if (/sante|bien-etre|medic|pharm/.test(value)) return 'fa-heart-pulse';
     if (/transport|trajet|vol/.test(value)) return 'fa-plane';
     if (/electron|tech|chargeur|numer/.test(value)) return 'fa-plug';
-    if (/plaisir|loisir|sortie/.test(value)) return 'fa-sparkles';
+    if (/plaisir|loisir|sortie/.test(value)) return 'fa-wand-magic-sparkles';
     return 'fa-list-check';
 }
 
