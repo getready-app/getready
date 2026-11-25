@@ -1281,6 +1281,7 @@ function getDashboardChecklistProgress(data) {
 }
 
 let dashboardSyncState = 'ready';
+let dashboardTripsSnapshot = { trips: [], selected: null, complete: false, signedOut: false, loading: true };
 
 function renderDashboardReservationSummary() {
     const element = document.getElementById('dashboard-reservations');
@@ -1617,6 +1618,23 @@ function renderDashboardUpcomingActivities() {
 }
 
 function renderDashboardTrips({ trips = [], selected = null, complete = true, signedOut = false, loading = false } = {}) {
+    dashboardTripsSnapshot = { trips: Array.isArray(trips) ? trips : [], selected, complete, signedOut, loading };
+    const tripButton = document.querySelector('.app-topbar-trip');
+    const canSwitchTrips = !DEMO_PREVIEW && dashboardTripsSnapshot.trips.length > 1;
+    if (tripButton) {
+        tripButton.setAttribute('aria-label', canSwitchTrips ? 'Changer de séjour actif' : 'Modifier le séjour actif');
+        tripButton.setAttribute('aria-expanded', 'false');
+        tripButton.dataset.switchable = String(canSwitchTrips);
+        if (canSwitchTrips) {
+            tripButton.setAttribute('aria-haspopup', 'dialog');
+            tripButton.setAttribute('aria-controls', 'modal-trip-switcher');
+            tripButton.title = 'Changer de séjour';
+        } else {
+            tripButton.removeAttribute('aria-haspopup');
+            tripButton.removeAttribute('aria-controls');
+            tripButton.title = 'Modifier le séjour actif';
+        }
+    }
     const grid = document.getElementById('dashboard-trips-grid');
     const status = document.getElementById('dashboard-trips-status');
     if (!grid || !status) return;
@@ -1710,12 +1728,71 @@ window.addEventListener('getready:sync-status', event => renderDashboardSyncNoti
 
 function openDashboardTrip(ownerUid, tripId) {
     const select = document.getElementById('cloud-trip-select');
-    if (!select) return;
+    if (!select || select.disabled) {
+        const status = document.getElementById('trip-switcher-status');
+        if (status) status.textContent = 'La sélection des séjours est indisponible. Ouvrez Réglages pour vérifier votre connexion.';
+        return;
+    }
     const value = JSON.stringify([ownerUid, tripId || 'legacy']);
-    if (![...select.options].some(option => option.value === value)) return;
+    if (![...select.options].some(option => option.value === value)) {
+        const status = document.getElementById('trip-switcher-status');
+        if (status) status.textContent = 'Ce séjour n’est plus accessible. Actualisez la liste puis réessayez.';
+        return;
+    }
     if (select.value === value) return;
     select.value = value;
     select.dispatchEvent(new Event('change', { bubbles: true }));
+    if (document.getElementById('modal-trip-switcher')?.classList.contains('active')) closeModal('modal-trip-switcher');
+}
+
+function renderTripSwitcher() {
+    const list = document.getElementById('trip-switcher-list');
+    const status = document.getElementById('trip-switcher-status');
+    if (!list || !status) return;
+    const { trips, selected } = dashboardTripsSnapshot;
+    const formatDate = (value, options) => {
+        if (!value) return '';
+        const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
+        return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('fr-FR', options);
+    };
+    list.innerHTML = trips.map(trip => {
+        const selectedTripId = selected?.tripId || 'legacy';
+        const tripId = trip.tripId || 'legacy';
+        const isCurrent = Boolean(selected && trip.ownerUid === selected.ownerUid && tripId === selectedTripId);
+        const start = formatDate(trip.tripStart, { day: 'numeric', month: 'short' });
+        const end = formatDate(trip.tripEnd, { day: 'numeric', month: 'short', year: 'numeric' });
+        const dateLabel = start && end ? `${start} — ${end}` : start || end || 'Dates à définir';
+        const details = [dateLabel, trip.destination].filter(Boolean).join(' · ');
+        const args = esc(JSON.stringify([trip.ownerUid, tripId]));
+        const tag = isCurrent ? 'article' : `button type="button" data-action="openDashboardTrip" data-action-args='${args}'`;
+        return `<${tag} class="trip-switcher-option${isCurrent ? ' is-current' : ''}"${isCurrent ? ' aria-current="true"' : ''}>
+            <span class="trip-switcher-icon" aria-hidden="true"><i class="fa-solid fa-suitcase-rolling"></i></span>
+            <span class="trip-switcher-main"><strong>${esc(trip.title || 'Mon séjour')}</strong><small>${esc(details)}</small></span>
+            <span class="trip-switcher-state">${isCurrent ? '<i class="fa-solid fa-check" aria-hidden="true"></i><span>ACTIF</span>' : '<i class="fa-solid fa-arrow-right" aria-hidden="true"></i>'}</span>
+        </${isCurrent ? 'article' : 'button'}>`;
+    }).join('');
+    status.textContent = dashboardTripsSnapshot.complete
+        ? `${trips.length} séjours accessibles`
+        : `Liste partielle · ${trips.length} séjours chargés`;
+}
+
+function openTripSwitcherOrEdit() {
+    if (!DEMO_PREVIEW && dashboardTripsSnapshot.trips.length > 1) {
+        renderTripSwitcher();
+        document.querySelector('.app-topbar-trip')?.setAttribute('aria-expanded', 'true');
+        openModal('modal-trip-switcher');
+        return;
+    }
+    openEditTripModal();
+}
+
+function resetDemoScenario() {
+    if (!DEMO_PREVIEW) return;
+    const confirmed = window.confirm('Restaurer cette simulation à son état de départ ? Les modifications de cette démo seront remplacées. Vos séjours personnels ne seront pas touchés.');
+    if (!confirmed) return;
+    const resetUrl = new URL(window.location.href);
+    resetUrl.searchParams.set('reset', '1');
+    window.location.assign(resetUrl.href);
 }
 
 function openDashboardReservations() {
@@ -1771,7 +1848,8 @@ function switchDashboardTab(tabId, itineraryFocus = null) {
         }));
         return;
     }
-    window.scrollTo({ top: 0, behavior });
+    const pageNavigationBehavior = window.matchMedia('(max-width: 1079px)').matches ? 'auto' : behavior;
+    window.scrollTo({ top: 0, behavior: pageNavigationBehavior });
 }
 
 const pageEntranceTimers = new WeakMap();
@@ -1986,6 +2064,7 @@ function saveTripDates() {
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
+    if (modalId === 'modal-trip-switcher') document.querySelector('.app-topbar-trip')?.setAttribute('aria-expanded', 'false');
     if (!modal.classList.contains('active') || modal.classList.contains('is-closing')) return;
     const finishClose = () => {
         window.clearTimeout(modal.closeTimer);
@@ -4969,6 +5048,8 @@ const ACTIONS = {
     switchDashboardTab,
     switchTab,
     openDashboardReservations,
+    openTripSwitcherOrEdit,
+    resetDemoScenario,
     openEditTripModal,
     saveTripDates,
     closeModal,

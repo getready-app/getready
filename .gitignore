@@ -1,0 +1,11 @@
+.DS_Store
+._*
+*.log
+node_modules/
+.env
+.env.*
+!.env.example
+
+# Cloudflare Wrangler
+flight-api/.wrangler/
+**/.dev.vars

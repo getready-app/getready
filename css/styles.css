@@ -936,9 +936,8 @@ body:not(.is-editor) .trip-title-container i.fa-pen-to-square {
 .currency-note, .budget-currency-setting p { color:var(--text-muted); font-size:.76rem; line-height:1.45; margin-top:7px; }
 .currency-note a { color:var(--accent-primary); font-weight:700; }
 .budget-currency-setting label { display:block; font-weight:750; margin-bottom:8px; }
-.budget-amount-row { display:flex; gap:8px; }
-.budget-amount-row input { min-width:0; flex:1; }
-.budget-amount-row select { width:115px; }
+.budget-amount-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(118px,34%); gap:8px; }
+.budget-amount-row input,.budget-amount-row select { width:100%; min-width:0; }
 
 .modal {
     display: none;

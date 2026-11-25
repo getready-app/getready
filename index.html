@@ -16,8 +16,8 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="css/styles.css?v=111">
-    <link rel="stylesheet" href="css/getready-shell.css?v=14">
+    <link rel="stylesheet" href="css/styles.css?v=112">
+    <link rel="stylesheet" href="css/getready-shell.css?v=20">
 </head>
 <body>
 
@@ -47,7 +47,7 @@
     <header class="app-topbar" aria-label="Barre d’outils du séjour">
         <div class="app-topbar-context">
             <span class="app-topbar-kicker">GETREADY <i class="fa-solid fa-angle-right" aria-hidden="true"></i> SÉJOUR ACTIF</span>
-            <button type="button" class="app-topbar-trip" data-action="openEditTripModal" aria-label="Modifier le séjour actif">
+            <button type="button" class="app-topbar-trip" data-action="openTripSwitcherOrEdit" data-switchable="false" aria-label="Modifier le séjour actif" aria-expanded="false">
                 <span id="app-topbar-trip-title">Mon séjour</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
             </button>
         </div>
@@ -125,7 +125,8 @@
 
         <aside class="demo-banner" id="demo-banner" hidden>
             <span class="demo-banner-icon" aria-hidden="true">✨</span>
-            <div><strong>Scénario de démonstration</strong><span>Groupe et budget fictifs · lieux sourcés au 16/11/2026 · itinéraire suggéré, aucun vol ni billet réservé ; horaires et tarifs 2027 à vérifier.</span></div>
+            <div class="demo-banner-copy"><strong>Scénario de démonstration</strong><span>Groupe et budget fictifs · lieux sourcés au 16/11/2026 · itinéraire suggéré, aucune réservation effectuée.</span></div>
+            <button type="button" class="demo-reset-button" data-action="resetDemoScenario"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Restaurer la démo</button>
         </aside>
 
         <div class="content-container dashboard-content">
@@ -497,6 +498,20 @@
             <span class="nav-label-wide">Réglages</span><span class="nav-label-compact" aria-hidden="true">Réglages</span>
         </button>
     </nav>
+
+    <!-- ================= SÉLECTEUR DE SÉJOUR ================= -->
+    <div class="modal" id="modal-trip-switcher" role="dialog" aria-modal="true" aria-labelledby="trip-switcher-heading" aria-describedby="trip-switcher-copy">
+        <div class="modal-content trip-switcher-dialog">
+            <span class="trip-switcher-eyebrow">VOTRE ESPACE</span>
+            <h3 id="trip-switcher-heading">Changer de séjour</h3>
+            <p class="trip-switcher-copy" id="trip-switcher-copy">Choisissez le voyage que vous souhaitez ouvrir.</p>
+            <div class="trip-switcher-list" id="trip-switcher-list"></div>
+            <p class="trip-switcher-status" id="trip-switcher-status" role="status" aria-live="polite"></p>
+            <div class="modal-buttons">
+                <button type="button" class="btn-modal cancel" data-action="closeModal" data-action-args='["modal-trip-switcher"]'>Fermer</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ================= MODAL DATES DU VOYAGE (MODIFICATION) ================= -->
     <div class="modal" id="modal-edit-trip" role="dialog" aria-modal="true" aria-labelledby="trip-modal-heading">

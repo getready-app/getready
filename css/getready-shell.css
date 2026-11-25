@@ -34,7 +34,7 @@ body { padding-bottom:0; }
     align-items:center;
     justify-content:space-between;
     gap:20px;
-    padding:12px clamp(22px,3vw,42px);
+    padding:calc(12px + env(safe-area-inset-top, 0px)) clamp(22px,3vw,42px) 12px;
     border-bottom:1px solid var(--gr-line);
     background:color-mix(in srgb,var(--gr-bg) 88%,transparent);
     backdrop-filter:blur(18px);
@@ -45,6 +45,7 @@ body { padding-bottom:0; }
 .app-topbar-trip { display:flex; width:fit-content; max-width:60vw; align-items:center; gap:9px; padding:0; border:0; color:var(--gr-ink); background:transparent; font-size:1rem; font-weight:750; text-align:left; cursor:pointer; }
 .app-topbar-trip span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .app-topbar-trip i { color:var(--gr-muted); font-size:.68rem; }
+.app-topbar-trip[data-switchable="false"] i { display:none; }
 .app-topbar-actions { display:flex; align-items:center; gap:11px; }
 .app-topbar-date { color:var(--gr-muted); font-size:.78rem; font-weight:650; white-space:nowrap; }
 .app-topbar-new-trip,.nav-new-trip {
@@ -235,6 +236,62 @@ html[data-theme] body[data-page="accueil"] #today-card-container .today-card { c
 #page-accueil .dashboard-travel-details>summary { min-height:62px; }
 #page-accueil .dashboard-travel-details[open] { padding-bottom:15px; }
 
+.trip-switcher-dialog {
+    width:min(540px,100%);
+    max-height:min(82vh,740px);
+    padding:24px;
+    border:1px solid var(--gr-line);
+    border-radius:24px;
+    color:var(--gr-ink);
+    background:var(--gr-surface);
+    box-shadow:0 28px 80px rgba(18,42,34,.22);
+}
+.trip-switcher-eyebrow { display:block; margin-bottom:7px; color:var(--gr-accent); font-size:.62rem; font-weight:850; letter-spacing:.14em; }
+.trip-switcher-dialog h3 { margin:0; color:var(--gr-ink); font-size:1.35rem; letter-spacing:-.04em; }
+.trip-switcher-copy { margin:6px 0 17px; color:var(--gr-muted); font-size:.83rem; line-height:1.45; }
+.trip-switcher-list { display:grid; gap:9px; }
+.trip-switcher-option { display:grid; width:100%; min-height:70px; grid-template-columns:40px minmax(0,1fr) auto; align-items:center; gap:11px; padding:11px; border:1px solid var(--gr-line); border-radius:15px; color:var(--gr-ink); background:var(--gr-bg); text-align:left; }
+button.trip-switcher-option { cursor:pointer; font:inherit; transition:border-color .16s ease,background-color .16s ease,transform .16s ease; }
+button.trip-switcher-option:hover { transform:translateY(-1px); border-color:color-mix(in srgb,var(--gr-accent) 45%,var(--gr-line)); }
+.trip-switcher-option.is-current { border-color:color-mix(in srgb,var(--gr-accent) 46%,var(--gr-line)); background:var(--gr-accent-soft); }
+.trip-switcher-icon { display:grid; width:40px; height:40px; place-items:center; border-radius:12px; color:var(--gr-accent); background:var(--gr-surface); }
+.trip-switcher-main { display:grid; min-width:0; gap:4px; }
+.trip-switcher-main strong { overflow:hidden; color:var(--gr-ink); font-size:.84rem; text-overflow:ellipsis; white-space:nowrap; }
+.trip-switcher-main small { overflow:hidden; color:var(--gr-muted); font-size:.69rem; text-overflow:ellipsis; white-space:nowrap; }
+.trip-switcher-state { display:flex; align-items:center; gap:5px; color:var(--gr-accent); font-size:.58rem; font-weight:850; letter-spacing:.06em; }
+.trip-switcher-status { min-height:1.2em; margin:11px 0 0; color:var(--gr-muted); font-size:.68rem; }
+.demo-banner-copy { min-width:0; flex:1; }
+.demo-banner .demo-reset-button { display:inline-flex; min-height:35px; flex:none; align-items:center; justify-content:center; gap:7px; padding:0 11px; border:1px solid color-mix(in srgb,#9d7737 28%,transparent); border-radius:11px; color:#76541c; background:rgba(255,255,255,.55); font:inherit; font-size:.68rem; font-weight:750; cursor:pointer; }
+.demo-banner .demo-reset-button:hover { background:#fff; }
+
+/* Les liens d’action gardent un contraste lisible dans chaque thème. */
+.calendar-export-button,.budget-export-button,.billet-export-button {
+    border-color:color-mix(in srgb,var(--gr-accent) 34%,var(--gr-line));
+    color:var(--gr-accent);
+    background:var(--gr-surface);
+}
+.calendar-export-button:hover,.budget-export-button:hover,.billet-export-button:hover { border-color:var(--gr-accent); color:var(--gr-accent); background:var(--gr-accent-soft); }
+html[data-color-mode="dark"] .calendar-export-button:hover,
+html[data-color-mode="dark"] .budget-export-button:hover,
+html[data-color-mode="dark"] .billet-export-button:hover { color:var(--gr-ink); background:var(--gr-soft); }
+html .currency-note a { color:var(--gr-accent); }
+html[data-color-mode="dark"] .currency-note a { color:var(--gr-accent)!important; }
+html[data-color-mode="dark"] .itinerary-place-map { border:1px solid var(--gr-line); color:var(--gr-accent); background:var(--gr-surface); }
+#page-infos .card .info-source-link {
+    border-color:color-mix(in srgb,var(--gr-accent) 32%,var(--gr-line));
+    color:var(--gr-accent)!important;
+    background:var(--gr-surface);
+}
+#page-infos .card .info-source-link:hover { border-color:var(--gr-accent); }
+html[data-color-mode="dark"] #page-infos .card .info-source-link {
+    border-color:color-mix(in srgb,var(--gr-accent) 32%,var(--gr-line));
+    color:var(--gr-accent)!important;
+    background:var(--gr-surface);
+}
+html[data-color-mode="dark"] #page-infos .card .info-source-link:hover { border-color:var(--gr-accent); color:var(--gr-ink)!important; background:var(--gr-soft); }
+#page-infos #map-directions-link { color:#fff!important; }
+html[data-color-mode="dark"] #budget-people-add-row > button { border-color:var(--gr-accent)!important; color:var(--gr-accent)!important; }
+
 /* Même surface claire sur itinéraire, préparatifs, budget, carnet et réglages. */
 .page:not(#page-accueil) { min-height:calc(100vh - 76px); }
 .page:not(#page-accueil) > .page-header {
@@ -293,6 +350,7 @@ html[data-color-mode="dark"] #page-checklist .prep-search input::placeholder { c
 html[data-color-mode="dark"] #page-infos #map-embed-iframe { background-color:var(--gr-soft)!important; }
 html[data-color-mode="dark"] #page-accueil > .demo-banner { border-color:#514736; color:var(--gr-ink); background:#302a20; }
 html[data-color-mode="dark"] #page-accueil > .demo-banner span { color:var(--gr-muted); }
+html[data-color-mode="dark"] #page-accueil > .demo-banner .demo-reset-button { border-color:var(--gr-line); color:var(--gr-ink); background:var(--gr-soft); }
 html[data-color-mode="dark"] .nav-bar { border-color:var(--gr-line)!important; background:var(--gr-surface)!important; }
 html[data-theme] body .nav-bar { border-color:var(--gr-line)!important; background:var(--gr-surface)!important; }
 html[data-theme] body .nav-item { color:var(--gr-muted)!important; }
@@ -414,11 +472,13 @@ html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy p
     body.sidebar-collapsed .nav-new-trip { width:44px; }
 }
 @media (max-width:1079px) {
+    html { scroll-behavior:auto; }
     body { padding-bottom:calc(91px + env(safe-area-inset-bottom))!important; }
-    .app-topbar { min-height:67px; padding:10px 18px; }
+    .app-topbar { min-height:67px; padding:calc(10px + env(safe-area-inset-top, 0px)) 18px 10px; }
     .app-topbar-kicker { font-size:.55rem; }
     .app-topbar-trip { font-size:.88rem; }
     .app-topbar-date { font-size:.68rem; }
+    .trip-switcher-dialog { width:100%; max-height:91dvh; padding:22px 18px calc(20px + env(safe-area-inset-bottom)); border-radius:24px 24px 0 0; }
     .nav-bar { top:auto; right:auto; bottom:max(9px,env(safe-area-inset-bottom)); left:50%; display:flex; width:min(600px,calc(100% - 24px)); height:62px; flex-direction:row; justify-content:space-around; gap:0; padding:5px 7px; transform:translateX(-50%); border:1px solid var(--gr-line)!important; border-radius:18px!important; box-shadow:0 10px 30px rgba(30,44,67,.14)!important; }
     .nav-brand,.nav-collapse-button,.nav-new-trip { display:none!important; }
     .nav-item { width:16.666%; min-height:50px; flex-direction:column; justify-content:center; gap:3px; padding:3px 2px; border-radius:12px; font-size:.55rem!important; }
@@ -435,11 +495,13 @@ html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy p
     #page-accueil > .dashboard-content { padding-top:14px; }
 }
 @media (max-width:700px) {
-    .app-topbar { min-height:62px; gap:8px; padding:8px 14px; }
+    .app-topbar { min-height:62px; gap:8px; padding:calc(8px + env(safe-area-inset-top, 0px)) 14px 8px; }
     .app-topbar-actions { gap:7px; }
     .app-topbar-date { display:none; }
     .app-topbar-new-trip { min-height:35px; padding:0 10px; font-size:.68rem; }
     .app-topbar-edit { width:35px; height:35px; }
+    .demo-banner { flex-wrap:wrap; }
+    .demo-banner .demo-reset-button { margin-left:46px; }
     #page-accueil.active { padding:0 14px 24px; }
     #page-accueil > .home-header { padding-top:14px; }
     #page-accueil .dashboard-intro { padding-bottom:12px; }
@@ -480,6 +542,342 @@ html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy p
 .hero-primary-cta:focus-visible,.dashboard-calendar-edit:focus-visible {
     outline:3px solid color-mix(in srgb,var(--gr-accent) 48%,transparent);
     outline-offset:2px;
+}
+
+/* Direction artistique GetReady — rail forêt, grands titres éditoriaux, surfaces lumineuses. */
+:root {
+    --gr-radius:26px;
+    --gr-radius-card:21px;
+    --gr-radius-control:13px;
+    --gr-shadow:0 18px 48px rgba(30,61,51,.085);
+    --gr-rail:#173c35;
+    --gr-rail-ink:#f4f8f4;
+    --gr-rail-muted:#aec5bb;
+}
+html[data-color-mode="dark"] {
+    --gr-rail:#101e22;
+    --gr-rail-ink:#eef6f2;
+    --gr-rail-muted:#a5b7b1;
+    --gr-shadow:0 18px 48px rgba(0,0,0,.25);
+}
+#main-content {
+    background-color:var(--gr-bg)!important;
+    background-image:radial-gradient(ellipse at 82% 8%,color-mix(in srgb,var(--gr-accent) 9%,transparent),transparent 42%);
+}
+.page:not(#page-accueil) { background:transparent!important; }
+.app-topbar {
+    border-bottom-color:color-mix(in srgb,var(--gr-line) 72%,transparent);
+    box-shadow:0 5px 22px rgba(20,43,37,.035);
+}
+.app-topbar-trip { font-size:1.04rem; letter-spacing:-.025em; }
+
+/* Rail fixe sur ordinateur, dock flottant sur téléphone. */
+html[data-theme] body[data-page] .nav-bar {
+    border:0!important;
+    border-right:1px solid rgba(255,255,255,.09)!important;
+    background:var(--gr-rail)!important;
+    box-shadow:18px 0 50px rgba(14,39,34,.14)!important;
+}
+html[data-theme] body[data-page] .nav-brand { margin:8px 5px 24px!important; }
+html[data-theme] body[data-page] .nav-brand .brand-mark {
+    color:#173c35!important;
+    background:#c9ecd9!important;
+    box-shadow:0 8px 22px rgba(4,18,15,.2);
+}
+html[data-theme] body[data-page] .nav-brand .brand-type,
+html[data-theme] body[data-page] .nav-brand .brand-type span { color:var(--gr-rail-ink)!important; }
+html[data-theme] body[data-page] .nav-brand .brand-type small { color:var(--gr-rail-muted)!important; }
+html[data-theme] body[data-page] .nav-new-trip {
+    color:#183d35;
+    background:#d8f0e1;
+    box-shadow:0 9px 22px rgba(5,24,19,.19);
+}
+html[data-theme] body[data-page] .nav-collapse-button {
+    border-color:rgba(255,255,255,.17)!important;
+    color:var(--gr-rail-muted)!important;
+    background:rgba(255,255,255,.08)!important;
+}
+html[data-theme] body[data-page] .nav-item {
+    min-height:46px;
+    margin:2px 0;
+    border-radius:14px;
+    color:var(--gr-rail-muted)!important;
+    transition:color .18s ease,background-color .18s ease,transform .18s ease;
+}
+html[data-theme] body[data-page] .nav-item i { color:inherit!important; }
+html[data-theme] body[data-page] .nav-item.active {
+    color:#f4fff8!important;
+    background:rgba(207,240,221,.16)!important;
+    box-shadow:inset 3px 0 #c9ecd9!important;
+}
+html[data-theme] body[data-page] .nav-item.active i { color:#c9ecd9!important; }
+html[data-theme] body[data-page] .nav-item:not(.active):hover {
+    color:var(--gr-rail-ink)!important;
+    background:rgba(255,255,255,.075)!important;
+}
+
+/* Une couverture de voyage plus expressive sur l’accueil. */
+#page-accueil .hero-main {
+    position:relative;
+    min-height:278px;
+    padding:22px;
+    border:1px solid rgba(210,241,224,.13);
+    background:linear-gradient(125deg,#163e37 0%,#20594c 68%,#286455 100%);
+    box-shadow:0 22px 52px rgba(19,65,54,.2);
+}
+#page-accueil .hero-eyebrow { color:#bce6d0; }
+#page-accueil .hero-eyebrow span { background:#f1bd79; box-shadow:0 0 0 5px rgba(241,189,121,.14); }
+#page-accueil .trip-title { color:#f5faf6; }
+#page-accueil .trip-dates,
+#page-accueil .trip-primary-location { color:rgba(236,247,240,.75); }
+#page-accueil .trip-primary-location i { color:#f1bd79; }
+#page-accueil .trip-context {
+    border:1px solid rgba(209,239,222,.17);
+    color:#d8f0e1;
+    background:rgba(8,29,25,.26);
+}
+#page-accueil .trip-preparation-progress { color:rgba(236,247,240,.77); }
+#page-accueil .trip-progress-track { background:rgba(255,255,255,.17); }
+#page-accueil .trip-progress-track>span { background:linear-gradient(90deg,#f1bd79,#f5d59f); }
+#page-accueil .hero-primary-cta {
+    min-height:43px;
+    color:#173c35;
+    background:#e3f4e9;
+    box-shadow:0 9px 22px rgba(5,25,20,.15);
+}
+#page-accueil .hero-primary-cta:hover { background:#fff; transform:translateY(-1px); }
+#page-accueil .hero-countdown {
+    border-color:rgba(220,244,231,.18);
+    background:rgba(8,31,27,.24);
+    backdrop-filter:blur(16px);
+}
+#page-accueil .hero-countdown-label { color:rgba(230,245,236,.68); }
+#page-accueil .countdown-number { color:#f5d59f; }
+#page-accueil .countdown-text { color:rgba(236,247,240,.72); }
+#page-accueil .hero-orbit { min-height:224px; border:1px solid rgba(255,255,255,.16); }
+#page-accueil .hero-orbit::after { inset:28% 0 0; background:linear-gradient(0deg,rgba(9,30,26,.78),transparent); }
+
+/* Bannières partagées par l’itinéraire, la préparation, le budget et le carnet. */
+html[data-theme] body[data-page="programme"] #page-programme > .page-header,
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header,
+html[data-theme] body[data-page="budget"] #page-budget > .page-header,
+html[data-theme] body[data-page="infos"] #page-infos > .page-header {
+    position:relative;
+    isolation:isolate;
+    min-height:176px!important;
+    justify-content:center!important;
+    overflow:hidden;
+    padding:34px clamp(22px,4vw,58px) 30px!important;
+    border-radius:0 0 32px 32px!important;
+    color:#f5faf6!important;
+    background:linear-gradient(118deg,#143831 0%,#1d5145 62%,#286454 100%)!important;
+    box-shadow:0 18px 42px rgba(20,66,55,.17)!important;
+}
+html[data-theme] body[data-page="programme"] #page-programme > .page-header::before,
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header::before,
+html[data-theme] body[data-page="budget"] #page-budget > .page-header::before,
+html[data-theme] body[data-page="infos"] #page-infos > .page-header::before {
+    position:absolute;
+    z-index:-1;
+    inset:-50% -4% -70% 52%;
+    display:block!important;
+    border-radius:50%;
+    content:"";
+    background:radial-gradient(ellipse at 50% 50%,rgba(191,232,207,.18),rgba(191,232,207,.045) 40%,transparent 70%);
+    pointer-events:none;
+}
+html[data-theme] body[data-page="programme"] #page-programme > .page-header::after,
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header::after,
+html[data-theme] body[data-page="budget"] #page-budget > .page-header::after,
+html[data-theme] body[data-page="infos"] #page-infos > .page-header::after {
+    position:absolute;
+    z-index:-1;
+    top:-92px;
+    right:9%;
+    display:block!important;
+    width:230px;
+    height:230px;
+    border:1px solid rgba(230,246,236,.14);
+    border-radius:50%;
+    content:"";
+    box-shadow:0 0 0 28px rgba(230,246,236,.035),0 0 0 58px rgba(230,246,236,.025);
+    pointer-events:none;
+}
+html[data-theme] body[data-page="programme"] #page-programme > .page-header h1,
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header h1,
+html[data-theme] body[data-page="budget"] #page-budget > .page-header h1,
+html[data-theme] body[data-page="infos"] #page-infos > .page-header h1 {
+    color:#f5faf6!important;
+    font-size:clamp(2rem,3.6vw,3.15rem)!important;
+    letter-spacing:-.065em;
+    text-shadow:none!important;
+}
+html[data-theme] body[data-page="programme"] #page-programme > .page-header h1::before,
+html[data-theme] body[data-page="budget"] #page-budget > .page-header h1::before,
+html[data-theme] body[data-page="infos"] #page-infos > .page-header h1::before {
+    display:block;
+    margin:0 0 9px;
+    color:#bce6d0;
+    content:"";
+    font-size:.58rem;
+    font-weight:800;
+    letter-spacing:.16em;
+}
+html[data-theme] body[data-page="programme"] #page-programme > .page-header h1::before { content:"LE VOYAGE EN MOUVEMENT"; }
+html[data-theme] body[data-page="budget"] #page-budget > .page-header h1::before { content:"GARDER LE CAP"; }
+html[data-theme] body[data-page="infos"] #page-infos > .page-header h1::before { content:"REPÈRES & ADRESSES"; }
+html[data-theme] body[data-page="programme"] #page-programme > .page-header p,
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header p,
+html[data-theme] body[data-page="infos"] #page-infos > .page-header p {
+    max-width:620px;
+    color:rgba(235,247,239,.77)!important;
+    font-size:.92rem;
+    text-shadow:none!important;
+}
+html[data-theme] body[data-page="budget"] #page-budget > .page-header .live-rate { color:#e7f4eb!important; }
+html[data-theme] body[data-page="budget"] #page-budget > .page-header .live-dot { background:#f1bd79!important; }
+html[data-theme] body[data-page="budget"] #page-budget > .page-header .budget-header-add {
+    border:1px solid rgba(255,255,255,.2);
+    color:#173c35;
+    background:#e3f4e9;
+}
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-eyebrow { color:#bce6d0; }
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-card {
+    border-color:rgba(255,255,255,.17);
+    color:#f5faf6;
+    background:rgba(8,31,27,.24);
+    box-shadow:inset 0 1px rgba(255,255,255,.05);
+    backdrop-filter:blur(14px);
+}
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-top > span,
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-bottom > span:first-child { color:#f5faf6!important; }
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-top > strong { color:#f4d29d!important; }
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-bottom > span:last-child { color:rgba(235,247,239,.72)!important; }
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-track { background:rgba(255,255,255,.17); }
+html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-track > span { background:linear-gradient(90deg,#f4c879,#f4dda9); }
+html[data-theme] body[data-page="programme"] #page-programme > .content-container,
+html[data-theme] body[data-page="budget"] #page-budget > .content-container,
+html[data-theme] body[data-page="infos"] #page-infos > .content-container { padding-top:28px; }
+
+/* Réglages : même couverture et une galerie de choix mise en valeur. */
+html[data-theme] body[data-page="settings"] #page-settings .settings-hero {
+    position:relative;
+    isolation:isolate;
+    overflow:hidden;
+    padding:37px clamp(22px,4vw,58px) 33px!important;
+    border-radius:0 0 32px 32px;
+    color:#f5faf6!important;
+    background:linear-gradient(118deg,#143831 0%,#1d5145 62%,#286454 100%)!important;
+    box-shadow:0 18px 42px rgba(20,66,55,.17)!important;
+}
+html[data-theme] body[data-page="settings"] #page-settings .settings-hero::before {
+    position:absolute;
+    z-index:-1;
+    inset:-60% -4% -70% 52%;
+    display:block!important;
+    border-radius:50%;
+    content:"";
+    background:radial-gradient(ellipse at 50% 50%,rgba(191,232,207,.19),rgba(191,232,207,.045) 40%,transparent 70%);
+}
+html[data-theme] body[data-page="settings"] #page-settings .settings-hero::after {
+    position:absolute;
+    z-index:-1;
+    top:-92px;
+    right:9%;
+    display:block!important;
+    width:230px;
+    height:230px;
+    border:1px solid rgba(230,246,236,.14);
+    border-radius:50%;
+    content:"";
+    box-shadow:0 0 0 28px rgba(230,246,236,.035),0 0 0 58px rgba(230,246,236,.025);
+}
+html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy h1 { color:#f5faf6!important; font-size:clamp(2rem,3.6vw,3.15rem)!important; letter-spacing:-.065em; }
+html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy p { color:rgba(235,247,239,.77)!important; font-size:.92rem; }
+html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy .settings-eyebrow { color:#bce6d0; }
+html[data-theme] body[data-page="settings"] #page-settings .settings-hero-mark { color:rgba(220,244,231,.18)!important; }
+html[data-theme] body[data-page="settings"] #page-settings .settings-content { padding-top:28px; }
+
+/* Finition commune : contours doux, ombres calmes et feedback net. */
+.first-trip-guide,.dashboard-stat,.dashboard-priorities,.dashboard-trips,.dashboard-travel-details,
+.dashboard-calendar-panel,.dashboard-upcoming,.settings-panel,.budget-stat,.expense-card,
+.prep-category,.itinerary-city-slide,.itinerary-day-plan,.card {
+    border-radius:var(--gr-radius-card)!important;
+}
+.dashboard-stat,.dashboard-priority-item,.dashboard-upcoming-item,.expense-card,.checklist-item,
+.settings-background-choice,.settings-theme-choice,.settings-motion-options button {
+    transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+html[data-theme] body[data-page] .btn-add-float {
+    color:#173c35;
+    background:#d6f0df;
+    box-shadow:0 12px 30px rgba(13,54,42,.24);
+}
+html[data-theme] body[data-page] .btn-add-float:hover { color:#173c35; background:#f0f9f3; transform:translateY(-3px); }
+@media (hover:hover) and (pointer:fine) {
+    .dashboard-stat:hover,.dashboard-priority-item:hover,.dashboard-upcoming-item:hover,
+    .expense-card:hover,.checklist-item:hover,.settings-background-choice:hover,.settings-theme-choice:hover {
+        transform:translateY(-2px);
+        box-shadow:0 14px 30px rgba(28,57,49,.1);
+    }
+}
+
+@media (max-width:1079px) {
+    html[data-theme] body[data-page] .nav-bar {
+        width:min(700px,calc(100% - 20px));
+        height:70px;
+        padding:6px 7px;
+        border:1px solid rgba(255,255,255,.12)!important;
+        border-radius:22px!important;
+        background:color-mix(in srgb,var(--gr-rail) 94%,transparent)!important;
+        box-shadow:0 14px 36px rgba(7,27,23,.32)!important;
+        backdrop-filter:blur(22px);
+    }
+    html[data-theme] body[data-page] .nav-item {
+        min-height:56px;
+        gap:4px;
+        border-radius:15px;
+        font-size:.58rem!important;
+    }
+    html[data-theme] body[data-page] .nav-item.active {
+        color:#edfff3!important;
+        background:rgba(208,241,222,.15)!important;
+        box-shadow:none!important;
+    }
+    html[data-theme] body[data-page] .nav-item.active i { color:#d6f0df!important; }
+    html[data-theme] body[data-page] .nav-item span.nav-label-compact { display:inline!important; color:inherit!important; }
+}
+@media (max-width:700px) {
+    #page-accueil .hero-main { min-height:0; padding:12px; }
+    #page-accueil .hero-orbit { min-height:160px; }
+    #page-accueil .hero-primary-cta { min-height:40px; }
+    html[data-theme] body[data-page="programme"] #page-programme > .page-header,
+    html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header,
+    html[data-theme] body[data-page="budget"] #page-budget > .page-header,
+    html[data-theme] body[data-page="infos"] #page-infos > .page-header {
+        min-height:145px!important;
+        padding:24px 18px 23px!important;
+        border-radius:0 0 24px 24px!important;
+    }
+    html[data-theme] body[data-page="programme"] #page-programme > .page-header h1,
+    html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header h1,
+    html[data-theme] body[data-page="budget"] #page-budget > .page-header h1,
+    html[data-theme] body[data-page="infos"] #page-infos > .page-header h1,
+    html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy h1 { font-size:2rem!important; }
+    html[data-theme] body[data-page="programme"] #page-programme > .page-header p,
+    html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header p,
+    html[data-theme] body[data-page="infos"] #page-infos > .page-header p { font-size:.82rem; }
+    html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-header-layout { gap:14px; }
+    html[data-theme] body[data-page="checklist"] #page-checklist > .prep-page-header .prep-progress-card { width:100%; }
+    html[data-theme] body[data-page="settings"] #page-settings .settings-hero { padding:25px 18px 24px!important; border-radius:0 0 24px 24px; }
+    html[data-theme] body[data-page="settings"] #page-settings .settings-content { padding-top:18px; }
+}
+@media (max-width:430px) {
+    html[data-theme] body[data-page] .nav-item { font-size:.52rem!important; }
+}
+@media (prefers-reduced-motion:reduce) {
+    .dashboard-stat,.dashboard-priority-item,.dashboard-upcoming-item,.expense-card,.checklist-item,
+    .settings-background-choice,.settings-theme-choice,.settings-motion-options button { transition:none!important; }
 }
 .app-topbar-new-trip:disabled,.app-topbar-edit:disabled,
 .nav-new-trip:disabled,.nav-item:disabled,.hero-primary-cta:disabled,
