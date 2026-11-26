@@ -279,3 +279,10 @@ html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy p
 #page-accueil .dashboard-travel-details .date-badge-month { color: var(--ep-ink-2) !important; }
 #modal-choose-type .modal-buttons:first-of-type .btn-modal,
 #modal-choose-info-type .modal-buttons:first-of-type .btn-modal { justify-content: flex-start !important; gap: 12px !important; }
+
+/* Confort sur téléphone : boutons dont l'ancienne hauteur était imposée. */
+.brand-type small { text-shadow: none !important; }
+@media (max-width: 1079px) {
+    :is(.hero-primary-cta, .checklist-selector-btn, [data-color-mode-choice], .trip-backup-button, #page-infos select) { min-height: 44px !important; }
+    .settings-link-button { display: inline-block !important; padding-block: 12px !important; margin-block: -12px !important; }
+}

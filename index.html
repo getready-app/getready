@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <script>document.documentElement.classList.add('auth-required');</script>
-    <title>GetReady — Organisez votre prochain voyage</title>
+    <title>GetReady — Organise ton prochain voyage</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="GetReady">
@@ -16,7 +16,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="css/app.css?v=9">
+    <link rel="stylesheet" href="css/app.css?v=13">
 </head>
 <body>
 
@@ -29,6 +29,11 @@
             <span class="auth-gate-eyebrow"><i class="fa-solid fa-lock" aria-hidden="true"></i> ESPACE SÉCURISÉ</span>
             <h1 id="auth-gate-title">Connecte-toi à GetReady</h1>
             <p class="auth-gate-description">Tes séjours et tes informations sont réservés aux personnes connectées.</p>
+            <ul class="auth-gate-benefits" aria-label="Ce que permet GetReady">
+                <li><span class="auth-benefit-icon is-teal" aria-hidden="true"><i class="fa-solid fa-map-location-dot"></i></span>Ton itinéraire jour par jour, sur une carte</li>
+                <li><span class="auth-benefit-icon is-yellow" aria-hidden="true"><i class="fa-solid fa-square-check"></i></span>Tes préparatifs et ton budget au même endroit</li>
+                <li><span class="auth-benefit-icon is-lavender" aria-hidden="true"><i class="fa-solid fa-user-group"></i></span>Un séjour partagé avec celles et ceux qui partent avec toi</li>
+            </ul>
             <div id="auth-gate-loading" class="auth-gate-loading">Préparation de la connexion sécurisée…</div>
             <div id="auth-gate-form-slot"></div>
             <a class="auth-demo-link" href="?demo=newyork">
@@ -45,15 +50,16 @@
     <main id="main-content">
     <header class="app-topbar" aria-label="Barre d’outils du séjour">
         <div class="app-topbar-context">
-            <span class="app-topbar-kicker">GETREADY <i class="fa-solid fa-angle-right" aria-hidden="true"></i> SÉJOUR ACTIF</span>
+            <span class="app-topbar-kicker">GetReady <i class="fa-solid fa-angle-right" aria-hidden="true"></i> séjour actif</span>
             <button type="button" class="app-topbar-trip" data-action="openTripSwitcherOrEdit" data-switchable="false" aria-label="Modifier le séjour actif" aria-expanded="false">
                 <span id="app-topbar-trip-title">Mon séjour</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
             </button>
         </div>
         <div class="app-topbar-actions">
             <span class="app-topbar-date" id="app-topbar-trip-date">Dates à définir</span>
-            <button type="button" class="app-topbar-new-trip" data-action="startNewTrip"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Nouveau séjour</span></button>
+            <button type="button" class="app-topbar-add" data-action="openModal" data-action-args='["modal-quick-add"]' aria-haspopup="dialog" aria-label="Ajouter au séjour" title="Ajouter au séjour"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Ajouter</span></button>
             <button type="button" class="app-topbar-edit" data-action="openEditTripModal" aria-label="Modifier les informations du séjour" title="Modifier les informations du séjour"><i class="fa-solid fa-sliders" aria-hidden="true"></i></button>
+            <button type="button" class="app-topbar-settings" data-action="switchDashboardTab" data-action-args='["settings"]' aria-label="Réglages" title="Réglages"><i class="fa-solid fa-gear" aria-hidden="true"></i></button>
         </div>
     </header>
     <!-- ================= TABLEAU DE BORD ================= -->
@@ -71,11 +77,11 @@
                     </div>
                 </div>
                 <div class="dashboard-intro">
-                    <div><span class="dashboard-overline" id="dashboard-overline">VOTRE CARNET DE SÉJOUR</span><h1 id="dashboard-intro-title">Bonjour !</h1><p id="dashboard-intro-copy">Voici où en est votre prochain voyage.</p></div>
+                    <div><span class="dashboard-overline" id="dashboard-overline">TON CARNET DE SÉJOUR</span><h1 id="dashboard-intro-title">Bonjour !</h1><p id="dashboard-intro-copy">Voici où en est ton prochain voyage.</p></div>
                 </div>
                 <div class="hero-main">
                     <div class="hero-copy">
-                        <div class="hero-eyebrow"><span></span> VOTRE SÉJOUR EN UN COUP D’ŒIL</div>
+                        <div class="hero-eyebrow"><span></span> TON SÉJOUR EN UN COUP D’ŒIL</div>
                         <div class="trip-title-container" role="button" tabindex="0" data-action="openEditTripModal" data-action-keyboard>
                             <div class="trip-title" id="display-trip-title">Mon séjour</div>
                             <div class="trip-dates" id="display-trip-dates">Dates à définir</div>
@@ -109,10 +115,13 @@
                     <div><span class="dashboard-overline">DATES DU SÉJOUR</span><h2 id="dashboard-calendar-heading">Calendrier</h2></div>
                     <button type="button" class="dashboard-calendar-edit" data-action="openEditTripModal" aria-label="Modifier les dates du séjour"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
                 </div>
+                <div class="dashboard-calendar-month-view" id="dashboard-calendar-month-view">
                 <div class="dashboard-calendar-month" id="dashboard-mini-calendar-title">Mois du séjour</div>
                 <div class="dashboard-calendar-weekdays" aria-hidden="true"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
                 <div class="dashboard-mini-calendar" id="dashboard-mini-calendar" role="grid" aria-label="Calendrier des dates du séjour"></div>
-                <div class="dashboard-calendar-legend"><span class="dashboard-calendar-legend-mark" aria-hidden="true"></span><span>Dates du séjour</span><strong id="dashboard-calendar-range">Choisir vos dates</strong></div>
+                </div>
+                <div class="dashboard-calendar-legend"><span class="dashboard-calendar-legend-mark" aria-hidden="true"></span><span>Dates du séjour</span><strong id="dashboard-calendar-range">Choisir tes dates</strong></div>
+                <button type="button" class="dashboard-calendar-toggle" data-action="toggleDashboardCalendar" data-action-target aria-expanded="false" aria-controls="dashboard-calendar-month-view">Voir le mois</button>
             </section>
 
             <section class="dashboard-upcoming" aria-labelledby="dashboard-upcoming-title">
@@ -133,18 +142,18 @@
             <section class="first-trip-guide" id="first-trip-guide" aria-labelledby="first-trip-guide-title" hidden>
                 <div class="first-trip-guide-heading">
                     <span class="first-trip-guide-icon" aria-hidden="true"><i class="fa-solid fa-compass"></i></span>
-                    <div><span class="first-trip-kicker">POUR BIEN COMMENCER</span><h2 id="first-trip-guide-title">Votre séjour commence ici</h2><p>Deux repères suffisent pour prendre le départ. Vous pourrez compléter le reste au fil de vos idées.</p></div>
+                    <div><span class="first-trip-kicker">POUR BIEN COMMENCER</span><h2 id="first-trip-guide-title">Ton séjour commence ici</h2><p>Deux repères suffisent pour prendre le départ. Tu pourras compléter le reste au fil de tes idées.</p></div>
                 </div>
                 <span class="first-trip-progress" id="first-trip-progress" role="status" aria-live="polite">0 repère sur 2 prêt</span>
                 <ol class="first-trip-steps">
                     <li class="first-trip-step">
                         <span class="first-trip-step-number" aria-hidden="true">1</span>
-                        <div><strong>Donnez un nom à votre séjour et choisissez les dates</strong><span id="first-trip-details-status">À faire</span></div>
+                        <div><strong>Donne un nom à ton séjour et choisis les dates</strong><span id="first-trip-details-status">À faire</span></div>
                         <button type="button" data-action="openEditTripModal">Définir le séjour</button>
                     </li>
                     <li class="first-trip-step">
                         <span class="first-trip-step-number" aria-hidden="true">2</span>
-                        <div><strong>Ajoutez votre première destination</strong><span id="first-trip-destination-status">À faire</span></div>
+                        <div><strong>Ajoute ta première destination</strong><span id="first-trip-destination-status">À faire</span></div>
                         <button type="button" data-action="openItineraryEditor">Ajouter une destination</button>
                     </li>
                 </ol>
@@ -162,7 +171,7 @@
                 </section>
             </div>
             <section class="dashboard-trips" aria-labelledby="dashboard-trips-title">
-                <div class="dashboard-section-heading"><div><span class="dashboard-overline">VOS VOYAGES</span><h2 id="dashboard-trips-title">Mes séjours</h2></div><span id="dashboard-trips-status" role="status" aria-live="polite">Chargement des séjours…</span></div>
+                <div class="dashboard-section-heading"><div><span class="dashboard-overline">TES VOYAGES</span><h2 id="dashboard-trips-title">Mes séjours</h2></div><span id="dashboard-trips-status" role="status" aria-live="polite">Chargement des séjours…</span></div>
                 <div class="dashboard-trips-grid" id="dashboard-trips-grid" aria-busy="true"></div>
             </section>
             <details class="dashboard-travel-details">
@@ -252,7 +261,7 @@
                     <label><span>Vers</span><select id="currency-to" data-action="updateCurrencyConverter" data-action-event="change"></select></label>
                 </div>
                 <div class="currency-result" id="currency-result" aria-live="polite">—</div>
-                <p class="currency-note">Taux indicatifs actualisés chaque jour. Votre banque peut appliquer un autre taux. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Source des taux</a></p>
+                <p class="currency-note">Taux indicatifs actualisés chaque jour. Ta banque peut appliquer un autre taux. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Source des taux</a></p>
             </div>
 
             <div class="card budget-currency-setting">
@@ -281,6 +290,7 @@
                     <div class="budget-stat-label">Restant</div>
                 </div>
             </div>
+            <section class="budget-breakdown" id="budget-breakdown" aria-labelledby="budget-breakdown-title" hidden></section>
 
             <div class="budget-export-row">
                 <button type="button" class="budget-export-button" data-action="exportBudgetCsv"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Exporter les dépenses en CSV</button>
@@ -289,6 +299,8 @@
 
             <div class="budget-filter-toolbar" aria-label="Rechercher et filtrer les dépenses">
                 <label class="budget-search-field"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="budget-search" placeholder="Rechercher une dépense…" aria-label="Rechercher par dépense ou participant" data-budget-filter="query" data-action="updateBudgetFilter" data-action-event="input" data-action-target></label>
+                <button type="button" class="list-filter-toggle" id="budget-filter-toggle" data-action="toggleListFilters" data-action-target aria-expanded="false" aria-controls="budget-filter-options"><i class="fa-solid fa-sliders" aria-hidden="true"></i><span>Filtres</span></button>
+                <div class="list-filter-options" id="budget-filter-options" hidden>
                 <label class="budget-filter-select"><span>Catégorie</span><select id="budget-category-filter" data-budget-filter="category" data-action="updateBudgetFilter" data-action-event="change" data-action-target>
                     <option value="all">Toutes</option>
                     <option value="Transport">Transport</option>
@@ -304,6 +316,7 @@
                     <option value="unpaid">À payer</option>
                 </select></label>
                 <button type="button" class="budget-filter-reset" data-action="resetBudgetFilters">Effacer</button>
+                </div>
             </div>
 
             <div id="budget-split-card"></div>
@@ -361,6 +374,8 @@
             </div>
             <div class="billet-filter-toolbar" aria-label="Rechercher et filtrer les réservations">
                 <label class="billet-search-field"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="billet-search" placeholder="Rechercher une réservation…" aria-label="Rechercher par billet, adresse ou référence" data-action="updateBilletFilter" data-action-event="input" data-action-target data-billet-filter="query"></label>
+                <button type="button" class="list-filter-toggle" id="billet-filter-toggle" data-action="toggleListFilters" data-action-target aria-expanded="false" aria-controls="billet-filter-options"><i class="fa-solid fa-sliders" aria-hidden="true"></i><span>Filtres</span></button>
+                <div class="list-filter-options" id="billet-filter-options" hidden>
                 <label class="billet-status-filter"><span>Statut</span><select id="billet-status-filter" aria-label="Filtrer par statut" data-action="updateBilletFilter" data-action-event="change" data-action-target data-billet-filter="status">
                     <option value="all">Tous</option>
                     <option value="a-reserver">À réserver</option>
@@ -372,10 +387,12 @@
                     <option value="name">Nom (A–Z)</option>
                 </select></label>
                 <button type="button" class="billet-filter-reset" data-action="resetBilletFilters">Effacer</button>
+                </div>
                 <span id="billet-filter-count" role="status" aria-live="polite"></span>
             </div>
             <div id="billets-list"></div>
 
+            <h2 class="section-title notebook-section-title notebook-infos-title">Infos utiles</h2>
             <div id="infos-list"></div>
         </div>
         <button type="button" class="btn-add-float" data-action="openModal" data-action-args='["modal-choose-info-type"]' aria-label="Ajouter une information ou réservation" title="Ajouter une information ou réservation"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
@@ -414,40 +431,35 @@
                     </section>
 
                     <section class="settings-panel" aria-labelledby="settings-theme-title">
-                        <div class="settings-panel-heading"><span class="settings-panel-icon"><i class="fa-solid fa-palette" aria-hidden="true"></i></span><div><span class="settings-kicker">APPARENCE</span><h2 id="settings-theme-title">Couleur et mode d’affichage</h2><p>La couleur d’accent sert aux boutons, à la sélection et à la progression.</p></div></div>
+                        <div class="settings-panel-heading"><span class="settings-panel-icon"><i class="fa-solid fa-palette" aria-hidden="true"></i></span><div><span class="settings-kicker">APPARENCE</span><h2 id="settings-theme-title">Affichage</h2><p>La couleur d’accent sert aux boutons, à la sélection et à la progression.</p></div></div>
                         <div class="settings-theme-grid">
                             <button type="button" class="settings-theme-choice theme-sun" data-theme-choice="sun" data-action="setVisualTheme" data-action-args='["sun"]' aria-pressed="false"><span class="theme-preview theme-preview-sun"><i></i><i></i><i></i><b></b></span><span class="theme-choice-copy"><strong>Escapade</strong><small>Ocean Teal</small></span><i class="fa-solid fa-circle-check theme-check" aria-hidden="true"></i></button>
                             <button type="button" class="settings-theme-choice theme-ocean" data-theme-choice="ocean" data-action="setVisualTheme" data-action-args='["ocean"]' aria-pressed="false"><span class="theme-preview theme-preview-ocean"><i></i><i></i><i></i><b></b></span><span class="theme-choice-copy"><strong>Grand large</strong><small>Bleu océan</small></span><i class="fa-solid fa-circle-check theme-check" aria-hidden="true"></i></button>
                             <button type="button" class="settings-theme-choice theme-lavender" data-theme-choice="lavender" data-action="setVisualTheme" data-action-args='["lavender"]' aria-pressed="false"><span class="theme-preview theme-preview-lavender"><i></i><i></i><i></i><b></b></span><span class="theme-choice-copy"><strong>Douceur</strong><small>Lavande</small></span><i class="fa-solid fa-circle-check theme-check" aria-hidden="true"></i></button>
                         </div>
                         <div class="settings-color-mode" role="group" aria-label="Mode d’affichage"><span>Mode d’affichage</span><button type="button" data-color-mode-choice="auto" data-action="setColorMode" data-action-args='["auto"]' aria-pressed="false"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i> Automatique</button><button type="button" data-color-mode-choice="light" data-action="setColorMode" data-action-args='["light"]' aria-pressed="false"><i class="fa-solid fa-sun" aria-hidden="true"></i> Clair</button><button type="button" data-color-mode-choice="dark" data-action="setColorMode" data-action-args='["dark"]' aria-pressed="false"><i class="fa-solid fa-moon" aria-hidden="true"></i> Sombre</button></div>
+                        <div class="settings-motion-row"><span>Animations</span><div class="settings-motion-options" role="group" aria-label="Préférence d’animation">
+                            <button type="button" data-motion-choice="system" data-action="setMotionPreference" data-action-args='["system"]' aria-pressed="false"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><span><strong>Automatique</strong><small>Suit ton appareil</small></span></button>
+                            <button type="button" data-motion-choice="reduced" data-action="setMotionPreference" data-action-args='["reduced"]' aria-pressed="false"><i class="fa-solid fa-leaf" aria-hidden="true"></i><span><strong>Réduits</strong><small>Interface plus calme</small></span></button>
+                        </div></div>
+                        <button type="button" class="settings-reset-button" data-action="resetAppearance"><i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i><span><strong>Réinitialiser l’affichage</strong><small>Revenir aux préférences par défaut</small></span></button>
                     </section>
                 </div>
 
                 <aside class="settings-side-column">
-                    <section class="settings-panel settings-motion-panel" aria-labelledby="settings-motion-title">
-                        <div class="settings-panel-heading"><span class="settings-panel-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span><div><span class="settings-kicker">CONFORT</span><h2 id="settings-motion-title">Mouvements</h2></div></div>
-                        <p class="settings-panel-description">Choisis comment l’interface s’anime.</p>
-                        <div class="settings-motion-options" role="group" aria-label="Préférence d’animation">
-                            <button type="button" data-motion-choice="system" data-action="setMotionPreference" data-action-args='["system"]' aria-pressed="false"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><span><strong>Automatique</strong><small>Suit votre appareil</small></span></button>
-                            <button type="button" data-motion-choice="reduced" data-action="setMotionPreference" data-action-args='["reduced"]' aria-pressed="false"><i class="fa-solid fa-leaf" aria-hidden="true"></i><span><strong>Réduits</strong><small>Interface plus calme</small></span></button>
-                        </div>
-                    </section>
 
-                    <section class="settings-panel settings-data-panel" aria-labelledby="settings-data-title">
-                        <span class="settings-panel-icon"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i></span><span class="settings-kicker">TES DONNÉES</span><h2 id="settings-data-title">Ton séjour reste à toi.</h2><p>Sans compte connecté, ton séjour reste sur cet appareil. Connecte-toi et active la synchronisation pour le retrouver ailleurs.</p>
-                        <a href="#settings-backups" class="settings-link-button">Gérer mes sauvegardes <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
-                    </section>
 
-                    <button type="button" class="settings-reset-button" data-action="resetAppearance"><i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i><span><strong>Réinitialiser l’apparence</strong><small>Revenir aux préférences par défaut</small></span></button>
+
+
+
                 </aside>
             </div>
             <section class="card trip-backup-card settings-backup-card" id="settings-backups" aria-labelledby="trip-backup-title">
                 <div class="trip-backup-copy">
                     <span class="trip-backup-icon"><i class="fa-solid fa-box-archive" aria-hidden="true"></i></span>
                     <div>
-                        <h2 id="trip-backup-title">Sauvegarder ou transférer le séjour</h2>
-                        <p>Télécharge une copie de sécurité ou importe un séjour JSON sur cet appareil.</p>
+                        <h2 id="trip-backup-title">Tes données</h2>
+                        <p>Sans compte connecté, ton séjour reste sur cet appareil. Télécharge une copie de sécurité, ou importe une copie pour le retrouver ici.</p>
                     </div>
                 </div>
                 <div class="trip-backup-actions">
@@ -482,14 +494,14 @@
         </button>
         <button type="button" class="nav-item" data-tab="checklist" aria-label="Préparatifs" data-action="switchTab" data-action-args='["checklist"]' data-action-target>
             <i class="fa-solid fa-square-check" aria-hidden="true"></i>
-            <span class="nav-label-wide">Préparatifs</span><span class="nav-label-compact" aria-hidden="true">Prépa</span>
+            <span class="nav-label-wide">Préparatifs</span><span class="nav-label-compact" aria-hidden="true">Préparatifs</span>
         </button>
         <button type="button" class="nav-item" data-tab="budget" aria-label="Budget" data-action="switchTab" data-action-args='["budget"]' data-action-target>
             <i class="fa-solid fa-wallet" aria-hidden="true"></i>
             <span class="nav-label-wide">Budget</span><span class="nav-label-compact" aria-hidden="true">Budget</span>
         </button>
         <button type="button" class="nav-item" data-tab="infos" aria-label="Carnet" data-action="switchTab" data-action-args='["infos"]' data-action-target>
-            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+            <i class="fa-solid fa-book-open" aria-hidden="true"></i>
             <span class="nav-label-wide">Carnet</span><span class="nav-label-compact" aria-hidden="true">Carnet</span>
         </button>
         <button type="button" class="nav-item" data-tab="settings" aria-label="Réglages" data-action="switchTab" data-action-args='["settings"]' data-action-target>
@@ -498,14 +510,21 @@
         </button>
     </nav>
 
+    <!-- Bandeau « Supprimé · Annuler » (quelques secondes après une suppression) -->
+    <div class="undo-toast" id="undo-toast" role="status" aria-live="polite" hidden>
+        <span class="undo-toast-message"></span>
+        <button type="button" class="undo-toast-button" data-action="undoLastDelete">Annuler</button>
+    </div>
+
     <!-- ================= SÉLECTEUR DE SÉJOUR ================= -->
     <div class="modal" id="modal-trip-switcher" role="dialog" aria-modal="true" aria-labelledby="trip-switcher-heading" aria-describedby="trip-switcher-copy">
         <div class="modal-content trip-switcher-dialog">
-            <span class="trip-switcher-eyebrow">VOTRE ESPACE</span>
+            <span class="trip-switcher-eyebrow">TON ESPACE</span>
             <h3 id="trip-switcher-heading">Changer de séjour</h3>
-            <p class="trip-switcher-copy" id="trip-switcher-copy">Choisissez le voyage que vous souhaitez ouvrir.</p>
+            <p class="trip-switcher-copy" id="trip-switcher-copy">Choisis le voyage que tu veux ouvrir.</p>
             <div class="trip-switcher-list" id="trip-switcher-list"></div>
             <p class="trip-switcher-status" id="trip-switcher-status" role="status" aria-live="polite"></p>
+            <button type="button" class="trip-switcher-edit" data-action="editTripFromSwitcher"><i class="fa-solid fa-pen" aria-hidden="true"></i> Modifier le séjour ouvert</button>
             <div class="modal-buttons">
                 <button type="button" class="btn-modal cancel" data-action="closeModal" data-action-args='["modal-trip-switcher"]'>Fermer</button>
             </div>
@@ -774,6 +793,27 @@
         </div>
     </div>
 
+    <!-- ================= MODAL AJOUT RAPIDE (bouton + de la barre du haut) ================= -->
+    <div class="modal" id="modal-quick-add" role="dialog" aria-modal="true" aria-labelledby="quick-add-heading">
+        <div class="modal-content quick-add-dialog">
+            <h3 id="quick-add-heading">Que veux-tu ajouter ?</h3>
+            <div class="quick-add-list">
+                <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["activite"]'><span class="quick-add-icon is-teal" aria-hidden="true"><i class="fa-solid fa-map-location-dot"></i></span><span class="quick-add-copy"><strong>Une étape ou une activité</strong><small>Dans l’itinéraire</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
+                <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["preparatif"]'><span class="quick-add-icon is-yellow" aria-hidden="true"><i class="fa-solid fa-square-check"></i></span><span class="quick-add-copy"><strong>Un préparatif</strong><small>Dans la liste des préparatifs</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
+                <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["depense"]'><span class="quick-add-icon is-coral" aria-hidden="true"><i class="fa-solid fa-wallet"></i></span><span class="quick-add-copy"><strong>Une dépense</strong><small>Dans le budget</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
+                <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["billet"]'><span class="quick-add-icon is-lavender" aria-hidden="true"><i class="fa-solid fa-ticket"></i></span><span class="quick-add-copy"><strong>Une réservation ou un billet</strong><small>Dans le carnet</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
+                <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["info"]'><span class="quick-add-icon is-blue" aria-hidden="true"><i class="fa-solid fa-circle-info"></i></span><span class="quick-add-copy"><strong>Une info utile</strong><small>Dans le carnet</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
+                <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["trajet"]'><span class="quick-add-icon is-gray" aria-hidden="true"><i class="fa-solid fa-plane"></i></span><span class="quick-add-copy"><strong>Un vol ou un transport</strong><small>Sur l’accueil</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
+            </div>
+            <div class="quick-add-list">
+                <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["sejour"]'><span class="quick-add-icon is-teal" aria-hidden="true"><i class="fa-solid fa-suitcase-rolling"></i></span><span class="quick-add-copy"><strong>Un nouveau séjour</strong><small>Un autre voyage, avec ses propres listes</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn-modal cancel" data-action="closeModal" data-action-args='["modal-quick-add"]'>Annuler</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= MODAL CHOIX INFO / BILLET ================= -->
     <div class="modal" id="modal-choose-info-type" role="dialog" aria-modal="true" aria-labelledby="choose-info-heading">
         <div class="modal-content">
@@ -841,6 +881,7 @@
                 <textarea id="billet-notes" rows="2" placeholder="Ex: Fast Pass inclus, à retirer au guichet..."></textarea>
             </div>
 
+            <button type="button" class="modal-delete-button" id="billet-delete" data-action="deleteFromEditModal" data-action-args='["billets"]' hidden><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Supprimer cette réservation</button>
             <div class="modal-buttons">
                 <button type="button" class="btn-modal cancel" data-action="closeModal" data-action-args='["modal-billet"]'>Annuler</button>
                 <button type="button" class="btn-modal save" data-action="saveBillet">Enregistrer</button>
@@ -979,8 +1020,8 @@
     <div class="modal" id="modal-itinerary-editor" role="dialog" aria-modal="true" aria-labelledby="itinerary-editor-title">
         <div class="modal-content itinerary-editor-modal">
             <div class="itinerary-editor-heading">
-                <span class="itinerary-editor-icon"><i class="fa-solid fa-sliders" aria-hidden="true"></i></span>
-                <div><span class="settings-kicker">ESPACE DE MODIFICATION</span><h3 id="itinerary-editor-title">Gérer l’itinéraire</h3><p>Destinations, journées et activités réunies au même endroit.</p></div>
+                <span class="itinerary-editor-icon"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></span>
+                <div><h3 id="itinerary-editor-title">Gérer l’itinéraire</h3><p>Tes étapes, leurs journées et leurs activités.</p></div>
                 <button class="itinerary-editor-close" type="button" data-action="closeModal" data-action-args='["modal-itinerary-editor"]' aria-label="Fermer"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             </div>
             <div id="itinerary-editor-content"></div>
@@ -1064,6 +1105,7 @@
                 <input type="checkbox" id="bud-paid" style="width:20px; height:20px;">
                 <label style="margin-bottom:0;" for="bud-paid">Déjà payé</label>
             </div>
+            <button type="button" class="modal-delete-button" id="bud-delete" data-action="deleteFromEditModal" data-action-args='["budget"]' hidden><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Supprimer cette dépense</button>
             <div class="modal-buttons">
                 <button type="button" class="btn-modal cancel" data-action="closeModal" data-action-args='["modal-budget"]'>Annuler</button>
                 <button type="button" class="btn-modal save" data-action="saveBudget">Enregistrer</button>
@@ -1082,8 +1124,9 @@
             </div>
             <div class="input-group">
                 <label>Détails / Description</label>
-                <textarea id="info-desc" rows="3" placeholder="Ex: Saisissez les adresses importantes..."></textarea>
+                <textarea id="info-desc" rows="3" placeholder="Ex : les adresses importantes…"></textarea>
             </div>
+            <button type="button" class="modal-delete-button" id="info-delete" data-action="deleteFromEditModal" data-action-args='["infos"]' hidden><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Supprimer cette info</button>
             <div class="modal-buttons">
                 <button type="button" class="btn-modal cancel" data-action="closeModal" data-action-args='["modal-infos"]'>Annuler</button>
                 <button type="button" class="btn-modal save" data-action="saveInfo">Enregistrer</button>
@@ -1092,7 +1135,7 @@
     </div>
 
     <script src="js/flight-api-config.js"></script>
-    <script type="module" src="js/app.js?v=117"></script>
+    <script type="module" src="js/app.js?v=121"></script>
 
     <!-- ================= SERVICE WORKER (hors-ligne) ================= -->
     <script src="js/pwa.js"></script>

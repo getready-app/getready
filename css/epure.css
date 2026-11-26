@@ -174,14 +174,18 @@ a { color: var(--ep-accent-text); }
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
-.app-topbar-kicker { color: var(--ep-ink-3); font-size: 12px; font-weight: 500; letter-spacing: 0; text-transform: lowercase; }
-.app-topbar-kicker::first-letter { text-transform: uppercase; }
+/* Texte écrit tel quel dans la page : « GetReady » garde ses majuscules. */
+.app-topbar-kicker { color: var(--ep-ink-3); font-size: 12px; font-weight: 500; letter-spacing: 0; text-transform: none; }
 .app-topbar-kicker { display: block; }
 .app-topbar-kicker i { color: var(--ep-ink-3); }
 .app-topbar-trip { color: var(--ep-ink); font-size: 16px; font-weight: 650; letter-spacing: -.02em; background: none; }
 .app-topbar-trip i { color: var(--ep-ink-3); font-size: 11px; }
 .app-topbar-date { color: var(--ep-ink-2); font-size: 13px; font-weight: 500; }
-.app-topbar-new-trip {
+.app-topbar-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     min-height: 34px;
     padding: 0 14px;
     border: 0;
@@ -192,7 +196,7 @@ a { color: var(--ep-accent-text); }
     font-size: 13.5px;
     font-weight: 600;
 }
-.app-topbar-new-trip:hover { background: color-mix(in srgb, var(--ep-accent) 88%, #000); }
+.app-topbar-add:hover { background: color-mix(in srgb, var(--ep-accent) 88%, #000); }
 .app-topbar-edit {
     width: 34px;
     height: 34px;
@@ -326,7 +330,7 @@ a { color: var(--ep-accent-text); }
         inset: auto 0 0 0;
         z-index: 50;
         display: grid;
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         width: 100%;
         height: auto;
         margin: 0;
@@ -380,6 +384,8 @@ a { color: var(--ep-accent-text); }
     letter-spacing: 0;
     text-transform: lowercase;
 }
+/* ::first-letter ne s'applique qu'aux blocs : le repère reste sur sa ligne. */
+.first-trip-kicker { display: block; }
 .dashboard-overline::first-letter,
 .first-trip-kicker::first-letter,
 .hero-eyebrow::first-letter,
@@ -847,7 +853,7 @@ a { color: var(--ep-accent-text); }
     background: var(--ep-surface);
     box-shadow: var(--ep-shadow);
 }
-#page-accueil .today-card-title { color: var(--ep-ink); font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+#page-accueil .today-card-title { color: var(--ep-ink); font-size: 16px; font-weight: 700; letter-spacing: -.01em; text-transform: none; }
 #page-accueil .today-card-subtitle { color: var(--ep-ink-2); font-size: 13px; text-transform: none; }
 #page-accueil .today-item { gap: 12px; padding: 10px 0; border: 0; border-top: 1px solid var(--ep-line); border-radius: 0; background: none; color: var(--ep-ink); }
 #page-accueil .today-item-icon {
@@ -967,6 +973,7 @@ a { color: var(--ep-accent-text); }
         align-items: baseline;
         gap: 8px;
         min-width: 0;
+        min-height: 0;
         padding: 12px 0 2px;
         border-left: 0;
         border-top: 1px solid var(--ep-line);
@@ -979,8 +986,8 @@ a { color: var(--ep-accent-text); }
     #page-accueil .demo-reset-button { grid-column: 2; justify-self: start; margin-left: 0; }
 }
 @media (max-width: 600px) {
-    .app-topbar-new-trip { width: 34px; padding: 0; justify-content: center; }
-    .app-topbar-new-trip span { display: none; }
+    .app-topbar-add { width: 44px; padding: 0; }
+    .app-topbar-add span { display: none; }
     .app-topbar-date { display: none; }
 }
 
@@ -2904,3 +2911,675 @@ body.reduce-motion * { transition: none; animation: none; }
 
 /* Accueil : anciens textes des vols et transports repliés. */
 #page-accueil .dashboard-travel-details :is(p, .card-subtitle, .date-badge-month, small) { color: var(--ep-ink-2); }
+
+
+/* ==========================================================================
+   17. Confort sur téléphone
+   - Les textes de la carte du séjour n'ont plus l'ombre de l'ancien bandeau
+     photo : sur fond clair, elle rendait le texte flou.
+   - Tout ce qui se touche fait au moins 44 px, la taille conseillée par
+     Apple pour un doigt. Les liens dans le texte gardent leur place mais
+     reçoivent une zone de toucher plus haute.
+   ========================================================================== */
+#page-accueil :is(.hero-eyebrow, .hero-countdown-label, .trip-title, .trip-dates, .countdown-number, .countdown-text) { text-shadow: none; }
+
+@media (max-width: 1079px) {
+    .app-topbar-trip { min-height: 44px; }
+    .app-topbar-add { min-height: 44px; min-width: 44px; }
+    .app-topbar-edit { width: 44px; height: 44px; }
+    :is(.hero-primary-cta, .dashboard-upcoming-all, .demo-reset-button, .budget-header-add,
+        .budget-people-add-button, .budget-export-button, .budget-filter-reset, .billet-export-button,
+        .billet-filter-reset, .billet-share-button, .calendar-export-button, .itinerary-day-map-link,
+        .checklist-selector-btn, .prep-filter-btn, .trip-backup-button, .notebook-directions,
+        [data-color-mode-choice], .itinerary-route-mode, .expense-paid-pill) { min-height: 44px; }
+    #page-budget select, #page-infos select { min-height: 44px; }
+    :is(.dashboard-calendar-edit, .delete-btn, .delete-btn-round, .edit-action, .prep-task-delete,
+        .swap-currencies, .activity-map-focus-button, .activity-link-btn, .itinerary-place-map,
+        [aria-label^="Retirer ce participant"]) { min-width: 44px; min-height: 44px; }
+    :is(.settings-link-button, .billet-link, #page-budget a) {
+        display: inline-block;
+        padding-block: 12px;
+        margin-block: -12px;
+    }
+    /* Les sources du carnet sont des pastilles : on les agrandit sans les superposer. */
+    .info-source-link { display: inline-flex; align-items: center; min-height: 44px; }
+    #page-checklist .checkbox-round { width: 26px; height: 26px; }
+}
+
+/* ==========================================================================
+   18. Accueil sur téléphone et tablette : l'essentiel d'abord
+   Sous 1200 px, les blocs de l'accueil sont remis à plat (display: contents)
+   pour être rangés dans l'ordre utile :
+   bonjour → guide de démarrage (nouveau séjour) → carte du séjour → démo →
+   chiffres clés → chronologie → priorités → mes séjours → vols → calendrier.
+   ========================================================================== */
+@media (max-width: 1199px) {
+    /* L'ancien style alignait les blocs au début : ils prenaient la largeur de
+       leur contenu (jusqu'à 770 px pour la chronologie). Ici, pleine largeur. */
+    #page-accueil.active { gap: 16px; align-items: stretch; }
+    #page-accueil.active > *, #page-accueil :is(.dashboard-upcoming, .dashboard-calendar-panel, .first-trip-guide,
+        .dashboard-stats, .dashboard-home-modules, .dashboard-trips, .dashboard-travel-details, .hero-main) { min-width: 0; }
+    #page-accueil :is(.home-header, .home-header-content, .dashboard-content, .dashboard-side-column) { display: contents; }
+    #page-accueil .dashboard-intro { order: 1; margin: 4px 0 0; }
+    #page-accueil .first-trip-guide { order: 2; }
+    #page-accueil .hero-main { order: 3; }
+    #page-accueil .demo-banner { order: 4; }
+    #page-accueil .dashboard-sync-note { order: 5; }
+    #page-accueil .dashboard-stats { order: 6; }
+    #page-accueil .dashboard-upcoming { order: 7; }
+    #page-accueil .dashboard-home-modules { order: 8; }
+    #page-accueil .dashboard-trips { order: 9; }
+    #page-accueil .dashboard-travel-details { order: 10; }
+    #page-accueil .dashboard-calendar-panel { order: 11; }
+    #page-accueil :is(.first-trip-guide, .demo-banner, .dashboard-sync-note, .dashboard-stats,
+        .dashboard-upcoming, .dashboard-home-modules, .dashboard-trips, .dashboard-travel-details,
+        .dashboard-calendar-panel) { margin: 0; }
+    #page-accueil .first-trip-guide[hidden],
+    #page-accueil .dashboard-sync-note[hidden] { display: none; }
+    /* Le conteneur des chiffres n'existe plus comme boîte : on fixe 2 colonnes ici. */
+    #page-accueil .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* Pendant le démarrage, le guide porte les boutons : la carte reste un aperçu. */
+    #page-accueil.is-first-setup :is(.hero-primary-cta, .trip-preparation-progress) { display: none; }
+}
+@media (min-width: 701px) and (max-width: 1199px) {
+    #page-accueil .dashboard-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+#page-accueil.has-no-countdown .hero-countdown { display: none; }
+
+@media (max-width: 600px) {
+    /* Carte du séjour plus compacte : photo moins haute, pas de surtitre répété. */
+    #page-accueil .hero-orbit { height: 128px; }
+    #page-accueil .hero-main { gap: 12px; }
+    #page-accueil .hero-eyebrow { display: none; }
+    #page-accueil .hero-countdown { justify-content: flex-start; }
+    #page-accueil .countdown-container { justify-content: flex-start; }
+}
+#page-accueil .countdown-text { white-space: nowrap; }
+
+/* ==========================================================================
+   19. Barre du haut et navigation sur téléphone
+   - 5 onglets en bas (le maximum conseillé par Apple) ; Réglages passe en
+     haut à droite, sous forme de roue dentée, comme dans les applis iOS.
+   - Le bouton « + » ouvre « Que veux-tu ajouter ? » : chaque ajout y est
+     nommé et rangé, au lieu d'un « + » qui créait un séjour sans le dire.
+   - Modifier le séjour se fait en touchant son nom (en haut ou sur la carte).
+   ========================================================================== */
+.app-topbar-settings { display: none; }
+@media (max-width: 1079px) {
+    .nav-bar .nav-item[data-tab="settings"] { display: none; }
+    .app-topbar-edit { display: none; }
+    .app-topbar-settings {
+        display: inline-grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border: 0;
+        border-radius: 999px;
+        color: var(--ep-ink);
+        background: var(--ep-fill);
+        font-size: 17px;
+    }
+    body[data-page="settings"] .app-topbar-settings { color: var(--ep-accent-text); background: var(--ep-accent-soft); }
+}
+
+/* Fenêtre « Que veux-tu ajouter ? » : listes groupées façon Réglages iOS. */
+.quick-add-dialog h3 { margin: 0 0 14px; }
+.quick-add-list {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin: 0 0 14px;
+    border-radius: 12px;
+    background: var(--ep-surface-2);
+}
+.quick-add-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 56px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 0;
+    color: var(--ep-ink);
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.quick-add-option + .quick-add-option { border-top: 1px solid var(--ep-line); }
+.quick-add-option:hover { background: var(--ep-fill); }
+.quick-add-icon {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: #FFFFFF;
+    background: var(--ep-tile-gray);
+    font-size: 15px;
+}
+.quick-add-icon.is-teal { background: var(--ep-tile-teal); }
+.quick-add-icon.is-yellow { background: var(--ep-tile-yellow); }
+.quick-add-icon.is-coral { background: var(--ep-tile-coral); }
+.quick-add-icon.is-lavender { background: var(--ep-tile-lavender); }
+.quick-add-icon.is-blue { background: var(--ep-tile-blue); }
+.quick-add-copy { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.quick-add-copy strong { color: var(--ep-ink); font-size: 15px; font-weight: 600; }
+.quick-add-copy small { color: var(--ep-ink-2); font-size: 12.5px; }
+.quick-add-chevron { flex: none; color: var(--ep-ink-3); font-size: 12px; }
+
+/* Sélecteur de séjour : modifier le séjour ouvert sans repasser par l'accueil. */
+.trip-switcher-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    margin-top: 10px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-accent-text);
+    background: var(--ep-accent-soft);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   20. L'essentiel en premier sur téléphone (une seule colonne)
+   - Budget : où en est le budget, puis les dépenses ; les outils (devises,
+     convertisseur, export) passent après.
+   - Carnet : les réservations et infos utiles avant la carte.
+   - Réglages : le compte et la synchronisation d'abord, puis l'affichage.
+   ========================================================================== */
+#page-settings .settings-hero-inner { min-height: 0; }
+@media (max-width: 860px) {
+    #page-budget > .content-container > .budget-expenses-title { order: 1; }
+    #page-budget > .content-container > .budget-summary-row { order: 2; }
+    #page-budget > .content-container > .budget-filter-toolbar { order: 3; }
+    #page-budget > .content-container > #expenses-list { order: 4; }
+    #page-budget > .content-container > #budget-split-card { order: 5; }
+    #page-budget > .content-container > .budget-people-card { order: 6; }
+    #page-budget > .content-container > .budget-currency-setting { order: 7; }
+    #page-budget > .content-container > .currency-tool { order: 8; }
+    #page-budget > .content-container > .budget-export-row { order: 9; }
+
+    #page-infos > .content-container { display: flex; flex-direction: column; }
+    #page-infos > .content-container > .notebook-section-title { order: 1; }
+    #page-infos > .content-container > .billet-filter-toolbar { order: 2; }
+    #page-infos > .content-container > #billets-list { order: 3; }
+    #page-infos > .content-container > #infos-list { order: 4; }
+    #page-infos > .content-container > .notebook-map-card { order: 5; margin-top: 14px; }
+    #page-infos > .content-container > .billet-export-row { order: 6; }
+
+    #page-settings :is(.settings-primary-column, .settings-side-column) { display: contents; }
+    #page-settings .settings-account-panel { order: 1; }
+    #page-settings .settings-panel:has(#settings-theme-title) { order: 2; }
+    #page-settings .settings-panel:has(#settings-background-title) { order: 3; }
+    #page-settings .settings-motion-panel { order: 4; }
+    #page-settings .settings-data-panel { order: 5; }
+    #page-settings .settings-reset-button { order: 6; }
+}
+
+/* Champs de recherche du budget et du carnet : la loupe était placée par
+   l'ancien style par-dessus le texte ; elle reprend sa place dans la ligne. */
+:is(.budget-search-field, .billet-search-field) > i { position: static; flex: none; transform: none; }
+
+/* Itinéraire en très petit écran (320 px) : le choix du mode de trajet et le
+   lien vers la carte passent à la ligne au lieu d'élargir la page. */
+.itinerary-route-controls { flex-wrap: wrap; }
+.itinerary-planner, .itinerary-planner > * { min-width: 0; }
+
+/* Chronologie : le titre et « Tout l'itinéraire » restent sur la même ligne.
+   L'ancien style empilait le compteur et le bouton au-dessus du titre ; sur
+   téléphone, le compteur (« 3 affichées · 15 à venir ») laisse la place au
+   bouton, qui dit déjà où voir la suite. */
+#page-accueil .dashboard-upcoming .dashboard-section-heading { align-items: center; }
+#page-accueil .dashboard-upcoming-heading-actions { flex-direction: row; align-items: center; }
+@media (max-width: 600px) {
+    #page-accueil #dashboard-upcoming-status { display: none; }
+}
+
+/* ==========================================================================
+   21. Fenêtre « Gérer l'itinéraire »
+   - Les trois parties (étapes, journées, activités) ne sont plus des cartes
+     dans une carte : seuls les listes et le formulaire gardent un fond.
+   - L'ajout d'une activité est un petit formulaire : le conteneur recevait le
+     style d'un bouton-pastille et écrasait ses champs sur téléphone.
+   ========================================================================== */
+.itinerary-editor-section { padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.itinerary-editor-add-activity {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    min-height: 0;
+    padding: 12px;
+    border-radius: 12px;
+    color: var(--ep-ink);
+    background: var(--ep-surface-2);
+    font-weight: 400;
+}
+.itinerary-editor-add-activity > :is(input, .time-picker-pair) { width: 100%; min-width: 0; }
+:is(.itinerary-editor-add-activity, .itinerary-editor-add-row) > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-accent-ink);
+    background: var(--ep-accent);
+    font-size: 14px;
+    font-weight: 600;
+}
+@media (min-width: 601px) {
+    .itinerary-editor-add-activity { grid-template-columns: 170px minmax(0, 1fr); }
+    .itinerary-editor-add-activity > :is(input[id^="managed-activity-link"], button) { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
+    .itinerary-editor-add-row > :is(input, .date-picker-pair, .time-picker-pair, button) { flex: 1 1 100%; }
+    .itinerary-editor-row-actions button { width: 44px; height: 44px; }
+}
+/* Couleurs de la fenêtre : l'ancien style imposait des gris-verts fixes,
+   illisibles en mode sombre (contraste 1,4 sur les noms d'activités). */
+.itinerary-editor-heading p,
+.itinerary-editor-destination-select small,
+.itinerary-editor-activity small { color: var(--ep-ink-2); }
+.itinerary-editor-activity strong { color: var(--ep-ink); }
+.itinerary-editor-activity time { color: var(--ep-accent-text); font-weight: 600; }
+
+/* ==========================================================================
+   22. Lot « alléger » — accueil
+   ========================================================================== */
+#page-accueil .dashboard-trips[hidden] { display: none; }
+.dashboard-calendar-toggle { display: none; }
+@media (max-width: 600px) {
+    /* Calendrier replié : la plage de dates reste visible, le mois s'ouvre au besoin. */
+    #page-accueil .dashboard-calendar-panel:not(.is-open) .dashboard-calendar-month-view { display: none; }
+    #page-accueil .dashboard-calendar-panel:not(.is-open) .dashboard-calendar-heading { margin-bottom: 4px; }
+    #page-accueil .dashboard-calendar-panel:not(.is-open) .dashboard-calendar-legend { margin-top: 0; padding-top: 0; border-top: 0; }
+    .dashboard-calendar-toggle {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        margin-top: 8px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        color: var(--ep-accent-text);
+        background: var(--ep-accent-soft);
+        font-size: 14px;
+        font-weight: 600;
+    }
+}
+
+/* ==========================================================================
+   23. Lot « alléger » — budget et listes filtrables
+   ========================================================================== */
+/* Dépense : une ligne façon Wallet (icône, nom, détails, montant, statut). */
+.expense-row { display: flex; align-items: center; gap: 8px; padding: 0 12px 0 0; }
+.expense-row + .expense-row { border-top: 1px solid var(--ep-line); }
+.expense-row-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+    min-height: 60px;
+    padding: 10px 4px 10px 14px;
+    border: 0;
+    border-radius: 0;
+    color: var(--ep-ink);
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.expense-row-main:hover { background: var(--ep-surface-2); }
+.expense-row-icon {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: #FFFFFF;
+    background: var(--ep-tile-gray);
+    font-size: 14px;
+}
+.expense-row-icon.is-blue { background: var(--ep-tile-blue); }
+.expense-row-icon.is-lavender { background: var(--ep-tile-lavender); }
+.expense-row-icon.is-teal { background: var(--ep-tile-teal); }
+.expense-row-icon.is-coral { background: var(--ep-tile-coral); }
+.expense-row-icon.is-yellow { background: var(--ep-tile-yellow); color: #3A2A00; }
+.expense-row-copy { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.expense-row-copy strong { overflow: hidden; color: var(--ep-ink); font-size: 15px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
+.expense-row-copy small { overflow: hidden; color: var(--ep-ink-2); font-size: 12.5px; white-space: nowrap; text-overflow: ellipsis; }
+.expense-row-amount { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex: none; }
+.expense-row-amount strong { color: var(--ep-ink); font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.expense-row-amount small { color: var(--ep-ink-2); font-size: 12px; font-variant-numeric: tabular-nums; }
+.expense-row .expense-paid-pill { flex: none; }
+.expense-row.is-paid .expense-row-amount strong { color: var(--ep-ink-2); }
+
+/* Filtres repliés derrière « Filtres ». */
+.list-filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 10px;
+    color: var(--ep-ink);
+    background: var(--ep-fill);
+    font-size: 14px;
+    font-weight: 600;
+}
+.list-filter-toggle.is-active,
+.list-filter-toggle[aria-expanded="true"] { color: var(--ep-accent-text); background: var(--ep-accent-soft); }
+.list-filter-options { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; flex: 1 1 100%; }
+.list-filter-options[hidden] { display: none; }
+@media (max-width: 1079px) { .list-filter-toggle { min-height: 44px; } }
+
+/* Bouton « Supprimer » dans une fenêtre de modification. */
+.modal-delete-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    margin: 4px 0 10px;
+    border: 0;
+    border-radius: 12px;
+    color: var(--ep-danger);
+    background: color-mix(in srgb, var(--ep-danger) 10%, transparent);
+    font-size: 14.5px;
+    font-weight: 600;
+}
+.modal-delete-button[hidden] { display: none; }
+.expense-row .expense-paid-pill { gap: 6px; }
+.expense-row .expense-paid-pill i { font-size: 15px; }
+.expense-row-copy strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; line-height: 1.25; }
+@media (max-width: 600px) {
+    /* Statut en case ronde (comme Rappels) : « à payer / payé » est écrit sous le nom. */
+    .expense-row .expense-paid-pill { justify-content: center; width: 44px; min-width: 44px; padding: 0; background: transparent; }
+    .expense-row .expense-paid-pill span { display: none; }
+    .expense-row .expense-paid-pill i { color: var(--ep-ink-3); font-size: 22px; }
+    .expense-row .expense-paid-pill.paid i { color: var(--ep-success); }
+}
+
+/* ==========================================================================
+   24. Lot « alléger » — carnet en listes courtes
+   Réservations et infos utiles : une ligne chacune, le détail s'ouvre en
+   touchant (élément <details> natif, accessible au clavier et aux lecteurs
+   d'écran sans script).
+   ========================================================================== */
+#billets-list,
+#infos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    border-radius: var(--ep-radius);
+    background: var(--ep-surface);
+    box-shadow: var(--ep-shadow);
+}
+#infos-list { margin-top: 14px; }
+#billets-list > :is(.notebook-empty, .billet-filter-empty) { margin: 0; padding: 16px; }
+.notebook-row + .notebook-row { border-top: 1px solid var(--ep-line); }
+.notebook-row > summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 60px;
+    padding: 10px 14px;
+    color: var(--ep-ink);
+    list-style: none;
+    cursor: pointer;
+}
+.notebook-row > summary::-webkit-details-marker { display: none; }
+.notebook-row > summary:hover { background: var(--ep-surface-2); }
+.notebook-row-icon {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: #FFFFFF;
+    background: var(--ep-tile-gray);
+    font-size: 14px;
+}
+.notebook-row-icon.is-lavender { background: var(--ep-tile-lavender); }
+.notebook-row-icon.is-blue { background: var(--ep-tile-blue); }
+.notebook-row-icon i { color: inherit; }
+.notebook-row-copy { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.notebook-row-copy strong { display: -webkit-box; overflow: hidden; color: var(--ep-ink); font-size: 15px; font-weight: 600; line-height: 1.25; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.notebook-row-copy small { overflow: hidden; color: var(--ep-ink-2); font-size: 12.5px; white-space: nowrap; text-overflow: ellipsis; }
+.notebook-row .billet-status-badge { flex: none; margin: 0; }
+.notebook-row-chevron { flex: none; color: var(--ep-ink-3); font-size: 12px; transition: transform .15s ease; }
+.notebook-row[open] .notebook-row-chevron { transform: rotate(180deg); }
+.info-row[open] .notebook-row-copy small { display: none; }
+.notebook-row-body { display: flex; flex-direction: column; gap: 10px; padding: 0 14px 14px 58px; }
+.notebook-row-body .notebook-text { margin: 0; color: var(--ep-ink); font-size: 14.5px; line-height: 1.5; }
+.notebook-row-ref { margin: 0; color: var(--ep-ink-2); font-size: 13px; }
+.notebook-row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.notebook-row-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-accent-text);
+    background: var(--ep-accent-soft);
+    font-size: 14px;
+    font-weight: 600;
+}
+@media (max-width: 1079px) { .notebook-row-edit { min-height: 44px; } }
+@media (max-width: 600px) {
+    .notebook-row-body { padding-left: 14px; }
+}
+.notebook-infos-title { margin-top: 22px; }
+.notebook-infos-title:has(+ #infos-list:empty) { display: none; }
+#page-infos #infos-list { margin-top: 0; }
+@media (max-width: 860px) { #page-infos > .content-container > .notebook-infos-title { order: 4; } }
+
+/* ==========================================================================
+   25. Lot « alléger » — itinéraire
+   Une activité = une ligne qu'on touche pour la voir sur la carte (l'activité
+   affichée est surlignée) + une icône pour l'ouvrir dans Google Maps.
+   ========================================================================== */
+.itinerary-activity { padding: 0; gap: 4px; }
+.itinerary-activity-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+    min-height: 52px;
+    padding: 8px 6px;
+    border: 0;
+    border-radius: 10px;
+    color: var(--ep-ink);
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.itinerary-activity-main:hover { background: var(--ep-surface-2); }
+.itinerary-activity-main[aria-pressed="true"] { background: var(--ep-accent-soft); }
+.itinerary-activity-main[aria-pressed="true"] .itinerary-activity-time { color: var(--ep-accent-ink); background: var(--ep-accent); }
+.itinerary-activity-text { flex: 1; min-width: 0; color: var(--ep-ink); font-size: 15px; line-height: 1.35; }
+.itinerary-activity .activity-link-btn { justify-content: center; width: 44px; height: 44px; padding: 0; color: var(--ep-ink-2); }
+.itinerary-stage-map-link { color: var(--ep-accent-text); font-weight: 600; text-decoration: none; }
+.itinerary-stage-map-link:hover { text-decoration: underline; }
+
+/* ==========================================================================
+   26. Lot « alléger » — réglages regroupés
+   « Affichage » réunit couleur, mode clair/sombre, animations et remise à
+   zéro ; « Tes données » réunit la note sur le stockage et les sauvegardes.
+   ========================================================================== */
+#page-settings .settings-motion-row { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+#page-settings .settings-motion-row > span { color: var(--ep-ink-2); font-size: 13px; font-weight: 500; }
+#page-settings .settings-theme-grid + .settings-color-mode,
+#page-settings .settings-reset-button { margin-top: 14px; }
+/* Sans panneau de compte (aperçu de démonstration), pas de colonne vide. */
+#page-settings .settings-layout:has(.settings-side-column:not(:has(*))) { grid-template-columns: minmax(0, 1fr); }
+#page-settings .settings-side-column:not(:has(*)) { display: none; }
+
+/* L'essentiel d'abord aussi sur grand écran : dépenses et réservations en
+   haut, outils (devises, participants, carte) ensuite. */
+@media (min-width: 861px) {
+    #page-budget > .content-container { grid-auto-flow: row dense; }
+    #page-budget > .content-container > .budget-expenses-title { order: 1; }
+    #page-budget > .content-container > .budget-summary-row { order: 2; }
+    #page-budget > .content-container > .budget-filter-toolbar { order: 3; }
+    #page-budget > .content-container > #expenses-list { order: 4; }
+    #page-budget > .content-container > #budget-split-card { order: 5; }
+    #page-budget > .content-container > .budget-people-card { order: 6; grid-column: 2; grid-row: auto; }
+    #page-budget > .content-container > .budget-currency-setting { order: 7; grid-column: 2; grid-row: auto; }
+    #page-budget > .content-container > .currency-tool { order: 8; grid-column: 1; grid-row: span 2; }
+    #page-budget > .content-container > .budget-export-row { order: 9; }
+
+    #page-infos > .content-container { display: flex; flex-direction: column; }
+    #page-infos > .content-container > .notebook-section-title { order: 1; }
+    #page-infos > .content-container > .billet-filter-toolbar { order: 2; }
+    #page-infos > .content-container > #billets-list { order: 3; }
+    #page-infos > .content-container > .notebook-infos-title { order: 4; }
+    #page-infos > .content-container > #infos-list { order: 4; }
+    #page-infos > .content-container > .notebook-map-card { order: 5; margin-top: 22px; }
+    #page-infos > .content-container > .billet-export-row { order: 6; }
+}
+
+/* ==========================================================================
+   27. Lot « ajouter » — bandeau « Supprimé · Annuler »
+   ========================================================================== */
+.undo-toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: max-content;
+    max-width: calc(100vw - 32px);
+    min-height: 48px;
+    padding: 6px 6px 6px 18px;
+    border-radius: 14px;
+    color: var(--ep-bg);
+    background: var(--ep-ink);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .22);
+    font-size: 14.5px;
+    transform: translateX(-50%);
+}
+.undo-toast[hidden] { display: none; }
+.undo-toast-message { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.undo-toast-button {
+    flex: none;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 10px;
+    color: var(--ep-bg);
+    background: color-mix(in srgb, var(--ep-bg) 18%, transparent);
+    font-size: 14.5px;
+    font-weight: 700;
+}
+.undo-toast-button:hover { background: color-mix(in srgb, var(--ep-bg) 28%, transparent); }
+@media (max-width: 1079px) {
+    .undo-toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+    .undo-toast-button { min-height: 44px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+    body:not(.reduce-motion) .undo-toast:not([hidden]) { animation: ep-toast-in .2s ease-out; }
+}
+@keyframes ep-toast-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* ==========================================================================
+   28. Lot « ajouter » — préparatifs : texte léger et ajout en bas de liste
+   ========================================================================== */
+#page-checklist .prep-task .checklist-label { font-weight: 400; }
+.prep-inline-add {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 4px 14px;
+    border-top: 1px solid var(--ep-line);
+    color: var(--ep-accent-text);
+    cursor: text;
+}
+.prep-inline-add > i { display: inline-grid; place-items: center; width: 26px; flex: none; font-size: 15px; }
+.prep-inline-input {
+    flex: 1;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    color: var(--ep-ink);
+    background: transparent;
+    font: inherit;
+    font-size: 15px;
+}
+.prep-inline-input::placeholder { color: var(--ep-ink-3); }
+.prep-inline-input:focus { outline: none; box-shadow: none; }
+.prep-inline-add:focus-within { background: var(--ep-surface-2); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ep-accent) 55%, transparent); }
+/* Itinéraire : ajouter une activité au jour affiché, sans passer par 4 écrans. */
+.itinerary-add-activity {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 8px;
+    min-height: 44px;
+    margin-top: 8px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-accent-text);
+    background: var(--ep-accent-soft);
+    font-size: 14.5px;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   29. Lot « ajouter » — budget : où part l'argent
+   ========================================================================== */
+.budget-breakdown {
+    padding: 16px;
+    border-radius: var(--ep-radius);
+    background: var(--ep-surface);
+    box-shadow: var(--ep-shadow);
+}
+.budget-breakdown[hidden] { display: none; }
+.budget-breakdown h3 { margin: 0 0 12px; color: var(--ep-ink); font-size: 16px; font-weight: 650; }
+.budget-breakdown-bar { display: flex; gap: 2px; height: 12px; overflow: hidden; border-radius: 999px; background: var(--ep-fill); }
+.budget-breakdown-bar > span { display: block; min-width: 4px; height: 100%; background: var(--ep-tile-gray); }
+.budget-breakdown-list { display: flex; flex-direction: column; gap: 0; margin: 12px 0 0; padding: 0; list-style: none; }
+.budget-breakdown-list li { display: flex; align-items: center; gap: 10px; min-height: 36px; color: var(--ep-ink); font-size: 14.5px; }
+.budget-breakdown-list li + li { border-top: 1px solid var(--ep-line); }
+.budget-breakdown-name { flex: 1; min-width: 0; }
+.budget-breakdown-list strong { font-weight: 600; font-variant-numeric: tabular-nums; }
+.budget-breakdown-list small { width: 42px; color: var(--ep-ink-2); font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
+.budget-breakdown-dot { flex: none; width: 10px; height: 10px; border-radius: 999px; background: var(--ep-tile-gray); }
+:is(.budget-breakdown-bar > span, .budget-breakdown-dot).is-blue { background: var(--ep-tile-blue); }
+:is(.budget-breakdown-bar > span, .budget-breakdown-dot).is-lavender { background: var(--ep-tile-lavender); }
+:is(.budget-breakdown-bar > span, .budget-breakdown-dot).is-teal { background: var(--ep-tile-teal); }
+:is(.budget-breakdown-bar > span, .budget-breakdown-dot).is-coral { background: var(--ep-tile-coral); }
+:is(.budget-breakdown-bar > span, .budget-breakdown-dot).is-yellow { background: var(--ep-tile-yellow); }
+#page-budget > .content-container > #budget-breakdown { order: 2; }
+
+/* ==========================================================================
+   30. Lot « ajouter » — connexion : à quoi sert GetReady
+   ========================================================================== */
+.auth-gate-benefits { display: flex; flex-direction: column; gap: 8px; margin: 14px 0 18px; padding: 0; list-style: none; }
+.auth-gate-benefits li { display: flex; align-items: center; gap: 12px; color: var(--ep-ink); font-size: 14.5px; line-height: 1.35; }
+.auth-benefit-icon { display: inline-grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: 8px; color: #FFFFFF; font-size: 13px; }
+.auth-benefit-icon.is-teal { background: var(--ep-tile-teal); }
+.auth-benefit-icon.is-yellow { background: var(--ep-tile-yellow); color: #3A2A00; }
+.auth-benefit-icon.is-lavender { background: var(--ep-tile-lavender); }

@@ -509,7 +509,7 @@ const defaultData = {
         {
             id: 901,
             titre: "Repères publics · sources officielles",
-            desc: "Itinéraire proposé pour un séjour fictif du 16 au 20 avril 2027. Les lieux et repères ci-dessous ont été consultés le 16 novembre 2026. Les heures de l’itinéraire sont des suggestions, pas des horaires de rendez-vous ou de transport. Les horaires, tarifs et conditions d’accès peuvent évoluer avant le voyage : revalidez-les auprès des organismes officiels.",
+            desc: "Itinéraire proposé pour un séjour fictif du 16 au 20 avril 2027. Les lieux et repères ci-dessous ont été consultés le 16 novembre 2026. Les heures de l’itinéraire sont des suggestions, pas des horaires de rendez-vous ou de transport. Les horaires, tarifs et conditions d’accès peuvent évoluer avant le voyage : revalide-les auprès des organismes officiels.",
             sources: [
                 { label: "Métro de Lisbonne · depuis l’aéroport", url: "https://www.metrolisboa.pt/lisboa-de-metro-desde-o-aeroporto/" },
                 { label: "CP · trains vers Sintra", url: "https://www.cp.pt/info/documents/d/cp/completo-comboios-urbanos-lisboa" },
@@ -520,7 +520,7 @@ const defaultData = {
             ]
         },
         { id: 902, titre: "Hébergement · à choisir", desc: "Baixa est seulement un quartier repère pour la démonstration. Aucune adresse ni aucun hébergement ne sont renseignés ou réservés." },
-        { id: 903, titre: "Budget · enveloppe fictive", desc: "Les 1 860 € affichés sont un exemple de budget de groupe pour 4 personnes, sans devis ni tarifs vérifiés. Remplacez ces montants par les prix réellement trouvés avant de partager les dépenses." },
+        { id: 903, titre: "Budget · enveloppe fictive", desc: "Les 1 860 € affichés sont un exemple de budget de groupe pour 4 personnes, sans devis ni tarifs vérifiés. Remplace ces montants par les prix réellement trouvés avant de partager les dépenses." },
         { id: 904, titre: "Organisation du groupe 💛", desc: "Léa, Inès, Maya et Zoé sont des profils fictifs. Chacune peut proposer une pause, signaler une contrainte ou ajuster le programme." }
     ],
     transports: [
@@ -528,8 +528,8 @@ const defaultData = {
         { id: 1002, type: "Train", train: "Lisboa–Rossio → Sintra · horaire à choisir", date: "19 avr.", depStation: "Lisboa–Rossio", depTime: "", depPlatform: "À vérifier", arrStation: "Sintra", arrTime: "", arrPlatform: "À vérifier", seat: "—", notes: "Ligne desservie par CP. Les horaires d’avril 2027 ne sont pas encore ajoutés : consulter le calendrier officiel avant le départ." }
     ],
     billets: [
-        { id: 1101, nom: "Palais & Parc de Pena · billet à choisir", date: "19 avr. 2027", statut: "a-reserver", reference: "À RÉSERVER · aucun billet", lien: "https://www.parquesdesintra.pt/en/plan-your-visit/opening-times-and-prices/", notes: "La visite de l’intérieur du palais se fait sur créneau choisi à l’avance. Horaires et tarifs affichés par le site officiel à revalider avant avril 2027." },
-        { id: 1102, nom: "Vols Paris–Lisbonne · aller-retour à choisir", date: "16 avr. 2027", statut: "a-reserver", reference: "À RÉSERVER · aucun vol choisi", lien: "", notes: "Dates prévues : aller le 16 avril, retour le 20 avril. Aucune compagnie, aucun horaire et aucun billet ne sont renseignés. Ajouter les vrais détails après réservation." }
+        { id: 1101, nom: "Palais & Parc de Pena · billet à choisir", date: "19 avr. 2027", statut: "a-reserver", lien: "https://www.parquesdesintra.pt/en/plan-your-visit/opening-times-and-prices/", notes: "La visite de l’intérieur du palais se fait sur créneau choisi à l’avance. Horaires et tarifs affichés par le site officiel à revalider avant avril 2027." },
+        { id: 1102, nom: "Vols Paris–Lisbonne · aller-retour à choisir", date: "16 avr. 2027", statut: "a-reserver", lien: "", notes: "Dates prévues : aller le 16 avril, retour le 20 avril. Aucune compagnie, aucun horaire et aucun billet ne sont renseignés. Ajouter les vrais détails après réservation." }
     ]
 };
 
@@ -622,16 +622,16 @@ const newYorkDemoData = {
             ]
         },
         { id: 13902, titre: "Hébergement · à réserver", desc: "Manhattan sert uniquement de quartier repère. Aucune adresse, aucun établissement et aucune nuitée ne sont réservés." },
-        { id: 13903, titre: "Budget · 5 000 € indicatifs", desc: "Les lignes totalisent 5 000 € pour deux personnes, mais ce sont des enveloppes fictives et non des devis, prix en direct ou achats réalisés. Les vols et l’hébergement de Noël peuvent varier fortement : remplacez-les par les tarifs réellement trouvés." },
+        { id: 13903, titre: "Budget · 5 000 € indicatifs", desc: "Les lignes totalisent 5 000 € pour deux personnes, mais ce sont des enveloppes fictives et non des devis, prix en direct ou achats réalisés. Les vols et l’hébergement de Noël peuvent varier fortement : remplace-les par les tarifs réellement trouvés." },
         { id: 13904, titre: "Voyageurs 💛", desc: "Mohamed et Mélissa sont les deux voyageurs de cette simulation. Les dates, le programme et les montants peuvent être modifiés dans les pages GetReady." }
     ],
     transports: [
         { id: 13701, type: "Métro", train: "Réseau MTA · trajets à planifier", date: "23 déc.", depStation: "Aéroport à confirmer", depTime: "", depPlatform: "À vérifier", arrStation: "Manhattan", arrTime: "", arrPlatform: "À vérifier", seat: "—", notes: "La MTA annonce un tarif de base métro/bus local de 3 USD à partir du 4 janvier 2026. Prévoir une enveloppe indicative et revérifier les tarifs, le moyen de paiement OMNY et l’itinéraire avant le départ. Aucun trajet n’est réservé." }
     ],
     billets: [
-        { id: 13911, nom: "Vols aller-retour · à choisir", date: "23 déc. 2026", statut: "a-reserver", reference: "À RÉSERVER · aucun vol choisi", lien: "", notes: "Dates prévues : départ le 23 décembre, retour le 30 décembre 2026. Aucun aéroport de départ, compagnie, horaire ou tarif n’est renseigné. Ajouter les vrais détails après réservation." },
-        { id: 13912, nom: "Ferry Statue de la Liberté & Ellis Island · à réserver", date: "26 déc. 2026", statut: "a-reserver", reference: "À RÉSERVER · aucun billet", lien: "https://www.nps.gov/stli/planyourvisit/index.htm", notes: "Le National Park Service désigne Statue City Cruises comme vendeur et opérateur officiel. Vérifier les départs, tarifs et disponibilités pour la date avant toute réservation." },
-        { id: 13913, nom: "Top of the Rock · optionnel", date: "24 déc. 2026", statut: "a-reserver", reference: "OPTIONNEL · aucun billet", lien: "https://www.rockefellercenter.com/holiday-top-of-the-rock/", notes: "Le sapin est visible gratuitement depuis les espaces publics du Rockefeller Center. Le billet de l’observatoire est une option payante ; aucun billet n’est acheté." }
+        { id: 13911, nom: "Vols aller-retour · à choisir", date: "23 déc. 2026", statut: "a-reserver", lien: "", notes: "Dates prévues : départ le 23 décembre, retour le 30 décembre 2026. Aucun aéroport de départ, compagnie, horaire ou tarif n’est renseigné. Ajouter les vrais détails après réservation." },
+        { id: 13912, nom: "Ferry Statue de la Liberté & Ellis Island · à réserver", date: "26 déc. 2026", statut: "a-reserver", lien: "https://www.nps.gov/stli/planyourvisit/index.htm", notes: "Le National Park Service désigne Statue City Cruises comme vendeur et opérateur officiel. Vérifier les départs, tarifs et disponibilités pour la date avant toute réservation." },
+        { id: 13913, nom: "Top of the Rock · optionnel", date: "24 déc. 2026", statut: "a-reserver", lien: "https://www.rockefellercenter.com/holiday-top-of-the-rock/", notes: "Le sapin est visible gratuitement depuis les espaces publics du Rockefeller Center. Le billet de l’observatoire est une option payante ; aucun billet n’est acheté." }
     ]
 };
 
@@ -773,6 +773,8 @@ migrateLegacyProgramme();
 window.migrateLegacyProgramme = migrateLegacyProgramme;
 
 function saveToLocalStorage() {
+    // Toute nouvelle modification rend caduque l'annulation de la dernière suppression.
+    if (typeof hideUndoToast === 'function') hideUndoToast();
     const serialized = JSON.stringify(appData);
     localStorage.setItem(STORAGE_KEY, serialized);
     if (!DEMO_PREVIEW) localStorage.setItem('voyage_japon_data', serialized); // compatibilité avec l'ancienne version
@@ -787,7 +789,7 @@ const TRAVEL_BACKGROUNDS = {
     lisbon: { image: 'images/travel/lisbon.jpg', label: 'Lisbonne' },
     tokyo: { image: 'images/travel/tokyo.jpg', label: 'Tokyo' },
     coast: { image: 'images/travel/coast.jpg', label: 'une côte ensoleillée' },
-    journey: { image: 'images/travel/journey.jpg', label: 'votre destination' }
+    journey: { image: 'images/travel/journey.jpg', label: 'ta destination' }
 };
 
 function getAutomaticTravelBackground() {
@@ -800,7 +802,7 @@ function getAutomaticTravelBackground() {
     if (/\b(lis|lisbon|lisbonne|portugal)\b/.test(normalized)) key = 'lisbon';
     else if (/\b(hnd|nrt|tokyo|japon|japan|osaka|kyoto)\b/.test(normalized)) key = 'tokyo';
     else if (/\b(nce|muc|bcn|nap|nice|marseille|barcelone|barcelona|mediterranee|mediterranean|cote)\b/.test(normalized)) key = 'coast';
-    return { key, destination: destination || 'Votre prochaine destination' };
+    return { key, destination: destination || 'Ta prochaine destination' };
 }
 
 function applyAppearancePreferences() {
@@ -1340,7 +1342,7 @@ function renderDashboardReservationSummary() {
     const confirmedCount = reservations.length - pendingCount;
     if (detail) {
         detail.textContent = reservations.length
-            ? `${confirmedCount} confirmée${confirmedCount > 1 ? 's' : ''} · ${pendingCount} à réserver`
+            ? `${confirmedCount} confirmée${confirmedCount > 1 ? 's' : ''} sur ${reservations.length}`
             : 'Rien d’enregistré';
     }
     if (pendingCount) {
@@ -1394,7 +1396,7 @@ function renderDashboardSummary() {
     const budgetElement = document.getElementById('dashboard-budget');
     budgetElement.textContent = isLoading ? 'Chargement…' : !hasBudgetEntries ? 'À renseigner' : budgetConversionUnavailable ? 'Indisponible' : formatCurrency(plannedBudget, baseCurrency);
     budgetElement.title = isLoading ? 'Mise à jour du budget du séjour.' : !hasBudgetEntries
-        ? 'Ajoutez une dépense pour commencer à suivre le budget.'
+        ? 'Ajoute une dépense pour commencer à suivre le budget.'
         : budgetConversionUnavailable ? 'Total indisponible : certains taux de conversion ne sont pas disponibles.' : '';
     budgetElement.setAttribute('aria-label', isLoading ? 'Chargement du budget du séjour.' : !hasBudgetEntries
         ? 'Budget non renseigné. Ouvrir la section Budget pour ajouter une dépense.'
@@ -1433,6 +1435,8 @@ function renderDashboardSummary() {
     const setupState = getFirstTripSetupState(appData);
     const setupGuide = document.getElementById('first-trip-guide');
     if (setupGuide) setupGuide.hidden = dashboardSyncState === 'loading' || setupState.complete;
+    // Tant que le guide est affiché, il passe avant la carte du séjour sur téléphone.
+    document.getElementById('page-accueil')?.classList.toggle('is-first-setup', Boolean(setupGuide && !setupGuide.hidden));
     const detailsStatus = document.getElementById('first-trip-details-status');
     if (detailsStatus) detailsStatus.textContent = setupState.detailsComplete ? 'Terminé' : 'À faire';
     const destinationStatus = document.getElementById('first-trip-destination-status');
@@ -1442,6 +1446,15 @@ function renderDashboardSummary() {
         const completedSteps = Number(setupState.detailsComplete) + Number(setupState.hasDestination);
         progress.textContent = `${completedSteps} repère${completedSteps > 1 ? 's' : ''} sur 2 prêt${completedSteps > 1 ? 's' : ''}`;
     }
+}
+
+// Sur téléphone, les dates du séjour suffisent : le mois entier s'ouvre à la demande.
+function toggleDashboardCalendar(button) {
+    const panel = button?.closest?.('.dashboard-calendar-panel');
+    if (!panel) return;
+    const open = panel.classList.toggle('is-open');
+    button.setAttribute('aria-expanded', String(open));
+    button.textContent = open ? 'Masquer le mois' : 'Voir le mois';
 }
 
 function renderDashboardMiniCalendar() {
@@ -1459,7 +1472,8 @@ function renderDashboardMiniCalendar() {
     const gridStart = new Date(monthStart);
     gridStart.setDate(1 - ((monthStart.getDay() + 6) % 7));
     const gridEnd = new Date(monthEnd);
-    gridEnd.setDate(monthEnd.getDate() + (7 - ((monthEnd.getDay() + 6) % 7)) % 7);
+    // La grille s'arrête le dimanche qui termine la dernière semaine du mois.
+    gridEnd.setDate(monthEnd.getDate() + 6 - ((monthEnd.getDay() + 6) % 7));
     const sameDay = (a, b) => Boolean(a && b) && a.getFullYear() === b.getFullYear()
         && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
     const inTrip = date => Boolean(start && end && date >= start && date <= end);
@@ -1473,7 +1487,7 @@ function renderDashboardMiniCalendar() {
     } else if (end) {
         rangeLabel.textContent = `Jusqu’au ${end.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
     } else {
-        rangeLabel.textContent = 'Choisir vos dates';
+        rangeLabel.textContent = 'Choisir tes dates';
     }
 
     const cells = [];
@@ -1569,7 +1583,7 @@ function renderDashboardPriorities() {
             icon: 'fa-calendar-plus',
             type: 'Itinéraire',
             title: 'Planifier une première activité',
-            detail: 'Ajoutez une idée à votre programme',
+            detail: 'Ajoute une idée à ton programme',
             action: 'switchDashboardTab',
             args: ['programme', 'day']
         });
@@ -1582,7 +1596,7 @@ function renderDashboardPriorities() {
         : setupIncomplete ? 'Séjour à compléter' : 'Tout est à jour';
     if (!visible.length) {
         list.innerHTML = setupIncomplete
-            ? '<p class="dashboard-priority-empty">Terminez le guide de démarrage au-dessus pour finaliser votre séjour.</p>'
+            ? '<p class="dashboard-priority-empty">Termine le guide de démarrage pour finaliser ton séjour.</p>'
             : '<p class="dashboard-priority-empty"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Aucune action prioritaire pour le moment.</p>';
         return;
     }
@@ -1647,8 +1661,8 @@ function renderDashboardUpcomingActivities() {
         const message = !hasActivities
             ? 'Aucune activité planifiée pour le moment.'
             : hasUndatedActivities
-                ? 'Ajoutez une date à vos activités pour les afficher ici.'
-                : 'Aucune activité à venir. Ajoutez la suite de votre programme.';
+                ? 'Ajoute une date à tes activités pour les afficher ici.'
+                : 'Aucune activité à venir. Ajoute la suite de ton programme.';
         const focus = destinations.length ? 'day' : 'city';
         status.textContent = hasActivities ? 'À compléter' : 'Aucune activité';
         list.innerHTML = '<div class="dashboard-upcoming-empty"><span>' + esc(message) + '</span><button type="button" ' + actionAttrs('switchDashboardTab', ['programme', focus]) + '>Voir l’itinéraire</button></div>';
@@ -1663,8 +1677,8 @@ function renderDashboardUpcomingActivities() {
         const time = timeToPickerValue(item.time);
         const place = item.sub || 'Lieu à préciser';
         const label = item.label || 'Activité du séjour';
-        const tripLabel = String(appData.tripTitle || '').trim();
-        const placeLine = [place, tripLabel].filter(Boolean).join(' · ');
+        // Le nom du séjour est déjà en haut de l'écran : on ne le répète pas sur chaque ligne.
+        const placeLine = place;
         const context = [date, time, placeLine].filter(Boolean).join(' · ');
         const timeLabel = time ? ' · ' + esc(time) : '';
         return '<button type="button" class="dashboard-upcoming-item" ' +
@@ -1699,6 +1713,10 @@ function renderDashboardTrips({ trips = [], selected = null, complete = true, si
     const status = document.getElementById('dashboard-trips-status');
     if (!grid || !status) return;
     grid.setAttribute('aria-busy', 'false');
+    // Avec un seul séjour, la carte répéterait la grande carte du haut : la section
+    // n'apparaît que lorsqu'il y a un choix à faire (ou un problème à signaler).
+    const section = grid.closest?.('.dashboard-trips');
+    if (section) section.hidden = loading || (complete && !signedOut && trips.length === 1);
     if (loading) {
         grid.setAttribute('aria-busy', 'true');
         grid.innerHTML = '<p class="dashboard-trips-empty">Récupération des séjours associés à ce compte…</p>';
@@ -1706,14 +1724,14 @@ function renderDashboardTrips({ trips = [], selected = null, complete = true, si
         return;
     }
     if (signedOut) {
-        grid.innerHTML = '<p class="dashboard-trips-empty">Connectez-vous pour retrouver vos séjours.</p>';
+        grid.innerHTML = '<p class="dashboard-trips-empty">Connecte-toi pour retrouver tes séjours.</p>';
         status.textContent = 'Compte non connecté';
         return;
     }
     if (!trips.length) {
         grid.innerHTML = complete
-            ? `<div class="dashboard-trips-empty is-actionable"><p class="dashboard-trips-empty-copy">Aucun séjour enregistré pour ce compte. Commencez par définir les dates et la destination.</p><button type="button" class="dashboard-trips-empty-action" ${actionAttrs('startNewTrip', [])}>Créer mon premier séjour</button></div>`
-            : `<div class="dashboard-trips-empty is-actionable" role="status"><p class="dashboard-trips-empty-copy">Impossible de récupérer la liste des séjours. Vérifiez la connexion ou l’accès à votre compte.</p><button type="button" class="dashboard-trips-empty-action" ${actionAttrs('switchDashboardTab', ['settings'])}>Voir les réglages</button></div>`;
+            ? `<div class="dashboard-trips-empty is-actionable"><p class="dashboard-trips-empty-copy">Aucun séjour enregistré pour ce compte. Commence par définir les dates et la destination.</p><button type="button" class="dashboard-trips-empty-action" ${actionAttrs('startNewTrip', [])}>Créer mon premier séjour</button></div>`
+            : `<div class="dashboard-trips-empty is-actionable" role="status"><p class="dashboard-trips-empty-copy">Impossible de récupérer la liste des séjours. Vérifie la connexion ou l’accès à ton compte.</p><button type="button" class="dashboard-trips-empty-action" ${actionAttrs('switchDashboardTab', ['settings'])}>Voir les réglages</button></div>`;
         status.textContent = complete ? 'Aucun séjour' : 'Chargement impossible';
         return;
     }
@@ -1729,7 +1747,7 @@ function renderDashboardTrips({ trips = [], selected = null, complete = true, si
         const endDate = formatTripDate(trip.tripEnd, { day: 'numeric', month: 'short', year: 'numeric' });
         const dates = startDate && endDate ? `${startDate} — ${endDate}` : 'Dates à définir';
         const destination = trip.destination ? `<span><i class="fa-solid fa-location-dot" aria-hidden="true"></i>${esc(trip.destination)}</span>` : '';
-        const accessLabel = trip.demo ? 'DÉMONSTRATION LOCALE' : trip.isOwner ? 'CRÉÉ PAR VOUS' : 'SÉJOUR PARTAGÉ';
+        const accessLabel = trip.demo ? 'DÉMONSTRATION LOCALE' : trip.isOwner ? 'CRÉÉ PAR TOI' : 'SÉJOUR PARTAGÉ';
         const staticCard = trip.demo || isSelected;
         const tag = staticCard ? 'article' : 'button type="button" data-action="openDashboardTrip"';
         const actionArgs = staticCard ? '' : `data-action-args='${args}'`;
@@ -1790,13 +1808,13 @@ function openDashboardTrip(ownerUid, tripId) {
     const select = document.getElementById('cloud-trip-select');
     if (!select || select.disabled) {
         const status = document.getElementById('trip-switcher-status');
-        if (status) status.textContent = 'La sélection des séjours est indisponible. Ouvrez Réglages pour vérifier votre connexion.';
+        if (status) status.textContent = 'La sélection des séjours est indisponible. Ouvre Réglages pour vérifier ta connexion.';
         return;
     }
     const value = JSON.stringify([ownerUid, tripId || 'legacy']);
     if (![...select.options].some(option => option.value === value)) {
         const status = document.getElementById('trip-switcher-status');
-        if (status) status.textContent = 'Ce séjour n’est plus accessible. Actualisez la liste puis réessayez.';
+        if (status) status.textContent = 'Ce séjour n’est plus accessible. Actualise la liste puis réessaie.';
         return;
     }
     if (select.value === value) return;
@@ -1848,7 +1866,7 @@ function openTripSwitcherOrEdit() {
 
 function resetDemoScenario() {
     if (!DEMO_PREVIEW) return;
-    const confirmed = window.confirm('Restaurer cette simulation à son état de départ ? Les modifications de cette démo seront remplacées. Vos séjours personnels ne seront pas touchés.');
+    const confirmed = window.confirm('Restaurer cette simulation à son état de départ ? Les modifications de cette démo seront remplacées. Tes séjours personnels ne seront pas touchés.');
     if (!confirmed) return;
     const resetUrl = new URL(window.location.href);
     resetUrl.searchParams.set('reset', '1');
@@ -1978,7 +1996,7 @@ window.addEventListener('getready:user', event => {
 
 function startNewTrip() {
     if (DEMO_PREVIEW) {
-        if (window.confirm('La démonstration ne crée pas de vrai séjour.\nSe connecter pour créer votre propre séjour ?')) {
+        if (window.confirm('La démonstration ne crée pas de vrai séjour.\nTe connecter pour créer ton propre séjour ?')) {
             window.location.href = window.location.pathname;
         }
         return;
@@ -2004,7 +2022,7 @@ function updateCountdown() {
     const joursAvantFin = dateFin ? Math.round((jourUTC(dateFin) - aujourdHuiUTC) / jourMs) : null;
     let countdownValue = '—';
     let countdownText = 'dates à planifier';
-    let countdownLabel = 'CHOISISSEZ LES DATES';
+    let countdownLabel = 'CHOISIS LES DATES';
 
     if (dateDepart && joursAvantDepart > 0) {
         countdownValue = String(joursAvantDepart);
@@ -2028,6 +2046,8 @@ function updateCountdown() {
     }
 
     document.getElementById('days-count').innerText = countdownValue;
+    // Sans date de départ, le compte à rebours n'a rien à montrer : la carte le cache.
+    document.getElementById('page-accueil')?.classList.toggle('has-no-countdown', !dateDepart);
     document.querySelector('.countdown-text').innerText = countdownText;
     document.querySelector('.hero-countdown-label').innerText = countdownLabel;
 
@@ -2058,25 +2078,25 @@ function updateCountdown() {
     const destinationElement = document.getElementById('dashboard-main-destination');
     if (destinationElement) destinationElement.textContent = destinationLabel;
     const heroLocation = document.getElementById('dashboard-hero-location');
-    if (heroLocation) heroLocation.textContent = primaryDestination || 'Votre séjour';
+    if (heroLocation) heroLocation.textContent = primaryDestination || 'Ton séjour';
 
     const groupLabels = {
-        Solo: 'VOTRE CARNET DE VOYAGE', Couple: 'VOTRE CARNET À DEUX', Amis: 'VOTRE CARNET ENTRE AMIS',
-        Famille: 'VOTRE CARNET DE FAMILLE', Équipe: 'VOTRE CARNET D’ÉQUIPE', Autre: 'VOTRE CARNET DE SÉJOUR'
+        Solo: 'TON CARNET DE VOYAGE', Couple: 'TON CARNET À DEUX', Amis: 'TON CARNET ENTRE AMIS',
+        Famille: 'TON CARNET DE FAMILLE', Équipe: 'TON CARNET D’ÉQUIPE', Autre: 'TON CARNET DE SÉJOUR'
     };
     document.getElementById('dashboard-overline').textContent = groupLabels[appData.tripGroup] || groupLabels.Autre;
     renderDashboardGreeting();
-    let introCopy = 'Voici où en est votre prochain voyage.';
+    let introCopy = 'Voici où en est ton prochain voyage.';
     if (!dateDepart && !dateFin) {
-        introCopy = 'Commencez par choisir les dates et une première destination.';
+        introCopy = 'Commence par choisir les dates et une première destination.';
     } else if (!dateDepart || !dateFin) {
-        introCopy = 'Complétez les dates de votre séjour pour en suivre l’avancement.';
+        introCopy = 'Complète les dates de ton séjour pour en suivre l’avancement.';
     } else if (joursAvantDepart === 0) {
-        introCopy = 'Le départ, c’est aujourd’hui. Retrouvez votre programme et vos réservations.';
+        introCopy = 'Le départ, c’est aujourd’hui. Retrouve ton programme et tes réservations.';
     } else if (joursAvantDepart < 0 && joursAvantFin >= 0) {
-        introCopy = 'Votre séjour est en cours. Retrouvez le programme et les informations utiles du jour.';
+        introCopy = 'Ton séjour est en cours. Retrouve le programme et les informations utiles du jour.';
     } else if (joursAvantFin < 0) {
-        introCopy = 'Votre séjour est terminé. Retrouvez son itinéraire et les informations enregistrées.';
+        introCopy = 'Ton séjour est terminé. Retrouve son itinéraire et les informations enregistrées.';
     }
     document.getElementById('dashboard-intro-copy').textContent = introCopy;
 
@@ -2239,6 +2259,65 @@ function openModal(modalId) {
         const preferredControl = modalId === 'modal-checklist' ? modal.querySelector('#check-text') : null;
         (preferredControl || modal.querySelector('input:not([type="hidden"]), select, textarea, button'))?.focus();
     });
+}
+
+
+// --- ANNULER UNE SUPPRESSION ---
+// Plutôt qu'une fenêtre « Supprimer… ? » du navigateur, la suppression est
+// immédiate et un bandeau propose « Annuler » pendant quelques secondes.
+// On ne garde une copie que des parties du séjour touchées par la suppression.
+const UNDO_DELAY_MS = 7000;
+let pendingUndo = null;
+
+function hideUndoToast() {
+    if (!pendingUndo) return;
+    window.clearTimeout(pendingUndo.timer);
+    pendingUndo = null;
+    const toast = document.getElementById('undo-toast');
+    if (toast) toast.hidden = true;
+}
+
+function showUndoToast(message, undo) {
+    const toast = document.getElementById('undo-toast');
+    if (!toast) return;
+    hideUndoToast();
+    pendingUndo = { undo, timer: window.setTimeout(hideUndoToast, UNDO_DELAY_MS) };
+    const text = toast.querySelector('.undo-toast-message');
+    if (text) text.textContent = message;
+    toast.hidden = false;
+}
+
+function undoLastDelete() {
+    const current = pendingUndo;
+    if (!current) return;
+    hideUndoToast();
+    current.undo();
+}
+
+function deleteWithUndo(message, keys, remove, refresh) {
+    const snapshot = Object.fromEntries(keys.map(key => [key, appData[key] === undefined ? undefined : JSON.parse(JSON.stringify(appData[key]))]));
+    remove();
+    saveToLocalStorage();
+    refresh();
+    showUndoToast(message, () => {
+        keys.forEach(key => {
+            if (snapshot[key] === undefined) delete appData[key];
+            else appData[key] = snapshot[key];
+        });
+        saveToLocalStorage();
+        refresh();
+    });
+}
+
+function deletedLabel(item, fallback) {
+    const name = String(item?.nom || item?.texte || item?.titre || item?.ville || '').trim();
+    return name ? `Supprimé : « ${name.length > 40 ? `${name.slice(0, 39)}…` : name} »` : fallback;
+}
+
+function refreshItineraryViews() {
+    renderProgramme();
+    renderDashboardSummary();
+    if (document.getElementById('modal-itinerary-editor')?.classList.contains('active')) renderItineraryEditor();
 }
 
 // --- APERÇU ET EDITION DES VOLS ---
@@ -2771,19 +2850,19 @@ function parseVolPasteText() {
 
 function deleteVol(index) {
     if (!requireEditor()) return;
-    if (confirm("Voulez-vous vraiment supprimer ce vol ?")) {
-        appData.vols.splice(index, 1);
-        saveToLocalStorage();
+    const vol = appData.vols?.[index];
+    if (!vol) return;
+    deleteWithUndo(vol.numero ? `Vol ${vol.numero} supprimé` : 'Vol supprimé', ['vols'], () => appData.vols.splice(index, 1), () => {
         renderVols();
         applyAppearancePreferences();
-    }
+    });
 }
 
 function renderVols() {
     const list = document.getElementById('vols-list');
     list.innerHTML = '';
     if (!appData.vols.length) {
-        list.innerHTML = `<p>Aucun vol enregistré. Ajoutez les trajets réservés pour les retrouver facilement.</p>`;
+        list.innerHTML = `<p>Aucun vol enregistré. Ajoute les trajets réservés pour les retrouver facilement.</p>`;
         return;
     }
     appData.vols.forEach((vol, index) => {
@@ -3007,11 +3086,8 @@ function saveTransport() {
 
 function deleteTransport(index) {
     if (!requireEditor()) return;
-    if (confirm("Voulez-vous vraiment supprimer ce trajet ?")) {
-        appData.transports.splice(index, 1);
-        saveToLocalStorage();
-        renderTransports();
-    }
+    if (!appData.transports?.[index]) return;
+    deleteWithUndo('Trajet supprimé', ['transports'], () => appData.transports.splice(index, 1), () => renderTransports());
 }
 
 // --- PROGRAMME ---
@@ -3158,10 +3234,29 @@ function changeItineraryRouteMode(progId, mode) {
     if (link) link.href = buildDayDirectionsUrl(activities, programme.ville, selectedItineraryRouteModeByDay[modeKey]);
 }
 
+// Raccourci depuis le planning affiché : ouvre l'éditeur directement sur ce
+// jour, le curseur dans le nom de la nouvelle activité.
+function addActivityForDay(progId, date) {
+    if (!requireEditor()) return;
+    selectedItineraryProgrammeId = progId;
+    selectedItineraryDayByProgramme[progId] = date;
+    openItineraryEditor();
+    window.setTimeout(() => {
+        const field = document.getElementById(`managed-activity-name-${progId}_${safeId(date)}`);
+        if (!field) return;
+        field.scrollIntoView({ block: 'center', behavior: shouldReduceMotion() ? 'auto' : 'smooth' });
+        field.focus({ preventScroll: true });
+    }, 80);
+}
+
 function openItineraryEditor() {
     if (!requireEditor()) return;
     renderItineraryEditor();
     openModal('modal-itinerary-editor');
+}
+
+function pluralActivities(count) {
+    return count === 0 ? 'Aucune activité' : `${count} activité${count > 1 ? 's' : ''}`;
 }
 
 function renderItineraryEditor() {
@@ -3191,19 +3286,19 @@ function renderItineraryEditor() {
     `).join('');
     const daysHtml = days.length ? days.map(date => `
         <div class="itinerary-editor-day${date === selectedDate ? ' is-current' : ''}">
-            <button type="button" class="itinerary-editor-day-select" ${actionAttrs('selectManagedDay', [selectedProgramme.id, date])} aria-pressed="${date === selectedDate}"><i class="fa-regular fa-calendar" aria-hidden="true"></i><span>${esc(date)}</span><small>${(selectedProgramme.activites || []).filter(item => item.date === date).length} activité(s)</small></button>
+            <button type="button" class="itinerary-editor-day-select" ${actionAttrs('selectManagedDay', [selectedProgramme.id, date])} aria-pressed="${date === selectedDate}"><i class="fa-regular fa-calendar" aria-hidden="true"></i><span>${esc(date)}</span><small>${pluralActivities((selectedProgramme.activites || []).filter(item => item.date === date).length)}</small></button>
             <button type="button" ${actionAttrs('editManagedDay', [selectedProgramme.id, date])} aria-label="Modifier la journée du ${esc(date)}" title="Modifier cette date"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
             <button type="button" ${actionAttrs('deleteManagedDay', [selectedProgramme.id, date])} aria-label="Supprimer la journée du ${esc(date)}" title="Supprimer cette journée"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>
         </div>
     `).join('') : `<p class="itinerary-editor-note">Aucune journée prévue pour cette étape. Ajoute une date ci-dessous.</p>`;
     const activitiesHtml = activities.length ? activities.map(item => `
         <article class="itinerary-editor-activity"><div><time>${esc(item.heure || '—')}</time><strong>${esc(item.texte)}</strong>${item.lien ? `<small><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Lieu renseigné</small>` : ''}</div><div class="itinerary-editor-row-actions"><button type="button" ${actionAttrs('editManagedActivity', [selectedProgramme.id, item.id])} aria-label="Modifier ${esc(item.texte)}" title="Modifier"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button><button type="button" ${actionAttrs('deleteManagedActivity', [selectedProgramme.id, selectedDate, item.id])} aria-label="Supprimer ${esc(item.texte)}" title="Supprimer"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button></div></article>
-    `).join('') : `<p class="itinerary-editor-note">Aucune activité pour ${selectedDate ? `le ${esc(selectedDate)}` : 'cette étape'}.</p>`;
+    `).join('') : `<p class="itinerary-editor-note">${selectedDate ? 'Aucune activité ce jour-là pour l’instant.' : 'Choisis d’abord une journée ci-dessus.'}</p>`;
     const activitySuffix = `${selectedProgramme.id}_${safeId(selectedDate || 'new')}`;
     content.innerHTML = `
-        <section class="itinerary-editor-section"><div class="itinerary-editor-section-heading"><div><span>ÉTAPE 1</span><h4>Destinations</h4></div><button type="button" class="itinerary-editor-add" ${actionAttrs('openAddProgrammeFromEditor')}><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter une étape</button></div><div class="itinerary-editor-destination-list">${destinationsHtml}</div></section>
-        <section class="itinerary-editor-section"><div class="itinerary-editor-section-heading"><div><span>${esc(selectedProgramme.ville)}</span><h4>Journées</h4></div></div><div class="itinerary-editor-day-list">${daysHtml}</div><div class="itinerary-editor-add-row">${datePickerPairHtml(`managed-new-day-${selectedProgramme.id}`, '', 'Ajouter une date')}<button type="button" ${actionAttrs('addManagedDay', [selectedProgramme.id])}><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter</button></div></section>
-        <section class="itinerary-editor-section"><div class="itinerary-editor-section-heading"><div><span>${selectedDate ? esc(selectedDate) : 'CHOISIS UNE JOURNÉE'}</span><h4>Activités</h4></div></div><div class="itinerary-editor-activity-list">${activitiesHtml}</div>${selectedDate ? `<div class="itinerary-editor-add-activity">${timePickerPairHtml(`managed-activity-time-${activitySuffix}`, '', 'Heure')}<input type="text" id="managed-activity-name-${activitySuffix}" placeholder="Nom de l’activité" aria-label="Nom de l’activité"><input type="text" id="managed-activity-link-${activitySuffix}" placeholder="Lien Maps (facultatif)" aria-label="Lien Maps facultatif"><button type="button" ${actionAttrs('addManagedActivity', [selectedProgramme.id, selectedDate])}><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter l’activité</button></div>` : ''}</section>
+        <section class="itinerary-editor-section"><div class="itinerary-editor-section-heading"><h4>Étapes du voyage</h4><button type="button" class="itinerary-editor-add" ${actionAttrs('openAddProgrammeFromEditor')}><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter une étape</button></div><div class="itinerary-editor-destination-list">${destinationsHtml}</div></section>
+        <section class="itinerary-editor-section"><div class="itinerary-editor-section-heading"><h4>Journées à ${esc(selectedProgramme.ville)}</h4></div><div class="itinerary-editor-day-list">${daysHtml}</div><div class="itinerary-editor-add-row">${datePickerPairHtml(`managed-new-day-${selectedProgramme.id}`, '', 'Ajouter une date')}<button type="button" ${actionAttrs('addManagedDay', [selectedProgramme.id])}><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter</button></div></section>
+        <section class="itinerary-editor-section"><div class="itinerary-editor-section-heading"><h4>${selectedDate ? `Activités du ${esc(selectedDate)}` : 'Activités'}</h4></div><div class="itinerary-editor-activity-list">${activitiesHtml}</div>${selectedDate ? `<div class="itinerary-editor-add-activity">${timePickerPairHtml(`managed-activity-time-${activitySuffix}`, '', 'Heure')}<input type="text" id="managed-activity-name-${activitySuffix}" placeholder="Nom de l’activité" aria-label="Nom de l’activité"><input type="text" id="managed-activity-link-${activitySuffix}" placeholder="Lien Maps (facultatif)" aria-label="Lien Maps facultatif"><button type="button" ${actionAttrs('addManagedActivity', [selectedProgramme.id, selectedDate])}><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter l’activité</button></div>` : ''}</section>
     `;
     syncPickerControls(content);
 }
@@ -3230,17 +3325,16 @@ function editManagedDestination(progId) {
 
 function deleteManagedDestination(progId) {
     const destination = (appData.programme || []).find(item => item.id === progId);
-    if (!destination || !confirm(`Supprimer l’étape « ${destination.ville} » et son planning ?`)) return;
-    appData.programme = appData.programme.filter(item => item.id !== progId);
-    if (selectedItineraryProgrammeId === progId) selectedItineraryProgrammeId = appData.programme[0]?.id || null;
-    delete selectedItineraryDayByProgramme[progId];
-    delete selectedItineraryMapActivityByProgramme[progId];
-    Object.keys(selectedItineraryRouteModeByDay).forEach(key => {
-        if (key.startsWith(`${progId}|`)) delete selectedItineraryRouteModeByDay[key];
-    });
-    saveToLocalStorage();
-    renderProgramme();
-    renderItineraryEditor();
+    if (!destination) return;
+    deleteWithUndo(`Étape « ${destination.ville} » supprimée`, ['programme'], () => {
+        appData.programme = appData.programme.filter(item => item.id !== progId);
+        if (selectedItineraryProgrammeId === progId) selectedItineraryProgrammeId = appData.programme[0]?.id || null;
+        delete selectedItineraryDayByProgramme[progId];
+        delete selectedItineraryMapActivityByProgramme[progId];
+        Object.keys(selectedItineraryRouteModeByDay).forEach(key => {
+            if (key.startsWith(`${progId}|`)) delete selectedItineraryRouteModeByDay[key];
+        });
+    }, refreshItineraryViews);
 }
 
 function addManagedDay(progId) {
@@ -3269,7 +3363,6 @@ function editManagedDay(progId, date) {
 
 function deleteManagedDay(progId, date) {
     deleteDay(progId, date);
-    renderItineraryEditor();
 }
 
 function addManagedActivity(progId, date) {
@@ -3304,13 +3397,13 @@ function editManagedActivity(progId, activityId) {
 function deleteManagedActivity(progId, date, activityId) {
     const destination = (appData.programme || []).find(item => item.id === progId);
     const activity = destination?.activites?.find(item => item.id === activityId);
-    if (!destination || !activity || !confirm(`Supprimer l’activité « ${activity.texte} » ?`)) return;
-    destination.activites = destination.activites.filter(item => item.id !== activityId);
+    if (!destination || !activity) return;
     selectedItineraryProgrammeId = progId;
     selectedItineraryDayByProgramme[progId] = date;
-    saveToLocalStorage();
-    renderProgramme();
-    renderItineraryEditor();
+    deleteWithUndo(deletedLabel(activity, 'Activité supprimée'), ['programme'], () => {
+        const target = (appData.programme || []).find(item => item.id === progId);
+        if (target) target.activites = (target.activites || []).filter(item => item.id !== activityId);
+    }, refreshItineraryViews);
 }
 
 function safeId(str) {
@@ -3338,16 +3431,15 @@ function addDayToDestination(progId) {
 
 function deleteDay(progId, date) {
     if (!requireEditor()) return;
-    if (!confirm(`Supprimer la journée du ${date} et ses activités ?`)) return;
-    const prog = appData.programme.find(p => p.id === progId);
-    if (!prog) return;
-    prog.jours = (prog.jours || []).filter(d => d !== date);
-    prog.activites = (prog.activites || []).filter(a => a.date !== date);
-    saveToLocalStorage();
-    selectedItineraryDayByProgramme[progId] = prog.jours.includes(selectedItineraryDayByProgramme[progId])
-        ? selectedItineraryDayByProgramme[progId]
-        : bestItineraryDay(prog);
-    renderProgramme();
+    if (!appData.programme.some(p => p.id === progId)) return;
+    deleteWithUndo(`Journée du ${date} supprimée`, ['programme'], () => {
+        const prog = appData.programme.find(p => p.id === progId);
+        prog.jours = (prog.jours || []).filter(d => d !== date);
+        prog.activites = (prog.activites || []).filter(a => a.date !== date);
+        selectedItineraryDayByProgramme[progId] = prog.jours.includes(selectedItineraryDayByProgramme[progId])
+            ? selectedItineraryDayByProgramme[progId]
+            : bestItineraryDay(prog);
+    }, refreshItineraryViews);
 }
 
 let editingDay = null; // "progId|date" de la journée en cours de modification, ou null
@@ -3406,11 +3498,12 @@ function addInlineDayActivite(progId, date) {
 function deleteDayActivite(progId, date, activiteId) {
     if (!requireEditor()) return;
     const prog = appData.programme.find(p => p.id === progId);
-    if (!prog) return;
-    prog.activites = (prog.activites || []).filter(a => a.id !== activiteId);
-    saveToLocalStorage();
-    renderProgramme();
-    renderDashboardSummary();
+    const activity = prog?.activites?.find(a => a.id === activiteId);
+    if (!activity) return;
+    deleteWithUndo(deletedLabel(activity, 'Activité supprimée'), ['programme'], () => {
+        const target = appData.programme.find(p => p.id === progId);
+        target.activites = (target.activites || []).filter(a => a.id !== activiteId);
+    }, refreshItineraryViews);
 }
 
 let editingActivite = null; // id de l'activité en cours de modification, ou null
@@ -3464,8 +3557,6 @@ function renderDestinationDayBar(progId) {
     const selectedDate = selectedItineraryDayByProgramme[progId] || '';
     const selectedSuffix = selectedDate ? `${progId}_${safeId(selectedDate)}` : '';
     const progMapsUrl = mapsOpenLink(prog.maps);
-    const cityRange = prog.dateStart === prog.dateEnd ? esc(prog.dateStart || '') : `${esc(prog.dateStart || '')} — ${esc(prog.dateEnd || '')}`;
-    const hotel = prog.hotel ? esc(prog.hotel) : 'Hébergement à préciser';
 
     const daysHtml = jours.length ? jours.map((date, index) => {
         const parsed = resolveTripDate(date);
@@ -3509,11 +3600,14 @@ function renderDestinationDayBar(progId) {
             }
             const activityMapUrl = mapsOpenLink(activity.lien);
             const isMapFocus = String(selectedItineraryMapActivityByProgramme[progId]) === String(activity.id);
-            const activityMapLink = `<button type="button" class="activity-map-focus-button" ${actionAttrs('focusItineraryMap', [progId, activity.id])} data-itinerary-map-activity="${esc(activity.id)}" data-itinerary-map-programme="${esc(progId)}" aria-label="Centrer la carte sur ${esc(activity.texte)}" aria-pressed="${isMapFocus}" title="Afficher sur la carte"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></button>${activityMapUrl ? `<a href="${activityMapUrl}" target="_blank" rel="noopener" class="activity-link-btn" aria-label="Ouvrir le lieu dans Google Maps" title="Ouvrir dans Google Maps"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i><span>Carte</span></a>` : ''}`;
+            // Toucher l'activité la montre sur la carte ; une seule icône ouvre Google Maps.
             activitiesHtml += `
                 <article class="itinerary-activity">
-                    <time class="itinerary-activity-time">${esc(activity.heure || '—')}</time>
-                    <div class="itinerary-activity-copy"><span>${esc(activity.texte)}</span>${activityMapLink}</div>
+                    <button type="button" class="itinerary-activity-main" ${actionAttrs('focusItineraryMap', [progId, activity.id])} data-itinerary-map-activity="${esc(activity.id)}" data-itinerary-map-programme="${esc(progId)}" aria-pressed="${isMapFocus}" title="Afficher sur la carte">
+                        <time class="itinerary-activity-time">${esc(activity.heure || '—')}</time>
+                        <span class="itinerary-activity-text">${esc(activity.texte)}</span>
+                    </button>
+                    ${activityMapUrl ? `<a href="${activityMapUrl}" target="_blank" rel="noopener" class="activity-link-btn" aria-label="${esc(`Ouvrir « ${activity.texte} » dans Google Maps`)}" title="Ouvrir dans Google Maps"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>` : ''}
                 </article>
             `;
         });
@@ -3543,22 +3637,14 @@ function renderDestinationDayBar(progId) {
         || selectedDayActivities[0];
     const itineraryMapLabel = focusActivity?.texte || prog.ville || 'cette étape';
     container.innerHTML = `
-        <section class="itinerary-selected-place">
-            <div class="itinerary-place-copy">
-                <span class="itinerary-place-overline">TON ÉTAPE ${String((appData.programme.findIndex(item => item.id === progId) + 1)).padStart(2, '0')}</span>
-                <div><i class="fa-solid fa-bed" aria-hidden="true"></i><span>${hotel}</span></div>
-                ${cityRange ? `<small><i class="fa-regular fa-calendar" aria-hidden="true"></i>${cityRange}</small>` : ''}
-            </div>
-            ${progMapsUrl ? `<a class="itinerary-place-map" href="${progMapsUrl}" target="_blank" rel="noopener"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i><span>Carte</span></a>` : ''}
-        </section>
         <section class="itinerary-day-picker-section" id="itinerary-day-choice">
-            <div class="itinerary-section-title"><div><span>TES DATES</span><h3>Choisis ta journée</h3></div><span class="itinerary-day-total">${jours.length} jour${jours.length === 1 ? '' : 's'}</span></div>
+            <div class="itinerary-section-title"><div><span>TES DATES</span><h3>Choisis ta journée</h3></div><span class="itinerary-day-total">${jours.length} jour${jours.length === 1 ? '' : 's'}${progMapsUrl ? ` · <a class="itinerary-stage-map-link" href="${progMapsUrl}" target="_blank" rel="noopener" aria-label="${esc(`Ouvrir l’étape ${prog.ville || ''} dans Google Maps`)}">Carte de l’étape</a>` : ''}</span></div>
             <div class="itinerary-date-rail" aria-label="Dates de cette étape">${daysHtml}</div>
         </section>
         <section class="itinerary-day-plan">
             ${dayTools}
             <div class="itinerary-map-layout">
-                <div class="itinerary-activities">${activitiesHtml}</div>
+                <div class="itinerary-activities">${activitiesHtml}${selectedDate ? `<button type="button" class="itinerary-add-activity" ${actionAttrs('addActivityForDay', [progId, selectedDate])}><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter une activité ce jour</button>` : ''}</div>
                 ${itineraryMapQuery ? `<aside class="itinerary-day-map-preview" aria-label="Carte de l’étape"><div class="itinerary-day-map-heading"><span>REPÈRE SUR LA CARTE</span><strong id="itinerary-day-map-label-${safeId(prog.id)}">${esc(itineraryMapLabel)}</strong><small>${esc(prog.ville || '')}</small></div><iframe id="itinerary-day-map-${safeId(prog.id)}" src="${esc(buildMapEmbedUrl(itineraryMapQuery))}" title="Carte : ${esc(itineraryMapLabel)}" loading="lazy" referrerpolicy="no-referrer"></iframe></aside>` : ''}
             </div>
         </section>
@@ -3764,7 +3850,9 @@ function renderGeneralChecklist(container) {
                 <span class="prep-category-meter"><span><i style="width:${percentage}%"></i></span><b>${percentage}%</b></span>
                 <i class="fa-solid fa-chevron-down prep-category-chevron" aria-hidden="true"></i>
             </button>
-            <div class="prep-category-items" ${collapsed ? 'hidden' : ''}>${items.map(item => checklistTaskHtml(item)).join('')}</div>
+            <div class="prep-category-items" ${collapsed ? 'hidden' : ''}>${items.map(item => checklistTaskHtml(item)).join('')}
+                <label class="prep-inline-add"><i class="fa-solid fa-plus" aria-hidden="true"></i><input type="text" class="prep-inline-input" placeholder="Ajouter un préparatif" enterkeyhint="done" aria-label="${esc(`Nouveau préparatif dans ${checklistCategoryLabel(category)}`)}" data-category="${esc(category)}" data-action="addChecklistInline" data-action-event="change" data-action-target></label>
+            </div>
         </section>`;
     }).join('');
 }
@@ -3783,6 +3871,21 @@ function renderDayChecklist(container, progId) {
     addRow.className = 'prep-day-add-row';
     addRow.innerHTML = `<input type="text" id="jour-checklist-add-input" placeholder="Ajouter un préparatif…" aria-label="Nouveau préparatif pour ${esc(prog?.ville || 'cette étape')}" data-action="handleChecklistEnter" data-action-event="keydown" data-action-event-object><button type="button" ${actionAttrs('addJourCheckItemGlobal', [progId])} aria-label="Ajouter une tâche"><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter</button>`;
     container.appendChild(addRow);
+}
+
+// Ajout direct en bas d'une liste, comme dans Rappels : on tape, on valide,
+// et le champ reste prêt pour l'élément suivant.
+function addChecklistInline(input) {
+    if (!requireEditor()) return;
+    const texte = String(input?.value || '').trim();
+    const category = input?.dataset.category;
+    if (!texte || !category) return;
+    appData.checklist.push({ id: Date.now(), categorie: category, texte, checked: false });
+    input.value = '';
+    saveToLocalStorage();
+    renderChecklist();
+    const next = [...document.querySelectorAll('.prep-inline-input')].find(field => field.dataset.category === category);
+    next?.focus({ preventScroll: true });
 }
 
 function addJourCheckItemGlobal(progId) {
@@ -3933,12 +4036,14 @@ function updateChecklistTaskInPlace(item) {
 function deleteItemJour(progId, itemId) {
     if (!requireEditor()) return;
     if (!appData.checklistsJour[progId]) return;
-    if (confirm("Voulez-vous vraiment supprimer cet élément ?")) {
+    const item = appData.checklistsJour[progId].find(i => i.id === itemId);
+    if (!item) return;
+    deleteWithUndo(deletedLabel(item, 'Préparatif supprimé'), ['checklistsJour'], () => {
         appData.checklistsJour[progId] = appData.checklistsJour[progId].filter(i => i.id !== itemId);
-        saveToLocalStorage();
+    }, () => {
         if (currentChecklistScope === progId) renderChecklist();
         else buildChecklistSelector();
-    }
+    });
 }
 
 // --- BUDGET ---
@@ -3953,13 +4058,18 @@ function updateBudgetUI() {
     const sharedByPerson = {};
     const minorUnits = currencyMinorUnits(baseCurrency);
     let visibleExpenseCount = 0;
+    const totalsByCategory = {};
 
     appData.budget.forEach(exp => {
         const amount = Number(exp.amount ?? exp.eur) || 0;
         const currency = exp.currency || 'EUR';
         const converted = convertCurrency(amount, currency, baseCurrency);
         const payeurs = exp.payeurs || [];
-        if (converted !== null) total += converted;
+        if (converted !== null) {
+            total += converted;
+            const categoryKey = budgetCategoryTiles[exp.categorie] ? exp.categorie : 'Autre';
+            totalsByCategory[categoryKey] = (totalsByCategory[categoryKey] || 0) + converted;
+        }
         if (exp.paid && converted !== null) {
             paid += converted;
             const knownPayeurs = [...new Set(payeurs.filter(name => appData.budgetPeople.includes(name)))];
@@ -3976,37 +4086,35 @@ function updateBudgetUI() {
         visibleExpenseCount++;
         const cat = exp.categorie || 'Autre';
         const icon = budgetCategoryIcons[cat] || budgetCategoryIcons['Autre'];
-        const methodeIcon = exp.methode === 'Carte bleue' ? '💳' : (exp.methode === 'Espèces' ? '💴' : '');
-        const payeurHtml = payeurs.length
-            ? `<span class="expense-payeur-pill">${methodeIcon ? methodeIcon + ' ' : ''}${esc(payeurs.join(' + '))}${exp.methode ? ' · ' + esc(exp.methode) : ''}</span>`
-            : '';
+        const tile = budgetCategoryTiles[cat] || budgetCategoryTiles['Autre'];
+        // Une ligne par dépense, façon Wallet : on la touche pour la modifier.
+        // La catégorie, qui paie et comment tiennent sur la ligne du dessous ;
+        // le montant n'est répété que s'il est converti depuis une autre devise.
+        const details = [cat, exp.paid ? 'payé' : 'à payer', payeurs.length ? `par ${payeurs.join(' + ')}` : '', exp.methode || ''].filter(Boolean).join(' · ');
+        const convertedNote = converted === null
+            ? 'conversion indisponible'
+            : currency !== baseCurrency ? `≈ ${formatCurrency(converted, baseCurrency)}` : '';
+        const amountLabel = formatCurrency(amount, currency);
         list.innerHTML += `
-            <div class="expense-card">
-                    <button class="delete-btn" ${actionAttrs('deleteItem', ['budget', exp.id])} aria-label="Supprimer cette dépense"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
-                <div class="expense-card-top">
-                <div class="expense-info">
-                    <h4>${esc(exp.nom)}</h4>
-                        <p><i class="fa-solid ${icon}" aria-hidden="true"></i>${esc(cat)}${converted === null ? ' · conversion indisponible' : ` · ${formatCurrency(converted, baseCurrency)}`}</p>
-                    </div>
-                    <div class="expense-amounts">
-                    <span class="expense-eur">${formatCurrency(amount, currency)}</span>
-                    </div>
-                </div>
-                <div class="expense-card-footer">
-                    <button class="expense-paid-pill ${exp.paid ? 'paid' : ''}" ${actionAttrs('toggleBudgetPaid', [exp.id])}>${exp.paid ? '✓ Payé' : 'À payer'}</button>
-                    ${payeurHtml}
-                    <button class="edit-action" ${actionAttrs('openEditBudgetModal', [exp.id])} aria-label="Modifier cette dépense" title="Modifier cette dépense"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
-                </div>
+            <div class="expense-row${exp.paid ? ' is-paid' : ''}">
+                <button type="button" class="expense-row-main" ${actionAttrs('openEditBudgetModal', [exp.id])} aria-label="${esc(`Modifier ${exp.nom || 'la dépense'} · ${amountLabel}`)}">
+                    <span class="expense-row-icon is-${tile}" aria-hidden="true"><i class="fa-solid ${icon}"></i></span>
+                    <span class="expense-row-copy"><strong>${esc(exp.nom)}</strong><small>${esc(details)}</small></span>
+                    <span class="expense-row-amount"><strong>${esc(amountLabel)}</strong>${convertedNote ? `<small>${esc(convertedNote)}</small>` : ''}</span>
+                </button>
+                <button type="button" class="expense-paid-pill ${exp.paid ? 'paid' : ''}" ${actionAttrs('toggleBudgetPaid', [exp.id])} aria-pressed="${exp.paid ? 'true' : 'false'}" aria-label="${esc(`${exp.nom || 'Dépense'} : ${exp.paid ? 'payée' : 'à payer'}. Changer le statut`)}"><i class="${exp.paid ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'}" aria-hidden="true"></i><span>${exp.paid ? 'Payé' : 'À payer'}</span></button>
             </div>
         `;
     });
 
     if (appData.budget.length === 0) {
-        list.innerHTML = `<div class="empty-state"><span class="empty-state-icon"><i class="fa-solid fa-coins"></i></span><h3>Votre budget, à votre rythme</h3><p>Ajoutez une dépense dès qu'un prix se précise. Les montants de plusieurs devises seront réunis dans la devise choisie.</p></div>`;
+        list.innerHTML = `<div class="empty-state"><span class="empty-state-icon"><i class="fa-solid fa-coins"></i></span><h3>Ton budget, à ton rythme</h3><p>Ajoute une dépense dès qu'un prix se précise. Les montants de plusieurs devises seront réunis dans la devise choisie.</p></div>`;
     } else if (visibleExpenseCount === 0) {
         list.innerHTML = `<div class="budget-filter-empty"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Aucune dépense ne correspond à ces critères.</span><button type="button" data-action="resetBudgetFilters">Effacer les filtres</button></div>`;
     }
 
+    syncFilterToggle('budget-filter-toggle', ['category', 'status'].filter(key => currentBudgetFilters[key] !== 'all').length);
+    renderBudgetBreakdown(totalsByCategory, total, baseCurrency);
     document.getElementById('budget-total-paid').innerText = formatCurrency(paid, baseCurrency);
     document.getElementById('budget-total-remaining').innerText = formatCurrency(total - paid, baseCurrency);
     populateCurrencySelectors();
@@ -4014,6 +4122,28 @@ function updateBudgetUI() {
     renderBudgetPeopleManageList();
     renderBudgetPeoplePicker();
     renderDashboardSummary();
+}
+
+// « Où part le budget » : une barre empilée et la liste des catégories,
+// de la plus grosse à la plus petite (toutes dépenses, filtres ignorés).
+function renderBudgetBreakdown(totalsByCategory, total, baseCurrency) {
+    const section = document.getElementById('budget-breakdown');
+    if (!section) return;
+    const rows = Object.entries(totalsByCategory)
+        .filter(([, value]) => value > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([category, value]) => ({ category, value, tile: budgetCategoryTiles[category] || 'gray', percent: total > 0 ? Math.round((value / total) * 100) : 0 }));
+    section.hidden = !(total > 0 && rows.length);
+    if (section.hidden) {
+        section.innerHTML = '';
+        return;
+    }
+    const summary = rows.map(row => `${row.category} ${row.percent} %`).join(', ');
+    section.innerHTML = `
+        <h3 id="budget-breakdown-title">Où part le budget</h3>
+        <div class="budget-breakdown-bar" role="img" aria-label="${esc(`Répartition du budget : ${summary}`)}">${rows.map(row => `<span class="is-${row.tile}" style="width:${Math.max(row.value / total * 100, 1.5).toFixed(2)}%"></span>`).join('')}</div>
+        <ul class="budget-breakdown-list">${rows.map(row => `<li><span class="budget-breakdown-dot is-${row.tile}" aria-hidden="true"></span><span class="budget-breakdown-name">${esc(row.category)}</span><strong>${esc(formatCurrency(row.value, baseCurrency))}</strong><small>${row.percent} %</small></li>`).join('')}</ul>
+    `;
 }
 
 function budgetExpenseMatchesFilters(expense, filters, people) {
@@ -4235,6 +4365,15 @@ function renderBudgetSplit(paidByPerson, settlements) {
     `;
 }
 
+const budgetCategoryTiles = {
+    'Transport': 'blue',
+    'Hébergement': 'lavender',
+    'Activités & Billets': 'teal',
+    'Nourriture': 'coral',
+    'Shopping': 'yellow',
+    'Autre': 'gray'
+};
+
 const budgetCategoryIcons = {
     'Transport': 'fa-train',
     'Hébergement': 'fa-bed',
@@ -4246,6 +4385,7 @@ const budgetCategoryIcons = {
 
 function openAddBudgetModal() {
     document.getElementById('budget-modal-title').innerText = "Ajouter une dépense";
+    setEditModalDeleteVisible('budget', false);
     document.getElementById('bud-edit-id').value = '';
     document.getElementById('bud-name').value = '';
     document.getElementById('bud-amount').value = '';
@@ -4264,6 +4404,7 @@ function openEditBudgetModal(id) {
     const exp = appData.budget.find(e => e.id === id);
     if (!exp) return;
     document.getElementById('budget-modal-title').innerText = "Modifier la dépense";
+    setEditModalDeleteVisible('budget', true);
     document.getElementById('bud-edit-id').value = exp.id;
     document.getElementById('bud-name').value = exp.nom || '';
     document.getElementById('bud-amount').value = exp.amount ?? exp.eur;
@@ -4357,22 +4498,20 @@ function renderInfos() {
         }
 
         list.innerHTML += `
-            <div class="card notebook-card info-card">
-                    <button class="delete-btn" ${actionAttrs('deleteItem', ['infos', info.id])} aria-label="Supprimer cette information"><i class="fa-solid fa-xmark"></i></button>
-                <div class="card-header-row">
-                    <div class="card-title-group">
-                        <div class="card-icon notebook-icon">${currentIcon}</div>
-                        <div class="card-title">${esc(info.titre)}</div>
+            <details class="notebook-row info-row">
+                <summary>
+                    <span class="notebook-row-icon is-blue" aria-hidden="true">${currentIcon}</span>
+                    <span class="notebook-row-copy"><strong>${esc(info.titre)}</strong>${info.desc ? `<small>${esc(info.desc)}</small>` : ''}</span>
+                    <i class="fa-solid fa-chevron-down notebook-row-chevron" aria-hidden="true"></i>
+                </summary>
+                <div class="notebook-row-body">
+                    ${info.desc ? `<p class="notebook-text">${esc(info.desc)}</p>` : ''}
+                    ${sourcesHtml ? `<div class="info-source-list" aria-label="Sources officielles">${sourcesHtml}</div>` : ''}
+                    <div class="notebook-row-actions">
+                        <button type="button" class="notebook-row-edit" ${actionAttrs('openEditInfoModal', [info.id])}><i class="fa-solid fa-pen" aria-hidden="true"></i> Modifier</button>
                     </div>
                 </div>
-                <div class="notebook-text">${esc(info.desc)}</div>
-                ${sourcesHtml ? `<div class="info-source-list" aria-label="Sources officielles">${sourcesHtml}</div>` : ''}
-                <div class="info-card-actions">
-                    <button ${actionAttrs('openEditInfoModal', [info.id])} class="edit-action" aria-label="Modifier cette information" title="Modifier cette information">
-                        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                    </button>
-                </div>
-            </div>
+            </details>
         `;
     });
 
@@ -4382,6 +4521,7 @@ function renderInfos() {
 
 function openAddInfoModal() {
     document.getElementById('info-modal-title').innerText = "Ajouter une info utile";
+    setEditModalDeleteVisible('infos', false);
     document.getElementById('info-edit-id').value = '';
     document.getElementById('info-title').value = '';
     document.getElementById('info-desc').value = '';
@@ -4392,6 +4532,7 @@ function openEditInfoModal(id) {
     const info = appData.infos.find(i => i.id === id);
     if (!info) return;
     document.getElementById('info-modal-title').innerText = "Modifier l'info";
+    setEditModalDeleteVisible('infos', true);
     document.getElementById('info-edit-id').value = info.id;
     document.getElementById('info-title').value = info.titre || '';
     document.getElementById('info-desc').value = info.desc || '';
@@ -4770,6 +4911,7 @@ function renderBillets() {
     list.innerHTML = '';
     const count = document.getElementById('billet-filter-count');
     const billets = appData.billets || [];
+    if (typeof syncFilterToggle === 'function') syncFilterToggle('billet-filter-toggle', currentBilletFilters.status && currentBilletFilters.status !== 'all' ? 1 : 0);
 
     if (billets.length === 0) {
         if (count) count.textContent = '0 réservation';
@@ -4792,36 +4934,34 @@ function renderBillets() {
         const lienHtml = lienUrl ? `<a href="${lienUrl}" target="_blank" rel="noopener" class="billet-link">Ouvrir le billet</a>` : '';
         const billetDateTime = [billet.date, timeToPickerValue(billet.heure)].filter(Boolean).join(' · ');
         const status = getBilletStatus(billet);
+        // Une ligne par réservation : nom, date et lieu, statut. Le détail
+        // (référence, notes, lien, partage, modification) s'ouvre en touchant.
+        const meta = [billetDateTime, billet.lieu].filter(Boolean).join(' · ');
         list.innerHTML += `
-            <div class="card notebook-card billet-card">
-                    <button class="delete-btn" ${actionAttrs('deleteItem', ['billets', billet.id])} aria-label="Supprimer cette réservation"><i class="fa-solid fa-xmark"></i></button>
-                <div class="card-header-row">
-                    <div class="card-title-group">
-                        <div class="card-icon notebook-icon"><i class="fa-solid fa-ticket" aria-hidden="true"></i></div>
-                        <div>
-                            <div class="card-title">${esc(billet.nom)}</div>
-                            ${billet.reference ? `<div class="card-subtitle">Réf. ${esc(billet.reference)}</div>` : ''}
-                            <span class="billet-status-badge is-${status}">${esc(getBilletStatusLabel(status))}</span>
-                        </div>
-                    </div>
-                    ${billetDateTime ? `<span class="card-date">${esc(billetDateTime)}</span>` : ''}
-                </div>
-                ${billet.lieu ? `<div class="billet-location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> ${esc(billet.lieu)}</div>` : ''}
-                ${billet.notes ? `<div class="notebook-text">${esc(billet.notes)}</div>` : ''}
-                <div class="billet-card-actions">
-                    ${lienHtml || '<span></span>'}
-                    <div class="billet-card-action-buttons">
+            <details class="notebook-row billet-row">
+                <summary>
+                    <span class="notebook-row-icon is-lavender" aria-hidden="true"><i class="fa-solid fa-ticket"></i></span>
+                    <span class="notebook-row-copy"><strong>${esc(billet.nom)}</strong>${meta ? `<small>${esc(meta)}</small>` : ''}</span>
+                    <span class="billet-status-badge is-${status}">${esc(getBilletStatusLabel(status))}</span>
+                    <i class="fa-solid fa-chevron-down notebook-row-chevron" aria-hidden="true"></i>
+                </summary>
+                <div class="notebook-row-body">
+                    ${billet.reference ? `<p class="notebook-row-ref">Réf. ${esc(billet.reference)}</p>` : ''}
+                    ${billet.notes ? `<p class="notebook-text">${esc(billet.notes)}</p>` : ''}
+                    <div class="notebook-row-actions">
+                        ${lienHtml}
                         <button type="button" class="billet-share-button" ${actionAttrs('shareBillet', [billet.id])}><i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span>Partager</span></button>
-                        <button type="button" class="edit-action" ${actionAttrs('openEditBilletModal', [billet.id])} aria-label="Modifier cette réservation" title="Modifier cette réservation"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
+                        <button type="button" class="notebook-row-edit" ${actionAttrs('openEditBilletModal', [billet.id])}><i class="fa-solid fa-pen" aria-hidden="true"></i> Modifier</button>
                     </div>
                 </div>
-            </div>
+            </details>
         `;
     });
 }
 
 function openAddBilletModal() {
     document.getElementById('billet-modal-title').innerText = "Ajouter un billet";
+    setEditModalDeleteVisible('billets', false);
     document.getElementById('billet-edit-id').value = '';
     document.getElementById('billet-nom').value = '';
     document.getElementById('billet-lieu').value = '';
@@ -4838,6 +4978,7 @@ function openEditBilletModal(id) {
     const billet = appData.billets.find(b => b.id === id);
     if (!billet) return;
     document.getElementById('billet-modal-title').innerText = "Modifier le billet";
+    setEditModalDeleteVisible('billets', true);
     document.getElementById('billet-edit-id').value = billet.id;
     document.getElementById('billet-nom').value = billet.nom || '';
     document.getElementById('billet-lieu').value = billet.lieu || '';
@@ -4911,38 +5052,38 @@ function saveInfo() {
     closeModal('modal-infos');
 }
 
+function refreshAfterCategoryChange(category) {
+    if (category === 'programme') {
+        buildChecklistSelector();
+        renderChecklist();
+        renderProgramme();
+    }
+    if (category === 'checklist') renderChecklist();
+    if (category === 'budget') updateBudgetUI();
+    if (category === 'infos') renderInfos();
+    if (category === 'billets') {
+        renderBillets();
+        renderDashboardSummary();
+    }
+}
+
 function deleteItem(category, id) {
     if (!requireEditor()) return;
-    if (confirm("Voulez-vous vraiment supprimer cet élément ?")) {
-        appData[category] = appData[category].filter(item => item.id !== id);
-        saveToLocalStorage();
-
+    const item = (appData[category] || []).find(entry => entry.id === id);
+    if (!item) return;
+    const keys = category === 'programme' ? ['programme', 'checklistsJour'] : [category];
+    deleteWithUndo(deletedLabel(item, 'Élément supprimé'), keys, () => {
+        appData[category] = appData[category].filter(entry => entry.id !== id);
         if (category === 'programme') {
-            // Also delete the day's checklist
-            if (appData.checklistsJour && appData.checklistsJour[id]) {
-                delete appData.checklistsJour[id];
-            }
-            // If currently viewing this day, switch back to voyage
-            const checklistScopeRemoved = currentChecklistScope === id;
-            if (checklistScopeRemoved) {
+            // La liste de préparatifs propre à cette étape part avec elle.
+            if (appData.checklistsJour && appData.checklistsJour[id]) delete appData.checklistsJour[id];
+            if (currentChecklistScope === id) {
                 currentChecklistScope = 'voyage';
                 currentChecklistFilter = 'all';
                 currentChecklistSearch = '';
             }
-            buildChecklistSelector();
-            renderChecklist();
-            renderProgramme();
         }
-        if (category === 'checklist') {
-            renderChecklist();
-        }
-        if (category === 'budget') updateBudgetUI();
-        if (category === 'infos') renderInfos();
-        if (category === 'billets') {
-            renderBillets();
-            renderDashboardSummary();
-        }
-    }
+    }, () => refreshAfterCategoryChange(category));
 }
 
 // ================= SAVE ACTIONS =================
@@ -5098,16 +5239,94 @@ function handleGlobalKeydown(event) {
     if (modal) closeModal(modal.id);
 }
 
+// Ferme une fenêtre de choix et ouvre la suivante. La fermeture étant animée,
+// le focus revient d'abord sur le bouton d'origine : il ne quitte plus la
+// nouvelle fenêtre 220 ms plus tard, et y reviendra quand elle se fermera.
+function replaceModal(fromId, openNext) {
+    const from = document.getElementById(fromId);
+    const returnTo = from?.returnFocusElement;
+    if (from) from.returnFocusElement = null;
+    closeModal(fromId);
+    if (returnTo?.isConnected) returnTo.focus({ preventScroll: true });
+    openNext();
+}
+
 function chooseAddType(type) {
-    closeModal('modal-choose-type');
-    if (type === 'vol') openAddVolModal();
-    else openAddTransportModal();
+    replaceModal('modal-choose-type', () => {
+        if (type === 'vol') openAddVolModal();
+        else openAddTransportModal();
+    });
 }
 
 function chooseAddInfoType(type) {
-    closeModal('modal-choose-info-type');
-    if (type === 'info') openAddInfoModal();
-    else openAddBilletModal();
+    replaceModal('modal-choose-info-type', () => {
+        if (type === 'info') openAddInfoModal();
+        else openAddBilletModal();
+    });
+}
+
+// Bouton « Ajouter » de la barre du haut : un seul point d'entrée pour tout
+// ajouter. On ouvre la page concernée, puis son formulaire, pour que la
+// personne voie ensuite où son ajout a été rangé.
+const QUICK_ADD_TARGETS = {
+    activite: { tab: 'programme', open: () => openItineraryEditor() },
+    preparatif: { tab: 'checklist', open: () => openModal('modal-checklist') },
+    depense: { tab: 'budget', open: () => openAddBudgetModal() },
+    billet: { tab: 'infos', open: () => openAddBilletModal() },
+    info: { tab: 'infos', open: () => openAddInfoModal() },
+    trajet: { tab: 'accueil', open: () => openModal('modal-choose-type') },
+    sejour: { tab: null, open: () => startNewTrip() }
+};
+
+function quickAdd(kind) {
+    const target = QUICK_ADD_TARGETS[kind];
+    if (!target) return;
+    replaceModal('modal-quick-add', () => {
+        if (target.tab) switchDashboardTab(target.tab);
+        target.open();
+    });
+}
+
+// La suppression d'une dépense se fait depuis sa fenêtre de modification,
+// comme sur iPhone : la liste reste lisible, sans croix sur chaque ligne.
+const EDIT_MODAL_DELETE = {
+    budget: { modal: 'modal-budget', input: 'bud-edit-id', button: 'bud-delete' },
+    billets: { modal: 'modal-billet', input: 'billet-edit-id', button: 'billet-delete' },
+    infos: { modal: 'modal-infos', input: 'info-edit-id', button: 'info-delete' }
+};
+
+function setEditModalDeleteVisible(category, visible) {
+    const button = document.getElementById(EDIT_MODAL_DELETE[category]?.button || '');
+    if (button) button.hidden = !visible;
+}
+
+function deleteFromEditModal(category) {
+    const config = EDIT_MODAL_DELETE[category];
+    if (!config) return;
+    const value = document.getElementById(config.input)?.value;
+    const item = (appData[category] || []).find(entry => String(entry.id) === String(value));
+    if (!item) return;
+    replaceModal(config.modal, () => deleteItem(category, item.id));
+}
+
+// Filtres repliés derrière un bouton ; le bouton indique combien sont actifs.
+function toggleListFilters(button) {
+    const panel = document.getElementById(button?.getAttribute('aria-controls') || '');
+    if (!panel) return;
+    panel.hidden = !panel.hidden;
+    button.setAttribute('aria-expanded', String(!panel.hidden));
+}
+
+function syncFilterToggle(toggleId, activeCount) {
+    const toggle = document.getElementById(toggleId);
+    if (!toggle) return;
+    const label = toggle.querySelector('span');
+    if (label) label.textContent = activeCount ? `Filtres (${activeCount})` : 'Filtres';
+    toggle.classList.toggle('is-active', activeCount > 0);
+}
+
+function editTripFromSwitcher() {
+    replaceModal('modal-trip-switcher', () => openEditTripModal());
 }
 
 // All UI actions are routed through one delegated listener. No HTML expression
@@ -5142,6 +5361,14 @@ const ACTIONS = {
     openModal,
     chooseAddType,
     chooseAddInfoType,
+    quickAdd,
+    editTripFromSwitcher,
+    toggleDashboardCalendar,
+    deleteFromEditModal,
+    toggleListFilters,
+    undoLastDelete,
+    addChecklistInline,
+    addActivityForDay,
     parseVolPasteText,
     searchFlightByNumber,
     selectFlightLookupResult,

@@ -1,7 +1,7 @@
 {
-  "name": "GetReady — organisez vos séjours",
+  "name": "GetReady — organise tes séjours",
   "short_name": "GetReady",
-  "description": "Un espace simple pour préparer vos vacances, escapades, voyages professionnels et événements, en solo ou à plusieurs.",
+  "description": "Un espace simple pour préparer tes vacances, escapades, voyages professionnels et événements, en solo ou à plusieurs.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

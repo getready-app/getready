@@ -111,7 +111,7 @@ test('la carte Réservations distingue les réservations confirmées de celles �
         { nom: 'Bateau', statut: 'annule' }
     ]);
 
-    assert.equal(values.get('dashboard-reservations-detail').textContent, '1 confirmée · 1 à réserver');
+    assert.equal(values.get('dashboard-reservations-detail').textContent, '1 confirmée sur 2');
     const empty = renderSummary([], 'EUR', { EUR: 1 }, []);
     assert.equal(empty.get('dashboard-reservations-detail').textContent, 'Rien d’enregistré');
     const loading = renderSummary([], 'EUR', { EUR: 1 }, [], [], [], {}, 'loading');
@@ -233,7 +233,8 @@ test('les prochaines activités affichent date, heure, étape et ouvrent le jour
     assert.equal(status.textContent, '1 prochaine activité');
     assert.match(list.innerHTML, /Musée/);
     assert.match(list.innerHTML, /10:30/);
-    assert.match(list.innerHTML, /Rome · Escapade romaine/);
+    assert.match(list.innerHTML, /<span>Rome<\/span>/);
+    assert.doesNotMatch(list.innerHTML, /Escapade romaine/);
     assert.match(list.innerHTML, /data-action="openDashboardActivity" data-action-args='\["rome","18 nov\."\]'/);
 });
 
@@ -475,10 +476,10 @@ test('l’ajout et la suppression d’une réservation actualisent les priorité
     assert.ok(saveStart >= 0 && saveEnd > saveStart);
     assert.match(appSource.slice(saveStart, saveEnd), /renderDashboardSummary\(\);/);
 
-    const deleteStart = appSource.indexOf('function deleteItem(category, id) {');
+    const deleteStart = appSource.indexOf('function refreshAfterCategoryChange(category) {');
     const deleteEnd = appSource.indexOf('\n\/\/ ================= SAVE ACTIONS', deleteStart);
     assert.ok(deleteStart >= 0 && deleteEnd > deleteStart);
-    const deleteBillets = appSource.slice(deleteStart, deleteEnd).match(/if \(category === 'billets'\) \{[\s\S]*?\n        \}/)?.[0] || '';
+    const deleteBillets = appSource.slice(deleteStart, deleteEnd).match(/if \(category === 'billets'\) \{[\s\S]*?\n    \}/)?.[0] || '';
     assert.match(deleteBillets, /renderDashboardSummary\(\);/);
 });
 
@@ -518,7 +519,30 @@ test('Nouveau séjour ouvre la vraie création de séjour et jamais l’ajout de
     assert.deepEqual(demoCalls, ['confirm']);
     assert.equal(location.href, '/');
 
-    assert.doesNotMatch(htmlSource, /class="(app-topbar-new-trip|nav-new-trip)" data-action="openModal"/);
-    assert.match(htmlSource, /class="app-topbar-new-trip" data-action="startNewTrip"/);
+    assert.doesNotMatch(htmlSource, /class="nav-new-trip" data-action="openModal"/);
     assert.match(htmlSource, /class="nav-new-trip" data-action="startNewTrip"/);
+    // Le « + » de la barre du haut ouvre un choix nommé, où « Un nouveau séjour » crée bien un séjour.
+    assert.match(htmlSource, /class="app-topbar-add" data-action="openModal" data-action-args='\["modal-quick-add"\]'/);
+    assert.match(htmlSource, /data-action="quickAdd" data-action-args='\["sejour"\]'[\s\S]*?Un nouveau séjour/);
+    assert.match(appSource, /sejour: \{ tab: null, open: \(\) => startNewTrip\(\) \}/);
+});
+
+test('le mini-calendrier s’arrête au dimanche de la dernière semaine, sans ligne orpheline', () => {
+    const start = appSource.indexOf('function renderDashboardMiniCalendar(');
+    const end = appSource.indexOf('\nfunction renderDashboardTripShell(', start);
+    const helper = appSource.slice(start, end);
+    for (let month = 0; month < 24; month += 1) {
+        const first = new Date(2026 + Math.floor(month / 12), month % 12, 10);
+        const elements = { 'dashboard-mini-calendar': { innerHTML: '' }, 'dashboard-mini-calendar-title': {}, 'dashboard-calendar-range': {} };
+        vm.runInNewContext(`${helper}\nrenderDashboardMiniCalendar();`, {
+            appData: { tripStart: 'start', tripEnd: '' },
+            parsePickerDate: value => value === 'start' ? first : null,
+            document: { getElementById: id => elements[id] }
+        });
+        const cells = (elements['dashboard-mini-calendar'].innerHTML.match(/role="gridcell"/g) || []).length;
+        assert.equal(cells % 7, 0, `mois ${month}: ${cells} cases`);
+        assert.ok(cells <= 42 && cells >= 28, `mois ${month}: ${cells} cases`);
+        const lastMonthDay = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+        assert.ok(elements['dashboard-mini-calendar'].innerHTML.includes(`>${lastMonthDay}</span>`));
+    }
 });
