@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import vm from 'node:vm';
 
@@ -24,18 +25,23 @@ test('le service worker met en cache toutes les feuilles du design épuré', () 
     }
 });
 
-test('les fonds restent neutres et la couleur d’Ocean Teal sert d’accent, en clair comme en sombre', () => {
-    assert.match(epure, /--ep-bg: #F2F2F7;/);
+test('identité violette : fonds lumineux, accent violet, secondaire bleu, en clair comme en sombre', () => {
+    assert.match(epure, /--ep-bg: #F5F5FA;/);
     assert.match(epure, /--ep-surface: #FFFFFF;/);
-    assert.match(epure, /--ep-accent: #167E76;/);
-    assert.match(epure, /:root\[data-color-mode="dark"\] \{[\s\S]*?--ep-bg: #000000;[\s\S]*?--ep-surface: #1C1C1E;/);
+    assert.match(epure, /--ep-accent: #6352E0;/);
+    assert.match(epure, /--ep-accent-2: #3F6CE0;/);
+    assert.match(epure, /--ep-gradient: linear-gradient\(135deg, #6E5BF0 0%, #6352E0 42%, #3F6CE0 100%\);/);
+    assert.match(epure, /:root\[data-color-mode="dark"\] \{[\s\S]*?--ep-bg: #0B0B0F;[\s\S]*?--ep-surface: #1C1C22;[\s\S]*?--ep-accent-text: #A99DFF;/);
     assert.match(epure, /@media \(prefers-color-scheme: dark\) \{\s*:root:not\(\[data-color-mode\]\)/);
 });
 
-test('les palettes ne changent que la couleur d’accent', () => {
-    assert.match(epure, /:root\[data-theme="ocean"\] \{ --ep-accent: #1867AA;/);
-    assert.match(epure, /:root\[data-theme="lavender"\] \{ --ep-accent: #6A52B5;/);
-    assert.match(html, /<strong>Escapade<\/strong><small>Ocean Teal<\/small>/);
+test('le violet est l’identité fixe : plus de choix de palette, logo avion en dégradé', () => {
+    assert.doesNotMatch(epure, /:root\[data-theme="(ocean|lavender)"\]/);
+    assert.doesNotMatch(html, /data-action="setVisualTheme"|settings-theme-grid/);
+    assert.doesNotMatch(appSource, /function setVisualTheme\(/);
+    assert.match(appSource, /const theme = 'sun';/);
+    assert.equal((html.match(/<span class="brand-mark"><i class="fa-solid fa-plane" aria-hidden="true"><\/i><\/span>/g) || []).length, 3);
+    assert.match(epure, /\.brand-mark \{[\s\S]*?background: var\(--ep-gradient\);/);
 });
 
 test('le focus clavier reste visible et les animations respectent la réduction des mouvements', () => {
@@ -214,7 +220,7 @@ test('budget : la répartition par catégorie part de la plus grosse et se cache
     const section = { hidden: true, innerHTML: '' };
     const run = (totals, total) => vm.runInNewContext(`${appSource.slice(start, end)}\nrenderBudgetBreakdown(totals, total, 'EUR');`, {
         totals, total, document: { getElementById: () => section },
-        budgetCategoryTiles: { Transport: 'blue', Hébergement: 'lavender', Autre: 'gray' },
+        BUDGET_CHART_COLORS: { Transport: '#3F6CE0', Hébergement: '#6352E0', Autre: '#B7C2D9' },
         esc: value => String(value), formatCurrency: value => `${value} €`
     });
     run({ Transport: 300, Hébergement: 700 }, 1000);
@@ -235,4 +241,142 @@ test('connexion : trois lignes expliquent à quoi sert GetReady', () => {
 test('sur iPhone, la barre du haut passe sous l’heure et la Dynamic Island, pas dessous', () => {
     assert.match(html, /viewport-fit=cover/);
     assert.match(epure, /\.app-topbar \{\s*min-height: calc\(56px \+ env\(safe-area-inset-top, 0px\)\);\s*padding-top: calc\(8px \+ env\(safe-area-inset-top, 0px\)\);/);
+});
+
+test('bibliothèque de composants : un rendu unique pour boutons, segmentés, interrupteur, badges et tuiles', () => {
+    assert.match(epure, /:is\(\.ep-btn-primary, \.btn-modal\.save, \.hero-primary-cta,[\s\S]*?background: var\(--ep-gradient\);/);
+    assert.match(epure, /:is\(\.ep-btn-secondary, \.btn-modal\.cancel,[\s\S]*?border: 1px solid var\(--ep-line-strong\);/);
+    assert.match(epure, /:is\(\.ep-segmented, #page-settings \.settings-color-mode, \.prep-filter-bar\) \{/);
+    assert.match(epure, /\.ep-switch input:checked \+ \.ep-switch-track \{ background: var\(--ep-accent\); \}/);
+    assert.match(epure, /:is\(\.ep-badge\.is-success, \.billet-status-badge\.is-confirme\)/);
+    assert.match(epure, /#checklist-progress-bar, \.prep-category-meter i\) \{[^}]*background: var\(--ep-progress\);/);
+    assert.match(force, /\.prep-filter-btn\.is-active \{ color: #FFFFFF !important; background: var\(--ep-accent\) !important;/);
+    assert.match(force, /:is\(\.ep-tile, \.stat-icon,[\s\S]*?\) \{\s*color: var\(--ep-tile-fg\) !important;\s*background: var\(--ep-tile-bg\) !important;/);
+    assert.match(force, /\.nav-item\.active \{ color: var\(--ep-accent-text\) !important; background: var\(--ep-accent-soft\) !important;/);
+});
+
+test('accueil : carte photo violette avec badge J-, puces séparées et chiffres réunis', () => {
+    assert.match(html, /<span class="hero-countdown-badge" id="hero-countdown-badge" role="img" hidden><\/span>/);
+    assert.match(appSource, /countdownBadge = `J-\$\{joursAvantDepart\}`;/);
+    assert.match(appSource, /countdownBadgeElement\.hidden = !countdownBadge;/);
+    assert.match(appSource, /tripContextParts\.map\(part => `<span>\$\{esc\(part\)\}<\/span>`\)\.join\(''\)/);
+    assert.match(appSource, /heroOrbit\.style\.backgroundImage = `var\(--ep-gradient-photo\),url\("\$\{background\.image\}"\)`;/);
+    assert.match(epure, /#page-accueil \.hero-orbit \{\s*grid-column: 1 \/ -1;\s*grid-row: 1 \/ 5;/);
+    assert.match(epure, /#page-accueil \.dashboard-stats \{\s*gap: 1px;/);
+    assert.match(force, /#page-accueil \.dashboard-stat :is\(\.stat-icon, \.stat-arrow, \.dashboard-stat-detail\) \{ display: none !important; \}/);
+});
+
+test('itinéraire : étapes en onglets, titre complet de la journée et frise des activités', () => {
+    const start = appSource.indexOf('function shortItineraryRange(');
+    const end = appSource.indexOf('\nfunction renderProgramme(', start);
+    const range = vm.runInNewContext(`${appSource.slice(start, end)}\n[shortItineraryRange('23 déc.', '25 déc.'), shortItineraryRange('30 déc.', '2 janv.'), shortItineraryRange('28 déc.', '28 déc.'), shortItineraryRange('', '')]`);
+    assert.deepEqual([...range], ['23 – 25 déc.', '30 déc. – 2 janv.', '28 déc.', 'Dates à choisir']);
+    assert.match(appSource, /id="itinerary-city-choice" role="group" aria-label="Étapes du voyage"/);
+    assert.doesNotMatch(appSource, /itinerary-route-hint/);
+    assert.match(appSource, /<h3>\$\{esc\(itineraryFullDate\(selectedDate\)\)\}<\/h3><p class="itinerary-plan-stay">/);
+    assert.match(appSource, /<span class="itinerary-activity-dot" aria-hidden="true"><\/span>/);
+    assert.match(force, /\.itinerary-city-slide\.is-active \.itinerary-city-card \{ color: #FFFFFF !important; background: var\(--ep-gradient\) !important;/);
+    assert.match(force, /\.itinerary-date-card\.is-selected \{ color: #FFFFFF !important;[^}]*background: var\(--ep-gradient\) !important;/);
+});
+
+test('préparatifs : grand pourcentage, listes en pastilles et filtre violet aussi en mode sombre', () => {
+    assert.match(html, /<strong id="checklist-progress-percent">0 %<\/strong>/);
+    assert.match(appSource, /percent\.textContent = `\$\{percentage\} %`;/);
+    assert.match(epure, /grid-template-areas: "pct count" "track track" "hint hint";/);
+    assert.match(force, /\.checklist-selector-btn\.active \{ color: #FFFFFF !important; border-color: transparent !important; background: var\(--ep-gradient\) !important;/);
+    assert.doesNotMatch(force, /\[data-color-mode="dark"\] \.prep-filter-btn\.is-active \{ background: var\(--ep-surface-2\)/);
+});
+
+test('budget : Prévu, Dépensé, Restant et anneau de répartition', () => {
+    assert.match(html, /id="budget-total-planned">0 €<\/div>\s*<div class="budget-stat-label">Prévu<\/div>/);
+    assert.match(html, /id="budget-total-paid">0 €<\/div>\s*<div class="budget-stat-label">Dépensé<\/div>/);
+    assert.match(html, /<div class="budget-stat is-remaining">/);
+    const start = appSource.indexOf('function renderBudgetBreakdown(');
+    const end = appSource.indexOf('\nfunction budgetExpenseMatchesFilters(', start);
+    const section = { hidden: true, innerHTML: '' };
+    vm.runInNewContext(`${appSource.slice(start, end)}\nrenderBudgetBreakdown({ Transport: 250, Hébergement: 750 }, 1000, 'EUR');`, {
+        document: { getElementById: () => section }, BUDGET_CHART_COLORS: { Transport: '#3F6CE0', Hébergement: '#6352E0', Autre: '#B7C2D9' },
+        esc: value => String(value), formatCurrency: value => `${value} €`, Math
+    });
+    assert.equal((section.innerHTML.match(/<circle [^>]*stroke="#/g) || []).length, 2);
+    assert.match(section.innerHTML, /<span class="budget-donut-center" aria-hidden="true"><strong>1000 €<\/strong><small>Prévu<\/small><\/span>/);
+    assert.match(section.innerHTML, /class="budget-donut" role="img" aria-label="Répartition du budget : Hébergement 75 %, Transport 25 %"/);
+});
+
+test('carnet : onglets Réservations / Vols / Infos utiles, vols et transports déplacés de l’accueil', () => {
+    assert.match(html, /<div id="page-infos" class="page" data-notebook-tab="reservations">/);
+    for (const tab of ['reservations', 'vols', 'infos']) assert.match(html, new RegExp(`data-notebook-choice="${tab}" data-action="switchNotebookTab"`));
+    assert.doesNotMatch(html, /dashboard-travel-details/);
+    assert.match(html, /<section class="notebook-travel" data-notebook-panel="vols"[\s\S]*?id="vols-list"[\s\S]*?id="transports-list"/);
+    assert.match(appSource, /trajet: \{ tab: 'infos', notebook: 'vols', open: \(\) => openModal\('modal-choose-type'\) \}/);
+    const start = appSource.indexOf('const NOTEBOOK_TABS');
+    const end = appSource.indexOf('\nfunction editTripFromSwitcher(', start);
+    const page = { dataset: {} };
+    const buttons = ['reservations', 'vols', 'infos'].map(choice => ({ dataset: { notebookChoice: choice }, pressed: null, setAttribute(_, value) { this.pressed = value; } }));
+    vm.runInNewContext(`${appSource.slice(start, end)}\nswitchNotebookTab('vols'); switchNotebookTab('inconnu');`, {
+        document: { getElementById: () => page, querySelectorAll: () => buttons }
+    });
+    assert.equal(page.dataset.notebookTab, 'reservations');
+    assert.deepEqual(buttons.map(button => button.pressed), ['true', 'false', 'false']);
+});
+
+test('réglages : interrupteur iOS « Animations » branché sur la préférence de mouvement', () => {
+    assert.match(html, /<label class="ep-switch"><input type="checkbox" role="switch" id="settings-motion-switch"[^>]*data-action="toggleMotionPreference" data-action-event="change" data-action-target/);
+    assert.doesNotMatch(html, /data-motion-choice=/);
+    const start = appSource.indexOf('function toggleMotionPreference(');
+    const end = appSource.indexOf('\nfunction resetAppearance(', start);
+    const calls = [];
+    vm.runInNewContext(`${appSource.slice(start, end)}\ntoggleMotionPreference({ checked: false }); toggleMotionPreference({ checked: true });`, { setMotionPreference: mode => calls.push(mode) });
+    assert.deepEqual(calls, ['reduced', 'system']);
+    assert.match(appSource, /if \(motionSwitch\) motionSwitch\.checked = motion !== 'reduced';/);
+    assert.match(force, /#page-settings \.settings-color-mode button\[aria-pressed="true"\] \{ background: var\(--ep-accent\) !important;/);
+});
+
+test('connexion : carte photo + formulaire, titre « Bon voyage avec GetReady », carte jamais coupée en haut', () => {
+    const syncSource = readFileSync(new URL('../js/firebase-sync.js', import.meta.url), 'utf8');
+    assert.match(html, /<div class="auth-gate-visual" aria-hidden="true"><\/div>\s*<div class="auth-gate-content">/);
+    assert.match(html, /<h1 id="auth-gate-title">Bon voyage avec GetReady<\/h1>/);
+    assert.equal((syncSource.match(/'Bon voyage avec GetReady'/g) || []).length, 2);
+    assert.doesNotMatch(syncSource, /Connecte-toi à GetReady/);
+    assert.match(html, /<p class="auth-gate-or"><span>ou<\/span><\/p>/);
+    assert.match(epure, /url\("\.\.\/images\/fuji-sakura\.webp"\)/);
+    assert.match(force, /\.auth-gate \{ align-items: start !important; \}\s*\.auth-gate-card \{ margin-block: auto !important; \}/);
+});
+
+test('fenêtres : une croix « Fermer » par fenêtre, placée après les champs, et plus de bouton rond en doublon', () => {
+    const start = appSource.indexOf('function addModalCloseButtons(');
+    const end = appSource.indexOf('\nif (typeof document', start);
+    const appended = [];
+    const makeContent = hasClose => ({ querySelector: () => (hasClose ? {} : null), append: node => appended.push(node) });
+    const modals = [
+        { id: 'modal-budget', querySelector: () => makeContent(false) },
+        { id: 'modal-itinerary-editor', querySelector: () => makeContent(true) }
+    ];
+    const created = [];
+    vm.runInNewContext(`${appSource.slice(start, end)}\naddModalCloseButtons(root);`, {
+        root: { querySelectorAll: () => modals },
+        document: { createElement: () => { const el = { dataset: {}, attributes: {}, setAttribute(k, v) { this.attributes[k] = v; } }; created.push(el); return el; } },
+        JSON
+    });
+    assert.equal(appended.length, 1);
+    assert.equal(appended[0].className, 'modal-close');
+    assert.equal(appended[0].dataset.action, 'closeModal');
+    assert.equal(appended[0].dataset.actionArgs, '["modal-budget"]');
+    assert.equal(appended[0].attributes['aria-label'], 'Fermer');
+    assert.match(force, /\.btn-add-float \{ display: none !important; \}/);
+    assert.match(force, /\.btn-modal\.cancel \{ color: var\(--ep-ink\) !important; background: transparent !important;/);
+});
+
+test('réglages réorganisés : Compte, Partager le séjour, Affichage, Copie de secours ; la photo dans « Modifier le séjour »', () => {
+    const syncSource = readFileSync(new URL('../js/firebase-sync.js', import.meta.url), 'utf8');
+    assert.match(syncSource, /<h2 id="firebase-account-title">Compte<\/h2>/);
+    assert.doesNotMatch(syncSource, /Retrouve ton séjour partout|Connecte-toi pour retrouver ton séjour sur tes appareils/);
+    assert.match(syncSource, /sharePanel\.id = 'firebase-share-panel';[\s\S]*?if \(shareTools\) sharePanel\.append\(shareTools\);\s*panel\.after\(sharePanel\);/);
+    assert.doesNotMatch(html, /settings-background-title/);
+    const editTrip = html.slice(html.indexOf('<div class="modal" id="modal-edit-trip"'), html.indexOf('<div class="modal" id="modal-vol"'));
+    assert.match(editTrip, /<h3 id="trip-modal-heading">Modifier le séjour<\/h3>/);
+    assert.equal((editTrip.match(/data-action="setTravelBackground"/g) || []).length, 5);
+    assert.match(html, /<details class="settings-backup-details">[\s\S]*?<h2 id="trip-backup-title">Copie de secours<\/h2>/);
+    assert.doesNotMatch(html, /Sans compte connecté, ton séjour reste sur cet appareil/);
+    assert.match(epure, /#page-settings \.settings-account-panel \{ order: 1; \}\s*#page-settings \.settings-share-panel \{ order: 2; \}/);
 });

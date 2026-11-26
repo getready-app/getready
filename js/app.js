@@ -807,7 +807,8 @@ function getAutomaticTravelBackground() {
 
 function applyAppearancePreferences() {
     const preferences = appData.preferences || {};
-    const theme = ['sun', 'ocean', 'lavender'].includes(preferences.theme) ? preferences.theme : 'sun';
+    // Identité violette unique : l'ancien choix de palette n'est plus proposé.
+    const theme = 'sun';
     // « auto » suit le thème clair/sombre du système ; c'est le choix par défaut.
     const colorPreference = ['light', 'dark', 'auto'].includes(preferences.colorMode) ? preferences.colorMode : 'auto';
     const systemPrefersDark = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -827,7 +828,7 @@ function applyAppearancePreferences() {
     const sidebarButton = document.querySelector('.nav-collapse-button');
     if (sidebarButton) sidebarButton.setAttribute('aria-expanded', String(!document.body.classList.contains('sidebar-collapsed')));
     const themeMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeMeta) themeMeta.content = colorMode === 'dark' ? '#000000' : '#f2f2f7';
+    if (themeMeta) themeMeta.content = colorMode === 'dark' ? '#0B0B0F' : '#F5F5FA';
     document.body.classList.toggle('reduce-motion', motion === 'reduced');
     document.body.dataset.travelBackground = backgroundKey;
     // Design épuré : la photo du voyage est montrée seule dans la carte du
@@ -835,7 +836,8 @@ function applyAppearancePreferences() {
     if (hero) hero.style.backgroundImage = 'none';
     const heroOrbit = document.querySelector('.hero-orbit');
     if (heroOrbit && showTravelPhoto) {
-        heroOrbit.style.backgroundImage = `linear-gradient(180deg,rgba(0,0,0,0) 52%,rgba(0,0,0,.42)),url("${background.image}")`;
+        // Voile violet → bleu sur la photo : le titre blanc reste lisible (référence visuelle).
+        heroOrbit.style.backgroundImage = `var(--ep-gradient-photo),url("${background.image}")`;
         heroOrbit.style.backgroundPosition = 'center 65%';
         heroOrbit.style.backgroundSize = 'cover';
     }
@@ -847,11 +849,6 @@ function applyAppearancePreferences() {
     });
     const autoPreview = document.querySelector('[data-background-preview="auto"]');
     if (autoPreview) autoPreview.style.backgroundImage = `linear-gradient(180deg,rgba(26,49,46,.12),rgba(26,49,46,.44)),url("${TRAVEL_BACKGROUNDS[automatic.key].image}")`;
-    document.querySelectorAll('[data-theme-choice]').forEach(button => {
-        const selected = button.dataset.themeChoice === theme;
-        button.classList.toggle('is-selected', selected);
-        button.setAttribute('aria-pressed', String(selected));
-    });
     document.querySelectorAll('[data-color-mode-choice]').forEach(button => {
         const selected = button.dataset.colorModeChoice === colorPreference;
         button.classList.toggle('is-selected', selected);
@@ -859,11 +856,9 @@ function applyAppearancePreferences() {
     });
     const autoDestination = document.getElementById('settings-auto-destination');
     if (autoDestination) autoDestination.textContent = automatic.destination;
-    document.querySelectorAll('[data-motion-choice]').forEach(button => {
-        const selected = button.dataset.motionChoice === motion;
-        button.classList.toggle('is-selected', selected);
-        button.setAttribute('aria-pressed', String(selected));
-    });
+    // Interrupteur « Animations » : allumé = suit l'appareil, éteint = réduites.
+    const motionSwitch = document.getElementById('settings-motion-switch');
+    if (motionSwitch) motionSwitch.checked = motion !== 'reduced';
 }
 
 function setTravelBackground(background) {
@@ -886,13 +881,6 @@ function animateTravelBackgroundChange() {
     void hero.offsetWidth;
     hero.classList.add('is-changing-background');
     window.setTimeout(() => hero.classList.remove('is-changing-background'), 650);
-}
-
-function setVisualTheme(theme) {
-    if (!['sun', 'ocean', 'lavender'].includes(theme)) return;
-    appData.preferences.theme = theme;
-    saveToLocalStorage();
-    applyAppearancePreferences();
 }
 
 function setColorMode(mode) {
@@ -920,8 +908,12 @@ function setMotionPreference(mode) {
     applyAppearancePreferences();
 }
 
+function toggleMotionPreference(input) {
+    setMotionPreference(input?.checked ? 'system' : 'reduced');
+}
+
 function resetAppearance() {
-    appData.preferences = { ...appData.preferences, theme: 'sun', colorMode: 'light', background: 'auto', motion: 'system', reduceMotion: false };
+    appData.preferences = { ...appData.preferences, theme: 'sun', colorMode: 'auto', background: 'auto', motion: 'system', reduceMotion: false };
     saveToLocalStorage();
     applyAppearancePreferences();
 }
@@ -1427,6 +1419,8 @@ function renderDashboardSummary() {
         mainPreparationTrack.setAttribute('aria-busy', String(isLoading));
         mainPreparationTrack.classList.toggle('is-loading', isLoading);
     }
+    const mainPreparationPercent = document.getElementById('dashboard-main-progress-percent');
+    if (mainPreparationPercent) mainPreparationPercent.textContent = !isLoading && preparation.total ? `${preparationPercent} %` : '';
     const mainPreparationBar = document.getElementById('dashboard-main-progress-bar');
     if (mainPreparationBar) mainPreparationBar.style.width = isLoading ? '0%' : `${preparationPercent}%`;
     renderDashboardPriorities();
@@ -1919,6 +1913,7 @@ function switchDashboardTab(tabId, itineraryFocus = null) {
         return;
     }
     if (tabId === 'infos' && ['billets', 'reservations'].includes(itineraryFocus)) {
+        switchNotebookTab('reservations');
         if (itineraryFocus === 'billets') showBilletsToBook();
         requestAnimationFrame(() => requestAnimationFrame(() => {
             const target = document.getElementById('billets-list');
@@ -2023,23 +2018,28 @@ function updateCountdown() {
     let countdownValue = '—';
     let countdownText = 'dates à planifier';
     let countdownLabel = 'CHOISIS LES DATES';
+    let countdownBadge = '';
 
     if (dateDepart && joursAvantDepart > 0) {
         countdownValue = String(joursAvantDepart);
         countdownText = `${joursAvantDepart === 1 ? 'jour' : 'jours'} avant le départ`;
         countdownLabel = 'ON Y EST DANS';
+        countdownBadge = `J-${joursAvantDepart}`;
     } else if (dateDepart && joursAvantDepart === 0) {
         countdownValue = '0';
         countdownText = 'départ aujourd’hui';
         countdownLabel = 'DÉPART AUJOURD’HUI';
+        countdownBadge = 'Jour J';
     } else if (dateDepart && dateFin && joursAvantFin >= 0) {
         countdownValue = String(joursAvantFin);
         countdownText = joursAvantFin === 0 ? 'dernier jour' : `${joursAvantFin === 1 ? 'jour' : 'jours'} restants`;
         countdownLabel = 'SÉJOUR EN COURS';
+        countdownBadge = joursAvantFin === 0 ? 'Dernier jour' : `Encore ${joursAvantFin} j`;
     } else if (dateDepart && dateFin) {
         countdownValue = '✓';
         countdownText = 'séjour terminé';
         countdownLabel = 'BON RETOUR';
+        countdownBadge = 'Terminé';
     } else if (dateDepart) {
         countdownText = 'fin du séjour à préciser';
         countdownLabel = 'DATES À ACTUALISER';
@@ -2050,6 +2050,13 @@ function updateCountdown() {
     document.getElementById('page-accueil')?.classList.toggle('has-no-countdown', !dateDepart);
     document.querySelector('.countdown-text').innerText = countdownText;
     document.querySelector('.hero-countdown-label').innerText = countdownLabel;
+    // Badge « J-29 » posé sur la photo du séjour ; le texte complet reste lu à voix haute.
+    const countdownBadgeElement = document.getElementById('hero-countdown-badge');
+    if (countdownBadgeElement) {
+        countdownBadgeElement.textContent = countdownBadge;
+        countdownBadgeElement.hidden = !countdownBadge;
+        countdownBadgeElement.setAttribute('aria-label', countdownValue === '—' ? countdownText : `${countdownValue} ${countdownText}`);
+    }
 
     const startOpt = { day: 'numeric', month: 'short' };
     const endOpt = { day: 'numeric', month: 'short', year: 'numeric' };
@@ -2072,7 +2079,8 @@ function updateCountdown() {
         .filter(Boolean)).size;
     const tripContextParts = [appData.tripType || 'Séjour', groupDescription];
     if (participantCount) tripContextParts.push(participantCount + ' participant' + (participantCount === 1 ? '' : 's'));
-    document.getElementById('trip-context-label').textContent = tripContextParts.join(' · ');
+    // Une puce par information (type, groupe, participants), comme sur la carte de référence.
+    document.getElementById('trip-context-label').innerHTML = tripContextParts.map(part => `<span>${esc(part)}</span>`).join('');
     const primaryDestination = (appData.programme || []).find(destination => String(destination?.ville || '').trim())?.ville || '';
     const destinationLabel = primaryDestination || 'Destination à ajouter';
     const destinationElement = document.getElementById('dashboard-main-destination');
@@ -3536,6 +3544,14 @@ function saveEditActivite(progId, activiteId) {
     renderDestinationDayBar(progId);
 }
 
+// « 25 déc. » → « Jeudi 25 décembre » (titre de la journée affichée).
+function itineraryFullDate(value) {
+    const parsed = resolveTripDate(value);
+    if (!parsed) return String(value || '');
+    const label = parsed.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    return label.charAt(0).toLocaleUpperCase('fr-FR') + label.slice(1);
+}
+
 // Affiche les dates de la ville choisie puis le planning de la date sélectionnée.
 function renderDestinationDayBar(progId) {
     const container = document.getElementById('itinerary-selected-stage');
@@ -3605,6 +3621,8 @@ function renderDestinationDayBar(progId) {
                 <article class="itinerary-activity">
                     <button type="button" class="itinerary-activity-main" ${actionAttrs('focusItineraryMap', [progId, activity.id])} data-itinerary-map-activity="${esc(activity.id)}" data-itinerary-map-programme="${esc(progId)}" aria-pressed="${isMapFocus}" title="Afficher sur la carte">
                         <time class="itinerary-activity-time">${esc(activity.heure || '—')}</time>
+                        <span class="itinerary-activity-dot" aria-hidden="true"></span>
+                        <span class="itinerary-activity-tile" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span>
                         <span class="itinerary-activity-text">${esc(activity.texte)}</span>
                     </button>
                     ${activityMapUrl ? `<a href="${activityMapUrl}" target="_blank" rel="noopener" class="activity-link-btn" aria-label="${esc(`Ouvrir « ${activity.texte} » dans Google Maps`)}" title="Ouvrir dans Google Maps"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>` : ''}
@@ -3626,7 +3644,7 @@ function renderDestinationDayBar(progId) {
         </div>
     ` : `
         <div class="itinerary-plan-heading">
-            <div><span>PLANNING DE LA JOURNÉE</span><h3>${esc(selectedDate)}</h3></div>
+            <div><h3>${esc(itineraryFullDate(selectedDate))}</h3><p class="itinerary-plan-stay"><i class="fa-solid fa-bed" aria-hidden="true"></i>${esc(prog.hotel || 'Hébergement à choisir')}</p></div>
             ${buildDayDirectionsUrl(selectedDayActivities, prog.ville, selectedRouteMode) ? `<div class="itinerary-route-controls"><label class="itinerary-route-mode-label" for="itinerary-route-mode-${safeId(progId)}"><span>Mode</span><select id="itinerary-route-mode-${safeId(progId)}" class="itinerary-route-mode" ${actionAttrs('changeItineraryRouteMode', [progId], { event: 'change', value: true })}><option value="walking" ${selectedRouteMode === 'walking' ? 'selected' : ''}>À pied</option><option value="driving" ${selectedRouteMode === 'driving' ? 'selected' : ''}>Voiture</option><option value="bicycling" ${selectedRouteMode === 'bicycling' ? 'selected' : ''}>Vélo</option><option value="transit" ${selectedRouteMode === 'transit' ? 'selected' : ''}>Transports</option></select></label><a id="itinerary-day-route-link-${safeId(progId)}" class="itinerary-day-map-link" href="${esc(buildDayDirectionsUrl(selectedDayActivities, prog.ville, selectedRouteMode))}" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-route" aria-hidden="true"></i><span>Voir ${selectedDayActivities.length} lieu${selectedDayActivities.length > 1 ? 'x' : ''} sur la carte</span></a></div>` : ''}
         </div>
     `) : '';
@@ -3638,7 +3656,7 @@ function renderDestinationDayBar(progId) {
     const itineraryMapLabel = focusActivity?.texte || prog.ville || 'cette étape';
     container.innerHTML = `
         <section class="itinerary-day-picker-section" id="itinerary-day-choice">
-            <div class="itinerary-section-title"><div><span>TES DATES</span><h3>Choisis ta journée</h3></div><span class="itinerary-day-total">${jours.length} jour${jours.length === 1 ? '' : 's'}${progMapsUrl ? ` · <a class="itinerary-stage-map-link" href="${progMapsUrl}" target="_blank" rel="noopener" aria-label="${esc(`Ouvrir l’étape ${prog.ville || ''} dans Google Maps`)}">Carte de l’étape</a>` : ''}</span></div>
+            <div class="itinerary-section-title"><div><h3>Choisis ta journée</h3></div><span class="itinerary-day-total">${jours.length} jour${jours.length === 1 ? '' : 's'}${progMapsUrl ? ` · <a class="itinerary-stage-map-link" href="${progMapsUrl}" target="_blank" rel="noopener" aria-label="${esc(`Ouvrir l’étape ${prog.ville || ''} dans Google Maps`)}">Carte de l’étape</a>` : ''}</span></div>
             <div class="itinerary-date-rail" aria-label="Dates de cette étape">${daysHtml}</div>
         </section>
         <section class="itinerary-day-plan">
@@ -3664,6 +3682,17 @@ function renderDestinationDayBar(progId) {
     });
 }
 
+// « 23 déc. » + « 25 déc. » → « 23 – 25 déc. » ; mois différents : « 30 déc. – 2 janv. ».
+function shortItineraryRange(start, end) {
+    const first = String(start || '').trim();
+    const last = String(end || '').trim();
+    if (!first && !last) return 'Dates à choisir';
+    if (!first || !last || first === last) return first || last;
+    const [firstDay, ...firstMonth] = first.split(/\s+/);
+    const [lastDay, ...lastMonth] = last.split(/\s+/);
+    return firstMonth.join(' ') === lastMonth.join(' ') && firstMonth.length ? `${firstDay} – ${lastDay} ${lastMonth.join(' ')}` : `${first} – ${last}`;
+}
+
 function renderProgramme() {
     const list = document.getElementById('programme-list');
     focusInitialItineraryDay();
@@ -3676,32 +3705,27 @@ function renderProgramme() {
 
     const selectedProgramme = programmes.find(prog => prog.id === selectedItineraryProgrammeId) || programmes[0];
     selectedItineraryProgrammeId = selectedProgramme.id;
+    // Étapes en onglets (référence visuelle) : la ville et ses dates ; l'étape
+    // choisie passe en violet. Le nombre de jours et d'activités reste annoncé.
     const cityCards = programmes.map((prog, index) => {
         const active = prog.id === selectedProgramme.id;
-        const dateRange = prog.dateStart === prog.dateEnd ? esc(prog.dateStart || 'Dates à choisir') : `${esc(prog.dateStart || 'Début à choisir')} — ${esc(prog.dateEnd || 'Fin à choisir')}`;
+        const dateRange = shortItineraryRange(prog.dateStart, prog.dateEnd);
+        const dayCount = (prog.jours || []).length;
         const activityCount = (prog.activites || []).length;
+        const summary = `Étape ${index + 1} : ${prog.ville}, ${dateRange} · ${dayCount} jour${dayCount === 1 ? '' : 's'} · ${activityCount} activité${activityCount === 1 ? '' : 's'}`;
         return `
             <article class="itinerary-city-slide${active ? ' is-active' : ''}">
-                <button type="button" class="itinerary-city-card" data-itinerary-destination="${esc(prog.id)}" ${actionAttrs('selectItineraryDestination', [prog.id])} aria-pressed="${active}">
-                    <span class="itinerary-city-kicker"><span class="itinerary-city-index">${String(index + 1).padStart(2, '0')}</span> ÉTAPE</span>
+                <button type="button" class="itinerary-city-card" data-itinerary-destination="${esc(prog.id)}" ${actionAttrs('selectItineraryDestination', [prog.id])} aria-pressed="${active}" aria-label="${esc(summary)}">
                     <strong>${esc(prog.ville)}</strong>
-                    <span class="itinerary-city-dates"><i class="fa-regular fa-calendar" aria-hidden="true"></i>${dateRange}</span>
-                    <span class="itinerary-city-foot"><span><i class="fa-solid fa-bed" aria-hidden="true"></i>${esc(prog.hotel || 'Hébergement à choisir')}</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+                    <span class="itinerary-city-dates">${esc(dateRange)}</span>
                 </button>
-                <div class="itinerary-city-actions">
-                    <span>${(prog.jours || []).length} jour${(prog.jours || []).length === 1 ? '' : 's'} · ${activityCount} activité${activityCount === 1 ? '' : 's'}</span>
-                </div>
             </article>
         `;
     }).join('');
 
     list.innerHTML = `
         <div class="itinerary-planner">
-            <div class="itinerary-route-heading" id="itinerary-city-choice">
-                <div><span>TON VOYAGE</span><h2>Choisis une ville</h2></div>
-            </div>
-            <p class="itinerary-route-hint">← Fais défiler les villes, puis les dates pour ouvrir le planning de ta journée →</p>
-            <div class="itinerary-city-carousel" aria-label="Villes de l’itinéraire">${cityCards}</div>
+            <div class="itinerary-city-carousel" id="itinerary-city-choice" role="group" aria-label="Étapes du voyage">${cityCards}</div>
             <div id="itinerary-selected-stage" class="itinerary-selected-stage"></div>
         </div>
     `;
@@ -3763,7 +3787,7 @@ function updateChecklistProgress() {
         : `${completed} sur ${items.length} éléments terminés`;
 
     if (progress) progress.textContent = checkedText;
-    if (percent) percent.textContent = `${percentage}%`;
+    if (percent) percent.textContent = `${percentage} %`;
     if (bar) bar.style.width = `${percentage}%`;
     if (track) track.setAttribute('aria-valuenow', String(percentage));
     if (caption) {
@@ -3847,7 +3871,7 @@ function renderGeneralChecklist(container) {
             <button type="button" class="prep-category-heading" data-category-label="${esc(category)}" data-action="toggleChecklistCategory" data-action-args='${esc(JSON.stringify([category]))}' data-action-target aria-expanded="${!collapsed}">
                 <span class="prep-category-icon"><i class="fa-solid ${checklistCategoryIcon(category)}" aria-hidden="true"></i></span>
                 <span class="prep-category-name"><strong>${esc(checklistCategoryLabel(category))}</strong><small>${completed} / ${allItems.length} terminés</small></span>
-                <span class="prep-category-meter"><span><i style="width:${percentage}%"></i></span><b>${percentage}%</b></span>
+                <span class="prep-category-meter"><span><i style="width:${percentage}%"></i></span><b>${percentage} %</b></span>
                 <i class="fa-solid fa-chevron-down prep-category-chevron" aria-hidden="true"></i>
             </button>
             <div class="prep-category-items" ${collapsed ? 'hidden' : ''}>${items.map(item => checklistTaskHtml(item)).join('')}
@@ -4025,7 +4049,7 @@ function updateChecklistTaskInPlace(item) {
             const percent = categoryCard.querySelector('.prep-category-meter b');
             if (small) small.textContent = `${completed} / ${items.length} terminés`;
             if (meter) meter.style.width = `${percentage}%`;
-            if (percent) percent.textContent = `${percentage}%`;
+            if (percent) percent.textContent = `${percentage} %`;
         }
     }
     updateChecklistProgress();
@@ -4115,6 +4139,8 @@ function updateBudgetUI() {
 
     syncFilterToggle('budget-filter-toggle', ['category', 'status'].filter(key => currentBudgetFilters[key] !== 'all').length);
     renderBudgetBreakdown(totalsByCategory, total, baseCurrency);
+    const plannedElement = document.getElementById('budget-total-planned');
+    if (plannedElement) plannedElement.innerText = formatCurrency(total, baseCurrency);
     document.getElementById('budget-total-paid').innerText = formatCurrency(paid, baseCurrency);
     document.getElementById('budget-total-remaining').innerText = formatCurrency(total - paid, baseCurrency);
     populateCurrencySelectors();
@@ -4124,7 +4150,17 @@ function updateBudgetUI() {
     renderDashboardSummary();
 }
 
-// « Où part le budget » : une barre empilée et la liste des catégories,
+// Couleurs de l'anneau : famille violet / bleu de l'identité GetReady.
+const BUDGET_CHART_COLORS = {
+    'Hébergement': '#6352E0',
+    'Transport': '#3F6CE0',
+    'Activités & Billets': '#9B7CF2',
+    'Nourriture': '#6FA0F2',
+    'Shopping': '#C3B5FA',
+    'Autre': '#B7C2D9'
+};
+
+// « Où part le budget » : un anneau et la liste des catégories,
 // de la plus grosse à la plus petite (toutes dépenses, filtres ignorés).
 function renderBudgetBreakdown(totalsByCategory, total, baseCurrency) {
     const section = document.getElementById('budget-breakdown');
@@ -4132,17 +4168,34 @@ function renderBudgetBreakdown(totalsByCategory, total, baseCurrency) {
     const rows = Object.entries(totalsByCategory)
         .filter(([, value]) => value > 0)
         .sort((a, b) => b[1] - a[1])
-        .map(([category, value]) => ({ category, value, tile: budgetCategoryTiles[category] || 'gray', percent: total > 0 ? Math.round((value / total) * 100) : 0 }));
+        .map(([category, value]) => ({ category, value, color: BUDGET_CHART_COLORS[category] || BUDGET_CHART_COLORS.Autre, percent: total > 0 ? Math.round((value / total) * 100) : 0 }));
     section.hidden = !(total > 0 && rows.length);
     if (section.hidden) {
         section.innerHTML = '';
         return;
     }
     const summary = rows.map(row => `${row.category} ${row.percent} %`).join(', ');
+    // Anneau : un arc par catégorie, de la plus grosse à la plus petite, en
+    // partant du haut ; un petit espace sépare les arcs. Total prévu au centre.
+    const radius = 48;
+    const circumference = 2 * Math.PI * radius;
+    const gap = rows.length > 1 ? 2 : 0;
+    let offset = 0;
+    const arcs = rows.map(row => {
+        const length = Math.max(row.value / total * circumference - gap, 1.5);
+        const arc = `<circle cx="60" cy="60" r="${radius}" fill="none" stroke="${row.color}" stroke-width="16" stroke-dasharray="${length.toFixed(2)} ${(circumference - length).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"></circle>`;
+        offset += row.value / total * circumference;
+        return arc;
+    }).join('');
     section.innerHTML = `
         <h3 id="budget-breakdown-title">Où part le budget</h3>
-        <div class="budget-breakdown-bar" role="img" aria-label="${esc(`Répartition du budget : ${summary}`)}">${rows.map(row => `<span class="is-${row.tile}" style="width:${Math.max(row.value / total * 100, 1.5).toFixed(2)}%"></span>`).join('')}</div>
-        <ul class="budget-breakdown-list">${rows.map(row => `<li><span class="budget-breakdown-dot is-${row.tile}" aria-hidden="true"></span><span class="budget-breakdown-name">${esc(row.category)}</span><strong>${esc(formatCurrency(row.value, baseCurrency))}</strong><small>${row.percent} %</small></li>`).join('')}</ul>
+        <div class="budget-breakdown-body">
+            <div class="budget-donut" role="img" aria-label="${esc(`Répartition du budget : ${summary}`)}">
+                <svg viewBox="0 0 120 120" aria-hidden="true"><g transform="rotate(-90 60 60)"><circle cx="60" cy="60" r="${radius}" fill="none" class="budget-donut-track" stroke-width="16"></circle>${arcs}</g></svg>
+                <span class="budget-donut-center" aria-hidden="true"><strong>${esc(formatCurrency(total, baseCurrency))}</strong><small>Prévu</small></span>
+            </div>
+            <ul class="budget-breakdown-list">${rows.map(row => `<li><span class="budget-breakdown-dot" style="background:${row.color}" aria-hidden="true"></span><span class="budget-breakdown-name">${esc(row.category)}</span><strong>${esc(formatCurrency(row.value, baseCurrency))}</strong><small>${row.percent} %</small></li>`).join('')}</ul>
+        </div>
     `;
 }
 
@@ -5272,9 +5325,9 @@ const QUICK_ADD_TARGETS = {
     activite: { tab: 'programme', open: () => openItineraryEditor() },
     preparatif: { tab: 'checklist', open: () => openModal('modal-checklist') },
     depense: { tab: 'budget', open: () => openAddBudgetModal() },
-    billet: { tab: 'infos', open: () => openAddBilletModal() },
-    info: { tab: 'infos', open: () => openAddInfoModal() },
-    trajet: { tab: 'accueil', open: () => openModal('modal-choose-type') },
+    billet: { tab: 'infos', notebook: 'reservations', open: () => openAddBilletModal() },
+    info: { tab: 'infos', notebook: 'infos', open: () => openAddInfoModal() },
+    trajet: { tab: 'infos', notebook: 'vols', open: () => openModal('modal-choose-type') },
     sejour: { tab: null, open: () => startNewTrip() }
 };
 
@@ -5283,6 +5336,7 @@ function quickAdd(kind) {
     if (!target) return;
     replaceModal('modal-quick-add', () => {
         if (target.tab) switchDashboardTab(target.tab);
+        if (target.notebook) switchNotebookTab(target.notebook);
         target.open();
     });
 }
@@ -5325,6 +5379,19 @@ function syncFilterToggle(toggleId, activeCount) {
     toggle.classList.toggle('is-active', activeCount > 0);
 }
 
+// Carnet : trois rubriques (réservations, vols et transports, infos utiles)
+// affichées une à la fois, comme les onglets segmentés de la référence.
+const NOTEBOOK_TABS = ['reservations', 'vols', 'infos'];
+
+function switchNotebookTab(tab) {
+    const next = NOTEBOOK_TABS.includes(tab) ? tab : 'reservations';
+    const page = document.getElementById('page-infos');
+    if (page) page.dataset.notebookTab = next;
+    document.querySelectorAll('[data-notebook-choice]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.notebookChoice === next));
+    });
+}
+
 function editTripFromSwitcher() {
     replaceModal('modal-trip-switcher', () => openEditTripModal());
 }
@@ -5336,10 +5403,10 @@ const ACTIONS = {
     swapCurrencies,
     setBudgetBaseCurrency,
     setTravelBackground,
-    setVisualTheme,
     setColorMode,
     toggleSidebar,
     setMotionPreference,
+    toggleMotionPreference,
     resetAppearance,
     syncDateText,
     syncDatePicker,
@@ -5369,6 +5436,7 @@ const ACTIONS = {
     undoLastDelete,
     addChecklistInline,
     addActivityForDay,
+    switchNotebookTab,
     parseVolPasteText,
     searchFlightByNumber,
     selectFlightLookupResult,
@@ -5506,3 +5574,22 @@ document.addEventListener('keydown', event => {
 document.addEventListener('click', event => {
     if (event.target instanceof Element && event.target.classList.contains('modal')) closeModal(event.target.id);
 });
+
+// Fenêtres : une croix « Fermer » en haut à droite de chacune (référence
+// visuelle). Elle est placée en fin de fenêtre dans le code pour que le
+// premier champ reste celui qui reçoit le focus à l'ouverture.
+function addModalCloseButtons(root = document) {
+    root.querySelectorAll('.modal[id]').forEach(modal => {
+        const content = modal.querySelector('.modal-content');
+        if (!content || content.querySelector('.modal-close, .itinerary-editor-close')) return;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'modal-close';
+        button.dataset.action = 'closeModal';
+        button.dataset.actionArgs = JSON.stringify([modal.id]);
+        button.setAttribute('aria-label', 'Fermer');
+        button.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+        content.append(button);
+    });
+}
+if (typeof document !== 'undefined') addModalCloseButtons();

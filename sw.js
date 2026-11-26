@@ -7,14 +7,14 @@
 //    touche pas, laissé au réseau normal.
 // CACHE_VERSION doit être incrémenté à chaque modification de ce fichier pour
 // forcer le nettoyage de l'ancien cache.
-const CACHE_VERSION = 'v151';
+const CACHE_VERSION = 'v164';
 const CACHE_NAME = `cap-commun-cache-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
     './',
     './index.html',
     './manifest.json',
-    './css/app.css?v=14',
+    './css/app.css?v=27',
     './css/styles.css',
     './css/getready-shell.css',
     './css/epure.css',
@@ -24,11 +24,11 @@ const PRECACHE_URLS = [
     './js/flight-api-config.js',
     './js/currency.js',
     './js/pwa.js',
-    './images/cap-commun.svg',
-    './images/getready-maskable.svg',
-    './images/icon-192.png?v=2',
-    './images/icon-512.png?v=2',
-    './images/icon-512-maskable.png?v=2',
+    './images/cap-commun.svg?v=3',
+    './images/getready-maskable.svg?v=3',
+    './images/icon-192.png?v=3',
+    './images/icon-512.png?v=3',
+    './images/icon-512-maskable.png?v=3',
     './images/travel/lisbon.jpg',
     './images/travel/tokyo.jpg',
     './images/travel/coast.jpg',

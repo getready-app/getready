@@ -5,85 +5,110 @@
    progression. Chargé dans la couche « epure » (voir app.css).
    ========================================================================== */
 
-/* ---------- 1. Jetons ---------- */
+/* ---------- 1. Jetons ----------
+   Identité GetReady : fonds blancs lumineux, texte noir profond, violet en
+   accent principal, bleu en secondaire, dégradé violet → bleu pour le logo,
+   les boutons principaux et les sélections. Vert = progression et réussite,
+   orange = à faire, rouge discret = erreur ou suppression.
+   Tous les couples texte/fond respectent le contraste AA (vérifié). */
 :root {
     color-scheme: light;
-    --ep-bg: #F2F2F7;
+    --ep-bg: #F5F5FA;
     --ep-surface: #FFFFFF;
-    --ep-surface-2: #F7F7FA;
+    --ep-surface-2: #F7F7FB;
     --ep-ink: #1D1D1F;
-    --ep-ink-2: #636368;   /* gris secondaire, AA sur fonds clairs et remplis */
-    --ep-ink-3: #6E6E73;   /* gris tertiaire, AA sur le fond de page */
-    --ep-line: rgba(60, 60, 67, .13);
-    --ep-fill: rgba(120, 120, 128, .12);
-    --ep-fill-strong: rgba(120, 120, 128, .2);
-    --ep-bar: rgba(249, 249, 251, .84);
-    --ep-shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 6px 20px rgba(0, 0, 0, .045);
-    --ep-shadow-pop: 0 12px 40px rgba(0, 0, 0, .14);
+    --ep-ink-2: #636368;   /* gris secondaire : 5,5:1 sur le fond */
+    --ep-ink-3: #6E6E73;   /* gris tertiaire : 4,7:1 sur le fond */
+    --ep-line: rgba(60, 60, 90, .11);
+    --ep-fill: rgba(118, 118, 140, .10);
+    --ep-fill-strong: rgba(118, 118, 140, .18);
+    --ep-bar: rgba(250, 250, 253, .84);
+    --ep-shadow: 0 1px 2px rgba(20, 16, 60, .04), 0 8px 24px rgba(20, 16, 60, .06);
+    --ep-shadow-pop: 0 18px 48px rgba(20, 16, 60, .16);
+    --ep-halo:
+        radial-gradient(1100px 520px at -10% -12%, rgba(99, 82, 224, .09), transparent 62%),
+        radial-gradient(900px 480px at 110% -8%, rgba(63, 108, 224, .07), transparent 60%);
 
-    /* Couleur d'accent (palette « Escapade » par défaut) */
-    --ep-accent: #167E76;
-    --ep-accent-text: #146F68;
+    /* Accent violet et secondaire bleu (texte blanc dessus : 4,7 à 5,5:1) */
+    --ep-accent: #6352E0;
+    --ep-accent-text: #5B4BD8;
     --ep-accent-ink: #FFFFFF;
-    --ep-accent-soft: rgba(22, 126, 118, .12);
+    --ep-accent-soft: rgba(99, 82, 224, .10);
+    --ep-accent-2: #3F6CE0;
+    --ep-accent-2-soft: rgba(63, 108, 224, .10);
+    --ep-gradient: linear-gradient(135deg, #6E5BF0 0%, #6352E0 42%, #3F6CE0 100%);
+    /* Voile sur la photo : léger en haut, dense sous le texte blanc. Mesuré sur les 4 photos
+       de destination : titre ≥ 3,9:1 et dates ≥ 5,3:1, même sur un ciel clair. */
+    --ep-gradient-photo: linear-gradient(180deg, rgba(40, 24, 120, .06) 0%, rgba(58, 40, 170, .32) 25%, rgba(50, 36, 156, .62) 50%, rgba(28, 28, 104, .9) 100%);
 
-    /* Tuiles d'icônes : la seule place où plusieurs couleurs cohabitent */
-    --ep-tile-teal: #167E76;
-    --ep-tile-coral: #F08B68;
-    --ep-tile-lavender: #7965BD;
-    --ep-tile-yellow: #E9B85B;
-    --ep-tile-blue: #2F7FC1;
-    --ep-tile-gray: #8E8E93;
+    /* Tuiles d'icônes : violet sur lavande pâle (une seule famille de couleurs) */
+    --ep-tile-bg: var(--ep-accent-soft);
+    --ep-tile-fg: var(--ep-accent-text);
+    /* Teintes pleines restantes (graphiques, anciens composants en cours de migration) */
+    --ep-tile-teal: #6352E0;
+    --ep-tile-lavender: #8A63F2;
+    --ep-tile-blue: #3F6CE0;
+    --ep-tile-coral: #E8708C;
+    --ep-tile-yellow: #E9A23B;
+    --ep-tile-gray: #8E8E99;
     --ep-tile-red: #E5484D;
 
-    --ep-danger: #C9302C;
-    --ep-success: #1E8E5A;
+    --ep-success: #18794E;
+    --ep-success-soft: rgba(24, 121, 78, .12);
+    --ep-progress: linear-gradient(90deg, #3CCB7F 0%, #22A35D 100%);
     --ep-warning-ink: #8A5A00;
+    --ep-warning-soft: rgba(233, 162, 59, .18);
+    --ep-danger: #C9302C;
+    --ep-danger-soft: rgba(201, 48, 44, .10);
 
-    --ep-radius-sm: 10px;
-    --ep-radius: 16px;
-    --ep-radius-lg: 20px;
+    --ep-radius-sm: 12px;
+    --ep-radius: 18px;
+    --ep-radius-lg: 24px;
     --ep-sidebar: 248px;
     --ep-sidebar-collapsed: 76px;
-    --ep-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --ep-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
-:root[data-theme="ocean"] { --ep-accent: #1867AA; --ep-accent-text: #155C99; --ep-accent-soft: rgba(24, 103, 170, .12); }
-:root[data-theme="lavender"] { --ep-accent: #6A52B5; --ep-accent-text: #6A52B5; --ep-accent-soft: rgba(106, 82, 181, .12); }
 
-/* Mode sombre : choisi explicitement, ou suivi du système avant que le JS
-   n'ait posé data-color-mode (évite un flash blanc au chargement). */
+/* Mode sombre : même langage, fonds noirs et anthracite, accents conservés.
+   Choisi explicitement, ou suivi du système avant que le JS n'ait posé
+   data-color-mode (évite un flash blanc au chargement). */
 :root[data-color-mode="dark"] {
     color-scheme: dark;
-    --ep-bg: #000000;
-    --ep-surface: #1C1C1E;
-    --ep-surface-2: #2C2C2E;
+    --ep-bg: #0B0B0F;
+    --ep-surface: #1C1C22;
+    --ep-surface-2: #26262E;
     --ep-ink: #F5F5F7;
-    --ep-ink-2: #A1A1A6;
-    --ep-ink-3: #8E8E93;
-    --ep-line: rgba(84, 84, 88, .55);
-    --ep-fill: rgba(118, 118, 128, .24);
-    --ep-fill-strong: rgba(118, 118, 128, .36);
-    --ep-bar: rgba(22, 22, 24, .82);
-    --ep-shadow: none;
-    --ep-shadow-pop: 0 12px 40px rgba(0, 0, 0, .5);
-    --ep-accent: #3EB1A6;
-    --ep-accent-text: #4CC2B6;   /* texte d'accent éclairci : AA sur fond teinté */
-    --ep-accent-ink: #00201D;
-    --ep-accent-soft: rgba(62, 177, 166, .14);
-    --ep-danger: #FF6B66;
+    --ep-ink-2: #A1A1AA;
+    --ep-ink-3: #8E8E96;
+    --ep-line: rgba(120, 120, 140, .26);
+    --ep-fill: rgba(130, 130, 150, .20);
+    --ep-fill-strong: rgba(130, 130, 150, .32);
+    --ep-bar: rgba(20, 20, 26, .82);
+    --ep-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+    --ep-shadow-pop: 0 18px 48px rgba(0, 0, 0, .55);
+    --ep-halo:
+        radial-gradient(1100px 520px at -10% -12%, rgba(99, 82, 224, .20), transparent 62%),
+        radial-gradient(900px 480px at 110% -8%, rgba(63, 108, 224, .14), transparent 60%);
+    --ep-accent: #6352E0;
+    --ep-accent-text: #A99DFF;   /* violet éclairci pour le texte : 7,2:1 */
+    --ep-accent-ink: #FFFFFF;
+    --ep-accent-soft: rgba(139, 124, 255, .18);
+    --ep-accent-2-soft: rgba(99, 140, 240, .18);
     --ep-success: #4CC38A;
+    --ep-success-soft: rgba(76, 195, 138, .16);
     --ep-warning-ink: #F2C46D;
+    --ep-warning-soft: rgba(242, 196, 109, .16);
+    --ep-danger: #FF6B66;
+    --ep-danger-soft: rgba(255, 107, 102, .14);
 }
-:root[data-color-mode="dark"][data-theme="ocean"] { --ep-accent: #64B0F2; --ep-accent-text: #7ABDF5; --ep-accent-ink: #00213D; --ep-accent-soft: rgba(100, 176, 242, .14); }
-:root[data-color-mode="dark"][data-theme="lavender"] { --ep-accent: #A796E6; --ep-accent-text: #B8AAEE; --ep-accent-ink: #1E1240; --ep-accent-soft: rgba(167, 150, 230, .14); }
 @media (prefers-color-scheme: dark) {
     :root:not([data-color-mode]) {
         color-scheme: dark;
-        --ep-bg: #000000; --ep-surface: #1C1C1E; --ep-surface-2: #2C2C2E;
-        --ep-ink: #F5F5F7; --ep-ink-2: #A1A1A6; --ep-ink-3: #8E8E93;
-        --ep-line: rgba(84, 84, 88, .55); --ep-fill: rgba(118, 118, 128, .24);
-        --ep-bar: rgba(22, 22, 24, .82); --ep-shadow: none;
-        --ep-accent: #3EB1A6; --ep-accent-text: #3EB1A6; --ep-accent-ink: #00201D;
+        --ep-bg: #0B0B0F; --ep-surface: #1C1C22; --ep-surface-2: #26262E;
+        --ep-ink: #F5F5F7; --ep-ink-2: #A1A1AA; --ep-ink-3: #8E8E96;
+        --ep-line: rgba(120, 120, 140, .26); --ep-fill: rgba(130, 130, 150, .20);
+        --ep-bar: rgba(20, 20, 26, .82); --ep-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+        --ep-accent-text: #A99DFF; --ep-accent-soft: rgba(139, 124, 255, .18);
     }
 }
 
@@ -128,6 +153,8 @@
 
 /* ---------- 2. Base ---------- */
 html, body { background: var(--ep-bg); }
+/* Léger halo violet et bleu en haut de l'écran, comme sur la référence. */
+body { background-image: var(--ep-halo); background-repeat: no-repeat; background-attachment: fixed; }
 body {
     color: var(--ep-ink);
     font-family: var(--ep-font);
@@ -137,7 +164,7 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 #main-content, .page, .page:not(#page-accueil), #page-accueil {
-    background: var(--ep-bg);
+    background: transparent;
     background-image: none;
 }
 :focus-visible {
@@ -355,7 +382,7 @@ a { color: var(--ep-accent-text); }
     /* Sur mobile, les icônes restent monochromes comme une barre d'onglets iOS. */
     .nav-item i,
     .nav-item[data-tab] i { width: auto; height: auto; color: inherit; background: none; font-size: 19px; }
-    .nav-item.active { color: var(--ep-accent); background: transparent; }
+    .nav-item.active { color: var(--ep-accent-text); background: transparent; }
     .nav-item .nav-label-wide { display: none; }
     .nav-item .nav-label-compact { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
     body { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
@@ -2387,8 +2414,8 @@ body.reduce-motion * { transition: none; animation: none; }
 #page-settings .settings-panel-description { margin: 2px 0 0; color: var(--ep-ink-2); font-size: 13.5px; }
 
 /* Photo du séjour : vignettes, la sélection est entourée */
-#page-settings .settings-background-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-#page-settings .settings-background-choice {
+:is(#page-settings, #modal-edit-trip) .settings-background-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+:is(#page-settings, #modal-edit-trip) .settings-background-choice {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -2401,7 +2428,7 @@ body.reduce-motion * { transition: none; animation: none; }
     box-shadow: none;
     text-align: left;
 }
-#page-settings .settings-background-art {
+:is(#page-settings, #modal-edit-trip) .settings-background-art {
     position: relative;
     display: block;
     height: 82px;
@@ -2411,8 +2438,8 @@ body.reduce-motion * { transition: none; animation: none; }
     background-size: cover;
     box-shadow: inset 0 0 0 1px var(--ep-line);
 }
-#page-settings .settings-background-choice[aria-pressed="true"] .settings-background-art { box-shadow: 0 0 0 2px var(--ep-surface), 0 0 0 4px var(--ep-accent); }
-#page-settings .settings-auto-pill {
+:is(#page-settings, #modal-edit-trip) .settings-background-choice[aria-pressed="true"] .settings-background-art { box-shadow: 0 0 0 2px var(--ep-surface), 0 0 0 4px var(--ep-accent); }
+:is(#page-settings, #modal-edit-trip) .settings-auto-pill {
     position: absolute;
     left: 6px;
     bottom: 6px;
@@ -2423,45 +2450,13 @@ body.reduce-motion * { transition: none; animation: none; }
     font-size: 11px;
     font-weight: 700;
 }
-#page-settings .settings-choice-copy { display: flex; flex-direction: column; gap: 0; padding: 0 2px; }
-#page-settings .settings-choice-title { color: var(--ep-ink); font-size: 13.5px; font-weight: 600; }
-#page-settings .settings-choice-subtitle { color: var(--ep-ink-2); font-size: 12px; }
-#page-settings .settings-choice-check { position: absolute; top: 6px; right: 6px; color: var(--ep-accent); background: var(--ep-surface); border-radius: 999px; opacity: 0; }
-#page-settings .settings-background-choice[aria-pressed="true"] .settings-choice-check { opacity: 1; }
+:is(#page-settings, #modal-edit-trip) .settings-choice-copy { display: flex; flex-direction: column; gap: 0; padding: 0 2px; }
+:is(#page-settings, #modal-edit-trip) .settings-choice-title { color: var(--ep-ink); font-size: 13.5px; font-weight: 600; }
+:is(#page-settings, #modal-edit-trip) .settings-choice-subtitle { color: var(--ep-ink-2); font-size: 12px; }
+:is(#page-settings, #modal-edit-trip) .settings-choice-check { position: absolute; top: 6px; right: 6px; color: var(--ep-accent-text); background: var(--ep-surface); border-radius: 999px; opacity: 0; }
+:is(#page-settings, #modal-edit-trip) .settings-background-choice[aria-pressed="true"] .settings-choice-check { opacity: 1; }
 
 /* Couleur d'accent : une pastille ronde par palette */
-#page-settings .settings-theme-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-#page-settings .settings-theme-choice {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border: 0;
-    border-radius: 12px;
-    color: var(--ep-ink);
-    background: var(--ep-surface-2);
-    box-shadow: inset 0 0 0 1px var(--ep-line);
-    text-align: left;
-}
-#page-settings .settings-theme-choice[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--ep-accent); }
-#page-settings .theme-preview {
-    flex: none;
-    width: 26px;
-    height: 26px;
-    border: 0;
-    border-radius: 999px;
-    background: #167E76;
-    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .35);
-}
-#page-settings .theme-preview > * { display: none; }
-#page-settings .theme-preview-ocean { background: #1867AA; }
-#page-settings .theme-preview-lavender { background: #6A52B5; }
-#page-settings .theme-choice-copy { display: flex; flex-direction: column; min-width: 0; }
-#page-settings .theme-choice-copy strong { color: var(--ep-ink); font-size: 14px; font-weight: 600; }
-#page-settings .theme-choice-copy small { color: var(--ep-ink-2); font-size: 12px; }
-#page-settings .theme-check { margin-left: auto; color: var(--ep-accent); opacity: 0; }
-#page-settings .settings-theme-choice[aria-pressed="true"] .theme-check { opacity: 1; }
 
 /* Mode d'affichage : contrôle segmenté */
 #page-settings .settings-color-mode {
@@ -2601,10 +2596,9 @@ body.reduce-motion * { transition: none; animation: none; }
     #page-settings .settings-layout { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 600px) {
-    #page-settings .settings-theme-grid { grid-template-columns: minmax(0, 1fr); }
     #page-settings .settings-color-mode { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     #page-settings .settings-color-mode > span { display: none; }
-    #page-settings .settings-background-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    :is(#page-settings, #modal-edit-trip) .settings-background-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 #page-settings .settings-data-panel { display: grid; grid-template-columns: 30px minmax(0, 1fr); column-gap: 12px; row-gap: 4px; align-items: start; }
 #page-settings .settings-data-panel > .settings-panel-icon { grid-row: 1 / span 4; }
@@ -3426,7 +3420,6 @@ body.reduce-motion * { transition: none; animation: none; }
    ========================================================================== */
 #page-settings .settings-motion-row { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
 #page-settings .settings-motion-row > span { color: var(--ep-ink-2); font-size: 13px; font-weight: 500; }
-#page-settings .settings-theme-grid + .settings-color-mode,
 #page-settings .settings-reset-button { margin-top: 14px; }
 /* Sans panneau de compte (aperçu de démonstration), pas de colonne vide. */
 #page-settings .settings-layout:has(.settings-side-column:not(:has(*))) { grid-template-columns: minmax(0, 1fr); }
@@ -3601,3 +3594,769 @@ body.reduce-motion * { transition: none; animation: none; }
     /* Les fenêtres en feuille ne remontent jamais sous la barre d'état. */
     .modal-content { max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 12px); }
 }
+
+/* ==========================================================================
+   32. Identité violette — logo
+   Tuile en dégradé violet → bleu avec un avion blanc incliné vers le haut,
+   partout où la marque apparaît (barre latérale, connexion, icône d'appli).
+   ========================================================================== */
+.brand-mark {
+    display: inline-grid;
+    place-items: center;
+    color: #FFFFFF;
+    background: var(--ep-gradient);
+    box-shadow: 0 6px 16px rgba(99, 82, 224, .28);
+}
+.brand-mark i { transform: rotate(-45deg); }
+.auth-gate-brand .brand-mark { background: var(--ep-gradient); box-shadow: 0 6px 16px rgba(99, 82, 224, .28); }
+
+/* ==========================================================================
+   33. Bibliothèque de composants — identité violette
+   Un composant = un seul rendu, sur toutes les pages. Chaque liste de
+   sélecteurs rattache les éléments existants à leur composant ; les classes
+   .ep-* servent aux nouveaux éléments.
+   États communs : survol, appui, sélectionné, désactivé, chargement, erreur.
+   ========================================================================== */
+:root { --ep-line-strong: rgba(60, 60, 90, .18); --ep-ring: 0 0 0 4px rgba(99, 82, 224, .18); --ep-switch-off: #D1D1D8; }
+:root[data-color-mode="dark"] { --ep-line-strong: rgba(160, 160, 185, .30); --ep-ring: 0 0 0 4px rgba(139, 124, 255, .28); --ep-switch-off: #3A3A44; }
+@media (prefers-color-scheme: dark) {
+    :root:not([data-color-mode]) { --ep-line-strong: rgba(160, 160, 185, .30); --ep-switch-off: #3A3A44; }
+}
+
+/* --- Bouton principal : pilule en dégradé violet → bleu --- */
+:is(.ep-btn-primary, .btn-modal.save, .hero-primary-cta, .budget-header-add, .notebook-directions,
+    .trip-backup-button.primary, #page-accueil .first-trip-step button, .cloud-action-button.is-primary,
+    .app-topbar-add, .nav-new-trip, #programme-list .empty-state button, .prep-empty-state button,
+    .itinerary-editor-add-activity > button, .itinerary-editor-add-row > button, .dashboard-trips-empty-action) {
+    color: #FFFFFF;
+    background: var(--ep-gradient);
+    border: 0;
+    border-radius: 999px;
+    box-shadow: 0 6px 16px rgba(99, 82, 224, .24);
+    font-weight: 600;
+    transition: filter .15s ease, transform .1s ease, box-shadow .15s ease;
+}
+:is(.ep-btn-primary, .btn-modal.save, .hero-primary-cta, .budget-header-add, .notebook-directions,
+    .trip-backup-button.primary, #page-accueil .first-trip-step button, .cloud-action-button.is-primary,
+    .app-topbar-add, .nav-new-trip, #programme-list .empty-state button, .prep-empty-state button,
+    .itinerary-editor-add-activity > button, .itinerary-editor-add-row > button, .dashboard-trips-empty-action):hover:not(:disabled) {
+    filter: brightness(1.07) saturate(1.05);
+    box-shadow: 0 8px 22px rgba(99, 82, 224, .32);
+}
+
+/* --- Bouton secondaire : pilule claire bordée --- */
+:is(.ep-btn-secondary, .btn-modal.cancel, .demo-reset-button, .trip-backup-button.secondary,
+    .cloud-action-button.is-secondary, .budget-export-button, .billet-export-button, .billet-share-button, .list-filter-toggle) {
+    color: var(--ep-ink);
+    background: var(--ep-surface);
+    border: 1px solid var(--ep-line-strong);
+    border-radius: 999px;
+    box-shadow: none;
+    font-weight: 600;
+    transition: background-color .15s ease, transform .1s ease;
+}
+:is(.ep-btn-secondary, .btn-modal.cancel, .demo-reset-button, .trip-backup-button.secondary,
+    .cloud-action-button.is-secondary, .budget-export-button, .billet-export-button, .billet-share-button, .list-filter-toggle):hover:not(:disabled) { background: var(--ep-surface-2); }
+.list-filter-toggle.is-active,
+.list-filter-toggle[aria-expanded="true"] { color: var(--ep-accent-text); background: var(--ep-accent-soft); border-color: transparent; }
+
+/* --- Bouton tonal : action secondaire dans une carte (violet sur lavande) --- */
+:is(.ep-btn-tonal, .dashboard-upcoming-all, .calendar-export-button, .itinerary-day-map-link, .itinerary-add-activity,
+    .budget-people-add-button, .notebook-row-edit, .trip-switcher-edit, .dashboard-calendar-toggle,
+    #expenses-list .budget-filter-empty button, .billet-filter-empty button, .itinerary-editor-add) {
+    color: var(--ep-accent-text);
+    background: var(--ep-accent-soft);
+    border: 0;
+    border-radius: 999px;
+    font-weight: 600;
+    transition: background-color .15s ease, transform .1s ease;
+}
+:is(.ep-btn-tonal, .dashboard-upcoming-all, .calendar-export-button, .itinerary-day-map-link, .itinerary-add-activity,
+    .budget-people-add-button, .notebook-row-edit, .trip-switcher-edit, .dashboard-calendar-toggle,
+    #expenses-list .budget-filter-empty button, .billet-filter-empty button, .itinerary-editor-add):hover:not(:disabled) { background: color-mix(in srgb, var(--ep-accent) 17%, transparent); }
+
+/* --- États communs des boutons --- */
+:is(button, a[class], [role="button"]):active:not(:disabled) { transform: scale(.98); }
+:is(button, [role="button"]):is(:disabled, [aria-disabled="true"]) { opacity: .45; cursor: not-allowed; filter: none; box-shadow: none; transform: none; }
+button[aria-busy="true"] { position: relative; color: transparent !important; pointer-events: none; }
+button[aria-busy="true"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 18px;
+    height: 18px;
+    margin: auto;
+    border: 2px solid currentColor;
+    border-color: rgba(255, 255, 255, .9) rgba(255, 255, 255, .9) transparent transparent;
+    border-radius: 50%;
+    animation: ep-spin .7s linear infinite;
+}
+@keyframes ep-spin { to { transform: rotate(360deg); } }
+
+/* --- Badges de statut --- */
+:is(.ep-badge, .billet-status-badge) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+}
+:is(.ep-badge.is-success, .billet-status-badge.is-confirme) { color: var(--ep-success); background: var(--ep-success-soft); }
+:is(.ep-badge.is-warning, .billet-status-badge.is-a-reserver) { color: var(--ep-warning-ink); background: var(--ep-warning-soft); }
+:is(.ep-badge.is-danger, .billet-status-badge.is-annule) { color: var(--ep-danger); background: var(--ep-danger-soft); text-decoration: none; }
+.ep-badge.is-accent { color: var(--ep-accent-text); background: var(--ep-accent-soft); }
+
+/* --- Barres de progression : piste neutre, remplissage vert --- */
+:is(.ep-progress, #page-accueil .trip-progress-track, .prep-progress-track) { height: 8px; overflow: hidden; border-radius: 999px; background: var(--ep-fill); }
+:is(.ep-progress > span, #dashboard-main-progress-bar, #checklist-progress-bar, .prep-category-meter i) { display: block; height: 100%; border-radius: inherit; background: var(--ep-progress); }
+
+/* --- Case à cocher ronde : violette une fois cochée --- */
+.checkbox-round { border-color: var(--ep-ink-3); transition: background-color .15s ease, border-color .15s ease, transform .1s ease; }
+.checkbox-round:checked,
+:root[data-color-mode="dark"] .checkbox-round:checked {
+    border-color: var(--ep-accent);
+    background: var(--ep-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.4l2.6 2.6L12 5.6' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat;
+}
+
+/* --- Champs de saisie : blancs, bordure fine, anneau violet au focus --- */
+:is(.modal, .auth-gate, #firebase-account-panel, .budget-filter-select, .billet-status-filter, .billet-sort-filter,
+    .currency-tool, .budget-currency-setting, .budget-people-add-row, .notebook-map-card, .prep-day-add-row)
+    :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]):not([type="range"]), select, textarea) {
+    min-height: 44px;
+    border: 1px solid var(--ep-line-strong);
+    border-radius: 12px;
+    color: var(--ep-ink);
+    background-color: var(--ep-surface);
+    box-shadow: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+:is(.modal, .auth-gate, #firebase-account-panel, .budget-filter-select, .billet-status-filter, .billet-sort-filter,
+    .currency-tool, .budget-currency-setting, .budget-people-add-row, .notebook-map-card, .prep-day-add-row)
+    :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus { outline: none; border-color: var(--ep-accent); box-shadow: var(--ep-ring); }
+:is(input, select, textarea)[aria-invalid="true"] { border-color: var(--ep-danger) !important; box-shadow: 0 0 0 4px var(--ep-danger-soft) !important; }
+:is(input, select, textarea):disabled { opacity: .55; cursor: not-allowed; }
+::placeholder { color: var(--ep-ink-3); opacity: 1; }
+
+/* --- Sélecteur segmenté (façon iOS) : l'option choisie passe en violet --- */
+:is(.ep-segmented, #page-settings .settings-color-mode, .prep-filter-bar) {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border: 0;
+    border-radius: 13px;
+    background: var(--ep-fill);
+}
+:is(.ep-segmented, #page-settings .settings-color-mode, .prep-filter-bar) > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    min-height: 36px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 10px;
+    color: var(--ep-ink-2);
+    background: transparent;
+    box-shadow: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: background-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+:is(.ep-segmented, #page-settings .settings-color-mode, .prep-filter-bar) > button:hover:not(:is([aria-pressed="true"], .is-active)) { color: var(--ep-ink); }
+:is(.ep-segmented > button[aria-pressed="true"], .ep-segmented > button.is-active,
+    #page-settings .settings-color-mode button[aria-pressed="true"], .prep-filter-bar .prep-filter-btn.is-active),
+:root[data-color-mode="dark"] :is(#page-settings .settings-color-mode button[aria-pressed="true"], .prep-filter-bar .prep-filter-btn.is-active) {
+    color: #FFFFFF;
+    background: var(--ep-accent);
+    box-shadow: 0 2px 8px rgba(99, 82, 224, .3);
+}
+:is(#page-settings .settings-color-mode button[aria-pressed="true"], .prep-filter-bar .prep-filter-btn.is-active) :is(i, b) { color: inherit; }
+.prep-filter-bar .prep-filter-btn.is-active b { color: rgba(255, 255, 255, .85); }
+/* Le libellé « Mode d'affichage » reste lu par les lecteurs d'écran ; le titre de la section le dit déjà. */
+#page-settings .settings-color-mode > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* --- Interrupteur iOS : violet allumé, gris éteint --- */
+.ep-switch { position: relative; display: inline-flex; flex: none; width: 51px; height: 31px; }
+.ep-switch input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.ep-switch-track { position: relative; width: 100%; height: 100%; border-radius: 999px; background: var(--ep-switch-off); transition: background-color .2s ease; }
+.ep-switch-track::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .2), 0 0 1px rgba(0, 0, 0, .1);
+    transition: transform .22s cubic-bezier(.3, .7, .4, 1);
+}
+.ep-switch input:checked + .ep-switch-track { background: var(--ep-accent); }
+.ep-switch input:checked + .ep-switch-track::after { transform: translateX(20px); }
+.ep-switch input:focus-visible + .ep-switch-track { outline: 3px solid color-mix(in srgb, var(--ep-accent) 55%, transparent); outline-offset: 2px; }
+.ep-switch input:disabled + .ep-switch-track { opacity: .45; }
+.ep-switch input:disabled { cursor: not-allowed; }
+
+/* Réglages : la section « Affichage » commence directement par le mode (l'ancien choix de couleur est retiré). */
+#page-settings .settings-panel:has(#settings-theme-title) .settings-panel-heading { margin-bottom: 4px; }
+#page-settings .settings-panel:has(#settings-theme-title) .settings-color-mode { margin-top: 4px; }
+#page-settings .settings-reset-button > i { color: var(--ep-danger); background: var(--ep-danger-soft); }
+/* Cases et boutons radio natifs (formulaires) : même violet que les composants. */
+input[type="checkbox"]:not(.checkbox-round),
+input[type="radio"] { accent-color: var(--ep-accent); width: 20px; height: 20px; }
+/* Aide de la recherche de vol : posée sur un fond teinté, le gris secondaire
+   y passait juste sous 4,5:1 ; le texte principal reste lisible partout. */
+.flight-lookup-note,
+#flight-lookup-title + p { color: var(--ep-ink); opacity: .82; }
+
+/* ==========================================================================
+   34. Accueil — identité violette
+   - Carte du séjour : la photo de destination occupe le haut de la carte,
+     sous un voile violet → bleu ; titre, dates, lieu et puces en blanc
+     par-dessus ; badge « J-29 » en haut à droite. Dessous : progression
+     des préparatifs (verte) et bouton principal.
+   - Chiffres clés : une seule carte, quatre cases séparées par des filets,
+     le chiffre en gras puis son libellé.
+   ========================================================================== */
+#page-accueil .hero-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(92px, 1fr) auto auto auto auto auto;
+    grid-template-areas: none;
+    gap: 0;
+    padding: 10px 10px 14px;
+    border-radius: var(--ep-radius-lg);
+}
+#page-accueil .hero-copy { display: contents; }
+#page-accueil .hero-eyebrow,
+#page-accueil .hero-countdown,
+#page-accueil .hero-orbit .orbit-city { display: none; }
+#page-accueil .hero-orbit {
+    grid-column: 1 / -1;
+    grid-row: 1 / 5;
+    align-self: stretch;
+    height: auto;
+    min-height: 232px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 18px;
+    background-color: #3B2F9E;
+    background-position: center 60%;
+    background-size: cover;
+}
+#page-accueil :is(.trip-title-container, .trip-primary-location, .trip-context, .hero-countdown-badge) { position: relative; z-index: 1; }
+#page-accueil .trip-title-container { grid-column: 1 / -1; grid-row: 2; margin: 0 18px; padding: 0; border-radius: 8px; }
+#page-accueil .trip-title {
+    max-width: none;
+    color: #FFFFFF;
+    font-size: clamp(24px, 3vw, 30px);
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.1;
+    text-shadow: 0 1px 14px rgba(20, 10, 70, .35);
+}
+#page-accueil .trip-dates { margin-top: 4px; color: rgba(255, 255, 255, .92); font-size: 14.5px; font-weight: 500; text-shadow: 0 1px 10px rgba(20, 10, 70, .35); }
+#page-accueil .trip-primary-location { grid-column: 1 / -1; grid-row: 3; display: flex; align-items: center; gap: 6px; margin: 2px 18px 0; color: rgba(255, 255, 255, .92); font-size: 13.5px; font-weight: 500; }
+#page-accueil .trip-primary-location i { color: rgba(255, 255, 255, .85); }
+#page-accueil .trip-context { grid-column: 1 / -1; grid-row: 4; display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 18px 16px; padding: 0; background: none; }
+#page-accueil .trip-context > span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 0 11px;
+    border-radius: 999px;
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, .2);
+    border: 1px solid rgba(255, 255, 255, .28);
+    font-size: 12.5px;
+    font-weight: 600;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+#page-accueil .hero-countdown-badge {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+    justify-self: end;
+    margin: 14px 14px 0 0;
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: var(--ep-accent-text);
+    background: #FFFFFF;
+    box-shadow: 0 4px 14px rgba(20, 10, 70, .18);
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+}
+:root[data-color-mode="dark"] #page-accueil .hero-countdown-badge { color: #4A3BC4; }
+#page-accueil .hero-countdown-badge[hidden] { display: none; }
+#page-accueil .trip-preparation-progress {
+    grid-column: 1 / -1;
+    grid-row: 5;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 12px;
+    width: auto;
+    margin: 16px 8px 0;
+}
+#page-accueil .trip-preparation-progress > span:first-child { color: var(--ep-ink); font-size: 14px; font-weight: 600; }
+#page-accueil #dashboard-main-progress-percent { color: var(--ep-ink); font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+#page-accueil .trip-preparation-progress .trip-progress-track { grid-column: 1 / -1; width: 100%; }
+#page-accueil .hero-primary-cta { grid-column: 1 / -1; grid-row: 6; justify-self: start; margin: 14px 8px 0; }
+@media (min-width: 861px) {
+    #page-accueil .hero-orbit { min-height: 260px; }
+    #page-accueil .trip-title-container,
+    #page-accueil .trip-primary-location { margin-left: 22px; margin-right: 22px; }
+    #page-accueil .trip-context { margin: 12px 22px 20px; }
+}
+
+/* Chiffres clés : une carte, quatre cases */
+#page-accueil .dashboard-stats {
+    gap: 1px;
+    overflow: hidden;
+    padding: 0;
+    border-radius: var(--ep-radius-lg);
+    background: var(--ep-line);
+    box-shadow: var(--ep-shadow);
+}
+#page-accueil .dashboard-stat {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    min-height: 86px;
+    padding: 14px 10px;
+    border-radius: 0;
+    box-shadow: none;
+    text-align: center;
+}
+#page-accueil .dashboard-stat :is(.stat-icon, .stat-arrow, .dashboard-stat-detail) { display: none; }
+#page-accueil .dashboard-stat .stat-copy { align-items: center; gap: 3px; }
+#page-accueil .dashboard-stat .stat-copy strong { order: -1; color: var(--ep-ink); font-size: 20px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+#page-accueil .dashboard-stat .stat-copy > small:first-child { color: var(--ep-ink-2); font-size: 12.5px; font-weight: 500; }
+
+/* Prochaine journée : titre à gauche, météo en pastille à droite */
+#page-accueil .today-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+#page-accueil .today-card-weather {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: var(--ep-ink);
+    background: var(--ep-accent-soft);
+    font-size: 14px;
+    font-weight: 600;
+}
+#page-accueil .today-card-weather-temp { font-variant-numeric: tabular-nums; }
+
+/* ==========================================================================
+   35. Itinéraire — identité violette
+   - Étapes : onglets dans une barre blanche ; l'étape choisie en dégradé.
+   - Jours : pastilles « Mer. 23 » ; le jour choisi en dégradé.
+   - Journée : titre complet (« Jeudi 25 décembre ») et hébergement.
+   - Activités : frise verticale (heure, puce, tuile, nom) ; l'activité
+     montrée sur la carte est surlignée en lavande.
+   ========================================================================== */
+#page-programme .itinerary-city-carousel {
+    display: flex;
+    gap: 4px;
+    margin: 0 0 14px;
+    padding: 4px;
+    border-radius: 16px;
+    background: var(--ep-surface);
+    box-shadow: var(--ep-shadow);
+    scroll-snap-type: x proximity;
+}
+#page-programme .itinerary-city-slide { flex: 0 0 auto; width: auto; min-width: 108px; gap: 0; }
+#page-programme .itinerary-city-card {
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    min-height: 52px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    text-align: center;
+    transition: background-color .2s ease, color .2s ease;
+}
+#page-programme .itinerary-city-card:hover { background: var(--ep-fill); }
+#page-programme .itinerary-city-card strong { font-size: 14.5px; font-weight: 650; letter-spacing: -.01em; white-space: nowrap; }
+#page-programme .itinerary-city-dates { color: var(--ep-ink-2); font-size: 12px; font-weight: 500; white-space: nowrap; }
+
+#page-programme .itinerary-section-title { align-items: center; margin: 0 0 8px; }
+#page-programme .itinerary-section-title h3 { color: var(--ep-ink-2); font-size: 14px; font-weight: 600; letter-spacing: 0; }
+#page-programme .itinerary-date-rail { gap: 8px; margin: 0; padding: 2px 0 12px; }
+#page-programme .itinerary-date-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    transition: background-color .2s ease, color .2s ease;
+}
+#page-programme .itinerary-date-weekday { color: var(--ep-ink-2); font-size: 13.5px; font-weight: 600; }
+#page-programme .itinerary-date-weekday::after { content: "."; }
+#page-programme .itinerary-date-main { flex-direction: row; }
+#page-programme .itinerary-date-main strong { font-size: 15px; font-weight: 700; letter-spacing: 0; }
+#page-programme .itinerary-date-main span { display: none; }
+#page-programme .itinerary-date-activity-count { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+#page-programme .itinerary-plan-heading { align-items: flex-start; margin: 10px 0 8px; }
+@media (min-width: 861px) { #page-programme .itinerary-plan-heading { align-items: flex-end; } }
+#page-programme .itinerary-plan-heading h3 { color: var(--ep-ink); font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+#page-programme .itinerary-plan-stay { display: flex; align-items: center; gap: 7px; margin: 3px 0 0; color: var(--ep-ink-2); font-size: 13.5px; }
+#page-programme .itinerary-plan-stay i { color: var(--ep-accent-text); font-size: 12px; }
+#page-programme a.itinerary-day-map-link { color: #FFFFFF; background: var(--ep-gradient); box-shadow: 0 4px 12px rgba(99, 82, 224, .24); }
+
+/* Frise des activités */
+#page-programme .itinerary-activity { position: relative; gap: 4px; padding: 0; border: 0; }
+#page-programme .itinerary-activity + .itinerary-activity { border-top: 0; }
+#page-programme .itinerary-activity::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 72px;
+    width: 2px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--ep-accent) 22%, transparent);
+}
+#page-programme .itinerary-activity:first-child::before { top: 50%; }
+#page-programme .itinerary-activity:last-of-type::before { bottom: 50%; }
+#page-programme .itinerary-activity:only-of-type::before { display: none; }
+#page-programme .itinerary-activity-main {
+    display: grid;
+    grid-template-columns: 48px 14px 36px minmax(0, 1fr);
+    align-items: center;
+    gap: 0 12px;
+    min-height: 60px;
+    padding: 8px 10px 8px 6px;
+    border-radius: 14px;
+}
+#page-programme .itinerary-activity-time { min-width: 0; padding: 0; color: var(--ep-ink-2); background: none; font-size: 13.5px; font-weight: 600; text-align: left; }
+#page-programme .itinerary-activity-main[aria-pressed="true"] .itinerary-activity-time { color: var(--ep-accent-text); background: none; }
+#page-programme .itinerary-activity-dot {
+    position: relative;
+    z-index: 1;
+    width: 14px;
+    height: 14px;
+    border: 3px solid var(--ep-accent);
+    border-radius: 50%;
+    background: var(--ep-surface);
+}
+#page-programme .itinerary-activity-main[aria-pressed="true"] .itinerary-activity-dot { background: var(--ep-accent); box-shadow: 0 0 0 4px var(--ep-accent-soft); }
+#page-programme .itinerary-activity-tile {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    color: var(--ep-tile-fg);
+    background: var(--ep-tile-bg);
+    font-size: 15px;
+}
+#page-programme .itinerary-activity-text { color: var(--ep-ink); font-size: 15px; font-weight: 600; line-height: 1.3; }
+#page-programme .itinerary-day-map-preview { border-radius: var(--ep-radius-lg); }
+#page-programme .itinerary-day-map-preview iframe { border-radius: 14px; }
+
+/* ==========================================================================
+   36. Préparatifs — identité violette
+   - Carte d'avancement : grand pourcentage, « 8 sur 11 terminés » à côté,
+     barre verte, puis la phrase d'encouragement.
+   - Listes (« Tout le séjour », villes) : pastilles blanches bordées, la
+     liste ouverte en dégradé.
+   - Groupes repliables : tuile, nom, « 0 / 4 terminés », pourcentage et
+     chevron ; plus de mini-jauge en double avec le pourcentage.
+   ========================================================================== */
+#page-checklist .prep-progress-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "pct count" "track track" "hint hint";
+    align-items: center;
+    gap: 6px 12px;
+    padding: 18px 20px;
+    border-radius: var(--ep-radius-lg);
+}
+#page-checklist .prep-progress-top,
+#page-checklist .prep-progress-bottom { display: contents; }
+#page-checklist #prep-progress-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+#page-checklist #checklist-progress-percent { grid-area: pct; color: var(--ep-ink); font-size: 34px; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+#page-checklist #checklist-progress { grid-area: count; color: var(--ep-ink-2); font-size: 14px; font-weight: 500; }
+#page-checklist .prep-progress-track { grid-area: track; height: 8px; margin: 8px 0 2px; }
+#page-checklist #checklist-progress-caption { grid-area: hint; color: var(--ep-ink-2); font-size: 13px; text-align: left; }
+
+#page-checklist .checklist-selector-btn { border-radius: 999px; transition: background-color .2s ease, color .2s ease; }
+#page-checklist .selector-label { color: var(--ep-ink-2); }
+
+#page-checklist .prep-category { border-radius: var(--ep-radius-lg); box-shadow: var(--ep-shadow); }
+#page-checklist .prep-category-meter > span { display: none; }
+#page-checklist .prep-category-meter b { color: var(--ep-ink-2); font-size: 13px; }
+#page-checklist .prep-category-name strong { color: var(--ep-ink); font-size: 16px; font-weight: 650; }
+#page-checklist .prep-category-chevron { color: var(--ep-ink-3); transition: transform .2s ease; }
+#page-checklist .prep-category.is-collapsed .prep-category-chevron { transform: rotate(-90deg); }
+
+/* ==========================================================================
+   37. Budget — identité violette
+   - Prévu / Dépensé / Restant : une carte, trois cases séparées par des
+     filets ; le chiffre en gras puis son libellé ; Restant en vert.
+   - « Où part le budget » : anneau (total prévu au centre) et légende.
+   ========================================================================== */
+#page-budget .budget-summary-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    border-radius: var(--ep-radius-lg);
+    background: var(--ep-line);
+    box-shadow: var(--ep-shadow);
+}
+#page-budget .budget-stat {
+    align-items: center;
+    justify-content: center;
+    min-height: 84px;
+    padding: 14px 8px;
+    border: 0;
+    border-radius: 0;
+    background: var(--ep-surface);
+    box-shadow: none;
+    text-align: center;
+}
+#page-budget .budget-stat-value { order: 1; font-size: clamp(17px, 4.6vw, 22px); font-variant-numeric: tabular-nums; white-space: nowrap; }
+#page-budget .budget-stat-label { order: 2; margin-top: 3px; }
+#page-budget .budget-stat.is-remaining .budget-stat-value { color: var(--ep-success); }
+
+#page-budget .budget-breakdown { border-radius: var(--ep-radius-lg); }
+.budget-breakdown-body { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 24px; }
+.budget-donut { position: relative; flex: none; width: 148px; height: 148px; margin: 0 auto; }
+.budget-donut svg { display: block; width: 100%; height: 100%; }
+.budget-donut-track { stroke: var(--ep-fill); }
+.budget-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    text-align: center;
+}
+.budget-donut-center strong { color: var(--ep-ink); font-size: 16px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.budget-donut-center small { color: var(--ep-ink-2); font-size: 12px; font-weight: 500; }
+.budget-breakdown-body .budget-breakdown-list { flex: 1 1 220px; margin: 0; }
+@media (prefers-reduced-motion: no-preference) {
+    body:not(.reduce-motion) .budget-donut circle:not(.budget-donut-track) { transition: stroke-dasharray .4s ease, stroke-dashoffset .4s ease; }
+}
+
+/* ==========================================================================
+   38. Carnet — identité violette
+   Onglets segmentés Réservations / Vols / Infos utiles : une rubrique à la
+   fois. Les vols et transports, autrefois repliés sur l'accueil, vivent ici.
+   ========================================================================== */
+#page-infos .notebook-tabs { order: 0; margin: 0 0 16px; }
+#page-infos[data-notebook-tab="reservations"] [data-notebook-panel]:not([data-notebook-panel="reservations"]),
+#page-infos[data-notebook-tab="vols"] [data-notebook-panel]:not([data-notebook-panel="vols"]),
+#page-infos[data-notebook-tab="infos"] [data-notebook-panel]:not([data-notebook-panel="infos"]) { display: none !important; }
+#page-infos > .content-container > .notebook-travel { order: 3; display: flex; flex-direction: column; gap: 10px; }
+#page-infos .notebook-travel .notebook-section-title { margin: 6px 0 0; }
+#page-infos .notebook-travel-add { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-top: 6px; padding: 0 16px; font-size: 14.5px; }
+#page-infos :is(#vols-list, #transports-list) { display: flex; flex-direction: column; gap: 10px; }
+#page-infos :is(#vols-list, #transports-list) > p { margin: 0; padding: 16px; border-radius: var(--ep-radius); color: var(--ep-ink-2); background: var(--ep-surface); box-shadow: var(--ep-shadow); }
+#page-infos :is(#vols-list, #transports-list) > .card { margin: 0; border: 0; border-radius: var(--ep-radius-lg); background: var(--ep-surface); box-shadow: var(--ep-shadow); }
+@media (min-width: 861px) {
+    #page-infos > .content-container > .notebook-tabs { order: 0; align-self: flex-start; min-width: 420px; }
+}
+/* Sous les onglets, les titres « Réservations & billets » et « Infos utiles »
+   répéteraient l'onglet choisi : lus par les lecteurs d'écran, masqués à l'écran. */
+#page-infos .notebook-section-title[data-notebook-panel="reservations"],
+#page-infos .notebook-infos-title { position: absolute !important; width: 1px; height: 1px; margin: 0 !important; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+#page-infos #infos-list { margin-top: 0; }
+
+/* ==========================================================================
+   39. Réglages — identité violette
+   Section « Affichage » en lignes façon Réglages iOS : mode d'affichage
+   (segmenté), Animations (interrupteur), Réinitialiser (en rouge).
+   ========================================================================== */
+#page-settings .settings-panel { border-radius: var(--ep-radius-lg); box-shadow: var(--ep-shadow); }
+#page-settings .settings-rows {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-top: 6px;
+    border-radius: 14px;
+    background: var(--ep-surface-2);
+}
+#page-settings .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    width: 100%;
+    min-height: 56px;
+    margin: 0;
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 0;
+    color: var(--ep-ink);
+    background: transparent;
+    box-shadow: none;
+    text-align: left;
+}
+#page-settings .settings-row + .settings-row { border-top: 1px solid var(--ep-line); }
+#page-settings .settings-row-stack { flex-direction: column; align-items: stretch; gap: 10px; padding-top: 12px; padding-bottom: 12px; }
+#page-settings .settings-row-label { color: var(--ep-ink); font-size: 15px; font-weight: 600; }
+#page-settings .settings-row-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+#page-settings .settings-row-copy strong { color: var(--ep-ink); font-size: 15px; font-weight: 600; }
+#page-settings .settings-row-copy small { color: var(--ep-ink-2); font-size: 12.5px; }
+#page-settings .settings-row-stack .settings-color-mode { margin: 0; background: var(--ep-fill); }
+#page-settings .settings-row.settings-reset-button { justify-content: flex-start; margin: 0; cursor: pointer; }
+#page-settings .settings-row.settings-reset-button:hover { background: var(--ep-fill); }
+#page-settings .settings-row.settings-reset-button > i { width: 30px; height: 30px; border-radius: 8px; }
+@media (min-width: 601px) {
+    #page-settings .settings-row-stack { flex-direction: row; align-items: center; }
+    #page-settings .settings-row-stack .settings-color-mode { flex: 0 1 340px; }
+}
+
+/* ==========================================================================
+   40. Connexion — identité violette
+   Carte en deux parties : photo (Fuji et cerisiers) à gauche, formulaire à
+   droite ; sur téléphone, la photo devient un bandeau en haut. Champs avec
+   icône (e-mail, cadenas), « Se connecter » en dégradé, « Mot de passe
+   oublié ? » en lien violet, « Créer un compte » en pilule bordée, puis
+   « ou » et la démo.
+   ========================================================================== */
+.auth-gate-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: min(460px, 100%);
+    padding: 0;
+    overflow: hidden;
+    border-radius: 28px;
+}
+.auth-gate-visual {
+    min-height: 148px;
+    background:
+        linear-gradient(180deg, rgba(40, 24, 120, 0) 45%, rgba(40, 24, 120, .22) 100%),
+        url("../images/fuji-sakura.webp") center 42% / cover no-repeat;
+}
+.auth-gate-content { min-width: 0; padding: 22px 22px 24px; }
+.auth-gate-eyebrow { display: none; }
+#auth-gate-title { margin: 16px 0 6px; font-size: 27px; letter-spacing: -.03em; }
+.auth-gate .auth-gate-benefits { margin: 14px 0 6px; }
+.auth-gate .cloud-auth-form { gap: 8px; margin-top: 16px; }
+.auth-gate .cloud-auth-form label { color: var(--ep-ink-2); font-size: 13px; font-weight: 600; }
+.auth-gate :is(#cloud-auth-email, #cloud-auth-password) {
+    padding-left: 44px;
+    background-repeat: no-repeat;
+    background-position: 14px center;
+    background-size: 18px 18px;
+    font-size: 16px;
+}
+.auth-gate #cloud-auth-email { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238E8E99' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='3'/%3E%3Cpath d='m4 7 8 6 8-6'/%3E%3C/svg%3E"); }
+.auth-gate #cloud-auth-password { padding-right: 48px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238E8E99' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='10' width='14' height='10' rx='2.5'/%3E%3Cpath d='M8 10V7.5a4 4 0 0 1 8 0V10'/%3E%3C/svg%3E"); }
+.auth-gate .cloud-password-toggle { width: 40px; height: 40px; }
+.auth-gate #cloud-auth-submit { order: 20; min-height: 48px; margin-top: 10px; font-size: 15.5px; }
+.auth-gate #cloud-auth-reset,
+.auth-gate #cloud-auth-back { order: 21; align-self: center; min-height: 44px; color: var(--ep-accent-text); font-size: 14px; }
+.auth-gate #cloud-auth-toggle {
+    order: 22;
+    min-height: 46px;
+    border: 1px solid var(--ep-line-strong);
+    border-radius: 999px;
+    color: var(--ep-ink);
+    background: var(--ep-surface);
+    font-size: 15px;
+    font-weight: 600;
+}
+.auth-gate #cloud-auth-toggle:hover { background: var(--ep-surface-2); }
+.auth-gate-or { display: flex; align-items: center; gap: 12px; margin: 18px 0 0; color: var(--ep-ink-3); font-size: 13px; }
+.auth-gate-or::before,
+.auth-gate-or::after { content: ""; flex: 1; height: 1px; background: var(--ep-line); }
+.auth-gate .auth-demo-link { margin-top: 12px; }
+.auth-gate .auth-demo-icon { color: var(--ep-tile-fg); background: var(--ep-tile-bg); }
+@media (min-width: 861px) {
+    .auth-gate-card { grid-template-columns: minmax(0, .92fr) minmax(0, 1fr); width: min(960px, 100%); }
+    .auth-gate-visual { min-height: 100%; }
+    .auth-gate-content { padding: 40px 44px 36px; }
+}
+@media (min-width: 861px) { .auth-gate-content { padding-top: 32px; padding-bottom: 28px; } }
+
+/* ==========================================================================
+   41. Fenêtres d'ajout et de modification — un seul modèle
+   Titre en haut à gauche, croix « Fermer » en haut à droite, libellés
+   courts au-dessus de champs blancs bordés, pied avec « Annuler » discret
+   et l'action principale en dégradé (à droite sur grand écran, pleine
+   largeur sur téléphone). Les fenêtres de choix reprennent les lignes à
+   tuiles violettes de « Que veux-tu ajouter ? ».
+   ========================================================================== */
+.modal-content { position: relative; padding: 22px 22px 20px; border-radius: 24px; }
+.modal-content > h3:first-of-type { padding-right: 48px; }
+.modal-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--ep-ink-2);
+    background: var(--ep-fill);
+    font-size: 15px;
+    cursor: pointer;
+}
+.modal-close:hover { color: var(--ep-ink); background: var(--ep-fill-strong); }
+@media (max-width: 1079px) { .modal-close { width: 44px; height: 44px; top: 12px; right: 12px; } }
+@media (max-width: 600px) { .modal-close { top: 16px; } }
+.modal .input-group > label,
+.modal label:not(:has(input, select, textarea)) { color: var(--ep-ink-2); font-size: 13px; font-weight: 600; }
+.modal-content > .modal-buttons:last-of-type { margin-top: 20px; }
+@media (min-width: 601px) {
+    .modal-content > .modal-buttons:last-of-type { justify-content: flex-end; }
+    .modal-content > .modal-buttons:last-of-type .btn-modal { flex: 0 0 auto; min-width: 124px; }
+}
+#modal-choose-type .modal-buttons:first-of-type .btn-modal i,
+#modal-choose-info-type .modal-buttons:first-of-type .btn-modal i { color: var(--ep-tile-fg); background: var(--ep-tile-bg); }
+
+/* ==========================================================================
+   42. Réglages réorganisés
+   Compte → Partager le séjour → Affichage → Copie de secours (repliée).
+   La photo du séjour vit désormais dans « Modifier le séjour ».
+   ========================================================================== */
+#page-settings .settings-layout { display: flex; flex-direction: column; gap: 14px; max-width: 760px; }
+#page-settings :is(.settings-primary-column, .settings-side-column) { display: contents; }
+#page-settings .settings-account-panel { order: 1; }
+#page-settings .settings-share-panel { order: 2; }
+#page-settings .settings-panel:has(#settings-theme-title) { order: 3; }
+#page-settings .settings-share-panel:has(#cloud-share-tools[hidden]),
+#page-settings .settings-share-panel:not(:has(#cloud-share-tools)) { display: none; }
+#page-settings .settings-backup-card { max-width: 760px; margin-top: 14px; }
+#page-settings .settings-panel-heading p { margin: 2px 0 0; color: var(--ep-ink-2); font-size: 13.5px; }
+#page-settings .settings-account-panel .cloud-account-email { margin: 6px 0 10px; color: var(--ep-ink); font-size: 15px; font-weight: 600; }
+
+/* Copie de secours : repliée, s'ouvre au toucher */
+#page-settings .settings-backup-details > summary { display: flex; align-items: center; gap: 12px; list-style: none; cursor: pointer; }
+#page-settings .settings-backup-details > summary::-webkit-details-marker { display: none; }
+#page-settings .trip-backup-heading { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+#page-settings .trip-backup-summary { color: var(--ep-ink-2); font-size: 13px; }
+#page-settings .settings-backup-chevron { flex: none; color: var(--ep-ink-3); font-size: 13px; transition: transform .2s ease; }
+#page-settings .settings-backup-details[open] .settings-backup-chevron { transform: rotate(180deg); }
+#page-settings .trip-backup-intro { margin: 14px 0 12px; color: var(--ep-ink-2); font-size: 14px; }
+
+/* Photo du séjour dans « Modifier le séjour » : vignettes compactes */
+#modal-edit-trip .trip-photo-label { color: var(--ep-ink-2); font-size: 13px; font-weight: 600; }
+#modal-edit-trip .trip-photo-hint { margin: 0 0 4px; color: var(--ep-ink-2); font-size: 12.5px; }
+#modal-edit-trip .settings-background-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+#modal-edit-trip .settings-background-art { height: 72px; }
+#modal-edit-trip .settings-choice-subtitle { display: none; }
+#modal-edit-trip .settings-choice-title { font-size: 12.5px; }

@@ -65,10 +65,9 @@ function createAccountPanel() {
     panel.setAttribute('aria-labelledby', 'firebase-account-title');
     panel.innerHTML = `
         <div class="settings-panel-heading">
-            <span class="settings-panel-icon"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i></span>
-            <div><span class="settings-kicker">COMPTE & SYNCHRONISATION</span><h2 id="firebase-account-title">Retrouve ton séjour partout</h2></div>
+            <span class="settings-panel-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+            <div><h2 id="firebase-account-title">Compte</h2><p>Ton séjour est enregistré en ligne automatiquement.</p></div>
         </div>
-        <p class="settings-panel-description">Connecte-toi pour retrouver ton séjour sur tes appareils et le partager avec les personnes invitées.</p>
         <p class="cloud-sync-status" id="cloud-sync-status" role="status" aria-live="polite">Connexion au service…</p>
         <form id="cloud-auth-form" class="cloud-auth-form">
             <label for="cloud-auth-email">Adresse e-mail</label>
@@ -115,6 +114,22 @@ function createAccountPanel() {
         </div>
     `;
     sideColumn.prepend(panel);
+
+    // « Partager le séjour » : une section à part, sous le compte. Elle reste
+    // masquée tant que les outils de partage ne sont pas disponibles.
+    const sharePanel = document.createElement('section');
+    sharePanel.id = 'firebase-share-panel';
+    sharePanel.className = 'settings-panel settings-share-panel';
+    sharePanel.setAttribute('aria-labelledby', 'firebase-share-title');
+    sharePanel.innerHTML = `
+        <div class="settings-panel-heading">
+            <span class="settings-panel-icon"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span>
+            <div><h2 id="firebase-share-title">Partager le séjour</h2><p>Invite les personnes qui partent avec toi : elles pourront voir et modifier le séjour.</p></div>
+        </div>
+    `;
+    const shareTools = panel.querySelector('#cloud-share-tools');
+    if (shareTools) sharePanel.append(shareTools);
+    panel.after(sharePanel);
 
     const authForm = panel.querySelector('#cloud-auth-form');
     document.getElementById('auth-gate-form-slot')?.append(authForm);
@@ -173,8 +188,8 @@ function setAuthGate(state, user = null) {
     document.documentElement.classList.add('auth-required');
     if (loading) loading.hidden = state !== 'loading';
     if (form) form.hidden = state !== 'login';
-    if (title) title.textContent = 'Connecte-toi à GetReady';
-    if (description) description.textContent = 'Tes séjours et tes informations sont réservés aux personnes connectées.';
+    if (title) title.textContent = 'Bon voyage avec GetReady';
+    if (description) description.textContent = 'Connecte-toi pour retrouver tes séjours, du premier plan jusqu’au retour.';
     if (email) email.textContent = user?.email || '';
 }
 
@@ -357,12 +372,12 @@ function setAuthMode(nextMode) {
         password.required = !isReset;
         if (isReset) password.value = '';
     }
-    if (title) title.textContent = isSignup ? 'Crée ton compte GetReady' : isReset ? 'Réinitialise ton mot de passe' : 'Connecte-toi à GetReady';
+    if (title) title.textContent = isSignup ? 'Crée ton compte GetReady' : isReset ? 'Réinitialise ton mot de passe' : 'Bon voyage avec GetReady';
     if (description) description.textContent = isSignup
         ? 'Crée ton espace personnel pour retrouver et partager tes séjours.'
         : isReset
             ? 'Saisis l’adresse e-mail de ton compte. Nous t’enverrons un lien pour choisir un nouveau mot de passe.'
-            : 'Tes séjours et tes informations sont réservés aux personnes connectées.';
+            : 'Connecte-toi pour retrouver tes séjours, du premier plan jusqu’au retour.';
     if (form && document.getElementById('auth-gate')?.contains(form)) {
         form.classList.remove('auth-view-transition');
         void form.offsetWidth;

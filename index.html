@@ -8,27 +8,29 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="GetReady">
-    <meta name="theme-color" content="#081116">
+    <meta name="theme-color" content="#F5F5FA">
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="images/icon-192.png?v=2">
-    <link rel="icon" type="image/svg+xml" href="images/cap-commun.svg">
-    <link rel="alternate icon" type="image/png" href="images/icon-192.png?v=2">
+    <link rel="apple-touch-icon" href="images/icon-192.png?v=3">
+    <link rel="icon" type="image/svg+xml" href="images/cap-commun.svg?v=3">
+    <link rel="alternate icon" type="image/png" href="images/icon-192.png?v=3">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="css/app.css?v=14">
+    <link rel="stylesheet" href="css/app.css?v=27">
 </head>
 <body>
 
     <section class="auth-gate" id="auth-gate" aria-labelledby="auth-gate-title">
         <div class="auth-gate-card">
+            <div class="auth-gate-visual" aria-hidden="true"></div>
+            <div class="auth-gate-content">
             <a class="brand-lockup auth-gate-brand" href="#" aria-label="GetReady">
-                <span class="brand-mark"><i class="fa-solid fa-compass-drafting" aria-hidden="true"></i></span>
+                <span class="brand-mark"><i class="fa-solid fa-plane" aria-hidden="true"></i></span>
                 <span class="brand-type">GET<span>READY</span><small>PRÊT·E À PARTIR ?</small></span>
             </a>
             <span class="auth-gate-eyebrow"><i class="fa-solid fa-lock" aria-hidden="true"></i> ESPACE SÉCURISÉ</span>
-            <h1 id="auth-gate-title">Connecte-toi à GetReady</h1>
-            <p class="auth-gate-description">Tes séjours et tes informations sont réservés aux personnes connectées.</p>
+            <h1 id="auth-gate-title">Bon voyage avec GetReady</h1>
+            <p class="auth-gate-description">Connecte-toi pour retrouver tes séjours, du premier plan jusqu’au retour.</p>
             <ul class="auth-gate-benefits" aria-label="Ce que permet GetReady">
                 <li><span class="auth-benefit-icon is-teal" aria-hidden="true"><i class="fa-solid fa-map-location-dot"></i></span>Ton itinéraire jour par jour, sur une carte</li>
                 <li><span class="auth-benefit-icon is-yellow" aria-hidden="true"><i class="fa-solid fa-square-check"></i></span>Tes préparatifs et ton budget au même endroit</li>
@@ -36,12 +38,14 @@
             </ul>
             <div id="auth-gate-loading" class="auth-gate-loading">Préparation de la connexion sécurisée…</div>
             <div id="auth-gate-form-slot"></div>
+            <p class="auth-gate-or"><span>ou</span></p>
             <a class="auth-demo-link" href="?demo=newyork">
                 <span class="auth-demo-icon" aria-hidden="true"><i class="fa-solid fa-compass"></i></span>
                 <span><strong>Découvrir GetReady sans créer de compte</strong><small>Explorer la simulation de Noël à New York pour Mohamed et Mélissa. Budget indicatif, aucune réservation effectuée.</small></span>
                 <i class="fa-solid fa-arrow-right auth-demo-arrow" aria-hidden="true"></i>
             </a>
             <p class="auth-gate-status" id="auth-gate-status" role="status" aria-live="polite"></p>
+            </div>
         </div>
     </section>
 
@@ -68,7 +72,7 @@
             <div class="home-header-content">
                 <div class="dashboard-topline">
                     <a class="brand-lockup" href="#" data-action="switchDashboardTab" data-action-args='["accueil"]' data-action-prevent-default aria-label="GetReady, accueil">
-                        <span class="brand-mark"><i class="fa-solid fa-compass-drafting"></i></span>
+                        <span class="brand-mark"><i class="fa-solid fa-plane" aria-hidden="true"></i></span>
                         <span class="brand-type">GET<span>READY</span><small>PRÊT·E À PARTIR ?</small></span>
                     </a>
                     <div class="dashboard-top-actions">
@@ -89,11 +93,12 @@
                         <div class="trip-primary-location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span id="dashboard-main-destination">Destination à ajouter</span></div>
                         <div class="trip-context" id="trip-context-label">Séjour à organiser</div>
                         <div class="trip-preparation-progress">
-                            <span id="dashboard-main-progress-label">Chargement des préparatifs…</span>
+                            <span id="dashboard-main-progress-label">Chargement des préparatifs…</span><strong id="dashboard-main-progress-percent"></strong>
                             <span class="trip-progress-track" id="dashboard-main-progress" role="progressbar" aria-label="Préparatifs du séjour" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Chargement…"><span id="dashboard-main-progress-bar"></span></span>
                         </div>
                         <button type="button" id="dashboard-primary-action" class="hero-primary-cta" data-action="switchDashboardTab" data-action-args='["programme"]'><span id="dashboard-primary-action-label">Explorer l’itinéraire</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
                     </div>
+                    <span class="hero-countdown-badge" id="hero-countdown-badge" role="img" hidden></span>
                     <div class="hero-countdown">
                             <span class="hero-countdown-label">LE GRAND DÉPART DANS</span>
                         <div class="countdown-container">
@@ -174,18 +179,6 @@
                 <div class="dashboard-section-heading"><div><span class="dashboard-overline">TES VOYAGES</span><h2 id="dashboard-trips-title">Mes séjours</h2></div><span id="dashboard-trips-status" role="status" aria-live="polite">Chargement des séjours…</span></div>
                 <div class="dashboard-trips-grid" id="dashboard-trips-grid" aria-busy="true"></div>
             </section>
-            <details class="dashboard-travel-details">
-                <summary>
-                    <span class="dashboard-travel-details-icon" aria-hidden="true"><i class="fa-solid fa-route"></i></span>
-                    <span class="dashboard-travel-details-copy"><strong>Vols et transports</strong><small>Retrouver les trajets enregistrés pour ce séjour</small></span>
-                    <span class="dashboard-travel-details-label">Afficher les détails</span>
-                    <i class="fa-solid fa-chevron-down dashboard-travel-details-chevron" aria-hidden="true"></i>
-                </summary>
-                <div class="dashboard-section-grid">
-                    <section class="dashboard-panel"><div class="dashboard-panel-heading"><div><span>RÉSERVATIONS</span><h2>Vols</h2></div><i class="fa-solid fa-plane-departure" aria-hidden="true"></i></div><div id="vols-list"></div></section>
-                    <section class="dashboard-panel"><div class="dashboard-panel-heading"><div><span>EN ROUTE</span><h2>Transports</h2></div><i class="fa-solid fa-route" aria-hidden="true"></i></div><div id="transports-list"></div></section>
-                </div>
-            </details>
         </div>
         <button type="button" class="btn-add-float" data-action="openModal" data-action-args='["modal-choose-type"]' aria-label="Ajouter un déplacement"><i class="fa-solid fa-plus"></i></button>
     </div>
@@ -212,7 +205,7 @@
             <div class="prep-header-layout">
                 <div class="prep-heading-copy"><span class="prep-eyebrow"><i class="fa-solid fa-suitcase" aria-hidden="true"></i> LE DÉPART SE PRÉPARE</span><h1>Préparatifs</h1><p>Une petite liste maintenant, l’esprit léger plus tard.</p></div>
                 <section class="prep-progress-card" aria-labelledby="prep-progress-title">
-                    <div class="prep-progress-top"><span id="prep-progress-title">Avancement de la liste</span><strong id="checklist-progress-percent">0%</strong></div>
+                    <div class="prep-progress-top"><span id="prep-progress-title">Avancement de la liste</span><strong id="checklist-progress-percent">0 %</strong></div>
                     <div class="prep-progress-track" role="progressbar" aria-label="Préparatifs terminés" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="checklist-progress-track"><span id="checklist-progress-bar"></span></div>
                     <div class="prep-progress-bottom"><span id="checklist-progress">Les petits préparatifs avant le grand départ</span><span id="checklist-progress-caption" aria-live="polite">On commence quand tu veux ✨</span></div>
                 </section>
@@ -282,10 +275,14 @@
             <h2 class="section-title budget-expenses-title">Dépenses</h2>
             <div class="budget-summary-row">
                 <div class="budget-stat">
-                    <div class="budget-stat-value" id="budget-total-paid">0 €</div>
-                    <div class="budget-stat-label">Payé</div>
+                    <div class="budget-stat-value" id="budget-total-planned">0 €</div>
+                    <div class="budget-stat-label">Prévu</div>
                 </div>
                 <div class="budget-stat">
+                    <div class="budget-stat-value" id="budget-total-paid">0 €</div>
+                    <div class="budget-stat-label">Dépensé</div>
+                </div>
+                <div class="budget-stat is-remaining">
                     <div class="budget-stat-value" id="budget-total-remaining">0 €</div>
                     <div class="budget-stat-label">Restant</div>
                 </div>
@@ -327,13 +324,25 @@
     </div>
 
     <!-- ================= INFOS ================= -->
-    <div id="page-infos" class="page">
+    <div id="page-infos" class="page" data-notebook-tab="reservations">
         <div class="page-header">
             <h1>Carnet pratique</h1>
             <p>Adresses, billets et informations utiles à garder sous la main.</p>
         </div>
         <div class="content-container">
-            <div class="card notebook-map-card">
+            <div class="ep-segmented notebook-tabs" role="group" aria-label="Rubriques du carnet">
+                <button type="button" data-notebook-choice="reservations" data-action="switchNotebookTab" data-action-args='["reservations"]' aria-pressed="true">Réservations</button>
+                <button type="button" data-notebook-choice="vols" data-action="switchNotebookTab" data-action-args='["vols"]' aria-pressed="false">Vols</button>
+                <button type="button" data-notebook-choice="infos" data-action="switchNotebookTab" data-action-args='["infos"]' aria-pressed="false">Infos utiles</button>
+            </div>
+            <section class="notebook-travel" data-notebook-panel="vols" aria-labelledby="notebook-flights-title">
+                <h2 class="section-title notebook-section-title" id="notebook-flights-title">Vols</h2>
+                <div id="vols-list"></div>
+                <h2 class="section-title notebook-section-title">Transports</h2>
+                <div id="transports-list"></div>
+                <button type="button" class="ep-btn-tonal notebook-travel-add" data-action="openModal" data-action-args='["modal-choose-type"]'><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter un vol ou un transport</button>
+            </section>
+            <div class="card notebook-map-card" data-notebook-panel="infos">
                 <div class="card-header-row">
                     <div class="card-title-group">
                         <div class="card-icon notebook-icon"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></div>
@@ -366,13 +375,13 @@
                 </a>
             </div>
 
-            <h2 class="section-title notebook-section-title">Réservations & billets</h2>
-            <div class="billet-export-row">
+            <h2 class="section-title notebook-section-title" data-notebook-panel="reservations">Réservations & billets</h2>
+            <div class="billet-export-row" data-notebook-panel="reservations">
                 <button type="button" class="billet-export-button" data-action="exportBilletsCsv"><i class="fa-solid fa-file-csv" aria-hidden="true"></i> Exporter les réservations en CSV</button>
                 <span id="billet-export-status" role="status" aria-live="polite"></span>
                 <span id="billet-share-status" role="status" aria-live="polite"></span>
             </div>
-            <div class="billet-filter-toolbar" aria-label="Rechercher et filtrer les réservations">
+            <div class="billet-filter-toolbar" data-notebook-panel="reservations" aria-label="Rechercher et filtrer les réservations">
                 <label class="billet-search-field"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="billet-search" placeholder="Rechercher une réservation…" aria-label="Rechercher par billet, adresse ou référence" data-action="updateBilletFilter" data-action-event="input" data-action-target data-billet-filter="query"></label>
                 <button type="button" class="list-filter-toggle" id="billet-filter-toggle" data-action="toggleListFilters" data-action-target aria-expanded="false" aria-controls="billet-filter-options"><i class="fa-solid fa-sliders" aria-hidden="true"></i><span>Filtres</span></button>
                 <div class="list-filter-options" id="billet-filter-options" hidden>
@@ -390,10 +399,10 @@
                 </div>
                 <span id="billet-filter-count" role="status" aria-live="polite"></span>
             </div>
-            <div id="billets-list"></div>
+            <div id="billets-list" data-notebook-panel="reservations"></div>
 
-            <h2 class="section-title notebook-section-title notebook-infos-title">Infos utiles</h2>
-            <div id="infos-list"></div>
+            <h2 class="section-title notebook-section-title notebook-infos-title" data-notebook-panel="infos">Infos utiles</h2>
+            <div id="infos-list" data-notebook-panel="infos"></div>
         </div>
         <button type="button" class="btn-add-float" data-action="openModal" data-action-args='["modal-choose-info-type"]' aria-label="Ajouter une information ou réservation" title="Ajouter une information ou réservation"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
     </div>
@@ -402,47 +411,23 @@
     <div id="page-settings" class="page">
         <header class="settings-hero">
             <div class="settings-hero-inner">
-                <div class="settings-hero-copy"><span class="settings-eyebrow"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> TON ESPACE</span><h1>Réglages</h1><p>Apparence, compte et sauvegardes de ton séjour.</p></div>
+                <div class="settings-hero-copy"><span class="settings-eyebrow"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> TON ESPACE</span><h1>Réglages</h1><p>Ton compte, le partage du séjour et l’affichage.</p></div>
                 <div class="settings-hero-mark" aria-hidden="true"><i class="fa-solid fa-compass"></i><span></span></div>
             </div>
         </header>
         <div class="settings-content">
             <div class="settings-layout">
                 <div class="settings-primary-column">
-                    <section class="settings-panel" aria-labelledby="settings-background-title">
-                        <div class="settings-panel-heading"><span class="settings-panel-icon"><i class="fa-solid fa-panorama" aria-hidden="true"></i></span><div><span class="settings-kicker">PERSONNALISATION</span><h2 id="settings-background-title">Photo du séjour</h2><p>Affichée sur la carte du voyage. En automatique, la destination du vol est utilisée en priorité, puis la première étape.</p></div></div>
-                        <div class="settings-background-grid">
-                            <button type="button" class="settings-background-choice is-auto" data-background="auto" data-action="setTravelBackground" data-action-args='["auto"]' aria-pressed="false">
-                                <span class="settings-background-art art-auto" data-background-preview="auto"><span class="settings-auto-pill"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> AUTO</span></span><span class="settings-choice-copy"><span class="settings-choice-title">Destination du vol</span><span class="settings-choice-subtitle" id="settings-auto-destination">Détection automatique</span></span><i class="fa-solid fa-circle-check settings-choice-check" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="settings-background-choice" data-background="lisbon" data-action="setTravelBackground" data-action-args='["lisbon"]' aria-pressed="false">
-                                <span class="settings-background-art art-lisbon"></span><span class="settings-choice-copy"><span class="settings-choice-title">Lisbonne</span><span class="settings-choice-subtitle">Lumière & tramways</span></span><i class="fa-solid fa-circle-check settings-choice-check" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="settings-background-choice" data-background="tokyo" data-action="setTravelBackground" data-action-args='["tokyo"]' aria-pressed="false">
-                                <span class="settings-background-art art-tokyo"></span><span class="settings-choice-copy"><span class="settings-choice-title">Tokyo</span><span class="settings-choice-subtitle">Sakura & horizons</span></span><i class="fa-solid fa-circle-check settings-choice-check" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="settings-background-choice" data-background="coast" data-action="setTravelBackground" data-action-args='["coast"]' aria-pressed="false">
-                                <span class="settings-background-art art-coast"></span><span class="settings-choice-copy"><span class="settings-choice-title">Côte ensoleillée</span><span class="settings-choice-subtitle">Une échappée en mer</span></span><i class="fa-solid fa-circle-check settings-choice-check" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="settings-background-choice" data-background="journey" data-action="setTravelBackground" data-action-args='["journey"]' aria-pressed="false">
-                                <span class="settings-background-art art-journey"></span><span class="settings-choice-copy"><span class="settings-choice-title">En route</span><span class="settings-choice-subtitle">Pour toutes les envies</span></span><i class="fa-solid fa-circle-check settings-choice-check" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                    </section>
-
                     <section class="settings-panel" aria-labelledby="settings-theme-title">
-                        <div class="settings-panel-heading"><span class="settings-panel-icon"><i class="fa-solid fa-palette" aria-hidden="true"></i></span><div><span class="settings-kicker">APPARENCE</span><h2 id="settings-theme-title">Affichage</h2><p>La couleur d’accent sert aux boutons, à la sélection et à la progression.</p></div></div>
-                        <div class="settings-theme-grid">
-                            <button type="button" class="settings-theme-choice theme-sun" data-theme-choice="sun" data-action="setVisualTheme" data-action-args='["sun"]' aria-pressed="false"><span class="theme-preview theme-preview-sun"><i></i><i></i><i></i><b></b></span><span class="theme-choice-copy"><strong>Escapade</strong><small>Ocean Teal</small></span><i class="fa-solid fa-circle-check theme-check" aria-hidden="true"></i></button>
-                            <button type="button" class="settings-theme-choice theme-ocean" data-theme-choice="ocean" data-action="setVisualTheme" data-action-args='["ocean"]' aria-pressed="false"><span class="theme-preview theme-preview-ocean"><i></i><i></i><i></i><b></b></span><span class="theme-choice-copy"><strong>Grand large</strong><small>Bleu océan</small></span><i class="fa-solid fa-circle-check theme-check" aria-hidden="true"></i></button>
-                            <button type="button" class="settings-theme-choice theme-lavender" data-theme-choice="lavender" data-action="setVisualTheme" data-action-args='["lavender"]' aria-pressed="false"><span class="theme-preview theme-preview-lavender"><i></i><i></i><i></i><b></b></span><span class="theme-choice-copy"><strong>Douceur</strong><small>Lavande</small></span><i class="fa-solid fa-circle-check theme-check" aria-hidden="true"></i></button>
+                        <div class="settings-panel-heading"><span class="settings-panel-icon"><i class="fa-solid fa-palette" aria-hidden="true"></i></span><div><span class="settings-kicker">APPARENCE</span><h2 id="settings-theme-title">Affichage</h2><p>Clair, sombre ou automatique, et le rythme des animations.</p></div></div>
+                        <div class="settings-rows">
+                            <div class="settings-row settings-row-stack"><span class="settings-row-label" aria-hidden="true">Mode d’affichage</span><div class="settings-color-mode" role="group" aria-label="Mode d’affichage"><span>Mode d’affichage</span><button type="button" data-color-mode-choice="auto" data-action="setColorMode" data-action-args='["auto"]' aria-pressed="false"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i> Automatique</button><button type="button" data-color-mode-choice="light" data-action="setColorMode" data-action-args='["light"]' aria-pressed="false"><i class="fa-solid fa-sun" aria-hidden="true"></i> Clair</button><button type="button" data-color-mode-choice="dark" data-action="setColorMode" data-action-args='["dark"]' aria-pressed="false"><i class="fa-solid fa-moon" aria-hidden="true"></i> Sombre</button></div></div>
+                            <div class="settings-row">
+                                <span class="settings-row-copy"><strong id="settings-motion-label">Animations</strong><small id="settings-motion-hint">Activées, elles suivent le réglage de ton appareil.</small></span>
+                                <label class="ep-switch"><input type="checkbox" role="switch" id="settings-motion-switch" aria-labelledby="settings-motion-label" aria-describedby="settings-motion-hint" data-action="toggleMotionPreference" data-action-event="change" data-action-target checked><span class="ep-switch-track" aria-hidden="true"></span></label>
+                            </div>
+                            <button type="button" class="settings-row settings-reset-button" data-action="resetAppearance"><i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i><span><strong>Réinitialiser l’affichage</strong><small>Revenir aux préférences par défaut</small></span></button>
                         </div>
-                        <div class="settings-color-mode" role="group" aria-label="Mode d’affichage"><span>Mode d’affichage</span><button type="button" data-color-mode-choice="auto" data-action="setColorMode" data-action-args='["auto"]' aria-pressed="false"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i> Automatique</button><button type="button" data-color-mode-choice="light" data-action="setColorMode" data-action-args='["light"]' aria-pressed="false"><i class="fa-solid fa-sun" aria-hidden="true"></i> Clair</button><button type="button" data-color-mode-choice="dark" data-action="setColorMode" data-action-args='["dark"]' aria-pressed="false"><i class="fa-solid fa-moon" aria-hidden="true"></i> Sombre</button></div>
-                        <div class="settings-motion-row"><span>Animations</span><div class="settings-motion-options" role="group" aria-label="Préférence d’animation">
-                            <button type="button" data-motion-choice="system" data-action="setMotionPreference" data-action-args='["system"]' aria-pressed="false"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><span><strong>Automatique</strong><small>Suit ton appareil</small></span></button>
-                            <button type="button" data-motion-choice="reduced" data-action="setMotionPreference" data-action-args='["reduced"]' aria-pressed="false"><i class="fa-solid fa-leaf" aria-hidden="true"></i><span><strong>Réduits</strong><small>Interface plus calme</small></span></button>
-                        </div></div>
-                        <button type="button" class="settings-reset-button" data-action="resetAppearance"><i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i><span><strong>Réinitialiser l’affichage</strong><small>Revenir aux préférences par défaut</small></span></button>
                     </section>
                 </div>
 
@@ -455,19 +440,23 @@
                 </aside>
             </div>
             <section class="card trip-backup-card settings-backup-card" id="settings-backups" aria-labelledby="trip-backup-title">
-                <div class="trip-backup-copy">
+                <details class="settings-backup-details">
+                <summary class="trip-backup-copy">
                     <span class="trip-backup-icon"><i class="fa-solid fa-box-archive" aria-hidden="true"></i></span>
-                    <div>
-                        <h2 id="trip-backup-title">Tes données</h2>
-                        <p>Sans compte connecté, ton séjour reste sur cet appareil. Télécharge une copie de sécurité, ou importe une copie pour le retrouver ici.</p>
-                    </div>
-                </div>
+                    <span class="trip-backup-heading">
+                        <h2 id="trip-backup-title">Copie de secours</h2>
+                        <span class="trip-backup-summary">Facultatif : ton séjour est déjà enregistré en ligne.</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down settings-backup-chevron" aria-hidden="true"></i>
+                </summary>
+                <p class="trip-backup-intro">Garde une copie du séjour sur cet appareil (par exemple avant de partir sans réseau), ou importe une copie pour la retrouver ici.</p>
                 <div class="trip-backup-actions">
                     <button type="button" class="trip-backup-button primary" data-action="exportTripBackup"><i class="fa-solid fa-download" aria-hidden="true"></i> Télécharger une copie</button>
                     <input class="trip-backup-file" type="file" id="trip-backup-file" accept=".json,application/json" data-action="importTripBackup" data-action-event="change" data-action-target>
                     <label class="trip-backup-button secondary" for="trip-backup-file"><i class="fa-solid fa-upload" aria-hidden="true"></i> Importer une copie</label>
                 </div>
                 <p class="trip-backup-note">Le fichier contient les détails de ton séjour. Garde-le dans un espace privé.</p>
+                </details>
                 <p class="trip-backup-feedback" id="trip-backup-feedback" role="status" aria-live="polite"></p>
             </section>
             <p class="settings-local-note"><i class="fa-solid fa-lock" aria-hidden="true"></i> Modifications enregistrées automatiquement</p>
@@ -479,7 +468,7 @@
     <!-- ================= NAV BAR ================= -->
     <nav class="nav-bar" aria-label="Navigation principale">
         <a class="nav-brand brand-lockup" href="#" data-action="switchDashboardTab" data-action-args='["accueil"]' data-action-prevent-default aria-label="GetReady, accueil">
-            <span class="brand-mark"><i class="fa-solid fa-compass-drafting" aria-hidden="true"></i></span>
+            <span class="brand-mark"><i class="fa-solid fa-plane" aria-hidden="true"></i></span>
             <span class="brand-type">GET<span>READY</span><small>PRÊT·E À PARTIR ?</small></span>
         </a>
         <button type="button" class="nav-new-trip" data-action="startNewTrip"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Nouveau séjour</span></button>
@@ -534,7 +523,7 @@
     <!-- ================= MODAL DATES DU VOYAGE (MODIFICATION) ================= -->
     <div class="modal" id="modal-edit-trip" role="dialog" aria-modal="true" aria-labelledby="trip-modal-heading">
         <div class="modal-content">
-            <h3 id="trip-modal-heading">Modifier le voyage</h3>
+            <h3 id="trip-modal-heading">Modifier le séjour</h3>
             <div class="input-group">
                 <label>Nom du voyage ou de l'événement</label>
                 <input type="text" id="edit-trip-title">
@@ -568,6 +557,27 @@
             <div class="input-group">
                 <label>Date de retour</label>
                 <input type="date" id="edit-trip-end">
+            </div>
+            <div class="input-group trip-photo-group">
+                <span class="trip-photo-label" id="trip-photo-label">Photo du séjour</span>
+                <p class="trip-photo-hint">Elle illustre la carte du séjour sur l’accueil. En automatique, elle suit la destination.</p>
+                <div class="settings-background-grid" role="group" aria-labelledby="trip-photo-label">
+                    <button type="button" class="settings-background-choice is-auto" data-background="auto" data-action="setTravelBackground" data-action-args='["auto"]' aria-pressed="false">
+                        <span class="settings-background-art art-auto" data-background-preview="auto"><span class="settings-auto-pill"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> AUTO</span></span><span class="settings-choice-copy"><span class="settings-choice-title">Destination du vol</span><span class="settings-choice-subtitle" id="settings-auto-destination">Détection automatique</span></span><i class="fa-solid fa-circle-check settings-choice-check" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="settings-background-choice" data-background="lisbon" data-action="setTravelBackground" data-action-args='["lisbon"]' aria-pressed="false">
+                        <span class="settings-background-art art-lisbon"></span><span class="settings-choice-copy"><span class="settings-choice-title">Lisbonne</span><span class="settings-choice-subtitle">Lumière & tramways</span></span><i class="fa-solid fa-circle-check settings-choice-check" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="settings-background-choice" data-background="tokyo" data-action="setTravelBackground" data-action-args='["tokyo"]' aria-pressed="false">
+                        <span class="settings-background-art art-tokyo"></span><span class="settings-choice-copy"><span class="settings-choice-title">Tokyo</span><span class="settings-choice-subtitle">Sakura & horizons</span></span><i class="fa-solid fa-circle-check settings-choice-check" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="settings-background-choice" data-background="coast" data-action="setTravelBackground" data-action-args='["coast"]' aria-pressed="false">
+                        <span class="settings-background-art art-coast"></span><span class="settings-choice-copy"><span class="settings-choice-title">Côte ensoleillée</span><span class="settings-choice-subtitle">Une échappée en mer</span></span><i class="fa-solid fa-circle-check settings-choice-check" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="settings-background-choice" data-background="journey" data-action="setTravelBackground" data-action-args='["journey"]' aria-pressed="false">
+                        <span class="settings-background-art art-journey"></span><span class="settings-choice-copy"><span class="settings-choice-title">En route</span><span class="settings-choice-subtitle">Pour toutes les envies</span></span><i class="fa-solid fa-circle-check settings-choice-check" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
             <div class="modal-buttons">
                 <button type="button" class="btn-modal cancel" data-action="closeModal" data-action-args='["modal-edit-trip"]'>Annuler</button>
@@ -803,7 +813,7 @@
                 <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["depense"]'><span class="quick-add-icon is-coral" aria-hidden="true"><i class="fa-solid fa-wallet"></i></span><span class="quick-add-copy"><strong>Une dépense</strong><small>Dans le budget</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
                 <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["billet"]'><span class="quick-add-icon is-lavender" aria-hidden="true"><i class="fa-solid fa-ticket"></i></span><span class="quick-add-copy"><strong>Une réservation ou un billet</strong><small>Dans le carnet</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
                 <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["info"]'><span class="quick-add-icon is-blue" aria-hidden="true"><i class="fa-solid fa-circle-info"></i></span><span class="quick-add-copy"><strong>Une info utile</strong><small>Dans le carnet</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
-                <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["trajet"]'><span class="quick-add-icon is-gray" aria-hidden="true"><i class="fa-solid fa-plane"></i></span><span class="quick-add-copy"><strong>Un vol ou un transport</strong><small>Sur l’accueil</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
+                <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["trajet"]'><span class="quick-add-icon is-gray" aria-hidden="true"><i class="fa-solid fa-plane"></i></span><span class="quick-add-copy"><strong>Un vol ou un transport</strong><small>Dans le carnet</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
             </div>
             <div class="quick-add-list">
                 <button type="button" class="quick-add-option" data-action="quickAdd" data-action-args='["sejour"]'><span class="quick-add-icon is-teal" aria-hidden="true"><i class="fa-solid fa-suitcase-rolling"></i></span><span class="quick-add-copy"><strong>Un nouveau séjour</strong><small>Un autre voyage, avec ses propres listes</small></span><i class="fa-solid fa-chevron-right quick-add-chevron" aria-hidden="true"></i></button>
@@ -1135,7 +1145,7 @@
     </div>
 
     <script src="js/flight-api-config.js"></script>
-    <script type="module" src="js/app.js?v=121"></script>
+    <script type="module" src="js/app.js?v=129"></script>
 
     <!-- ================= SERVICE WORKER (hors-ligne) ================= -->
     <script src="js/pwa.js"></script>

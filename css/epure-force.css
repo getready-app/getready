@@ -11,15 +11,15 @@
     .nav-bar {
         border: 0 !important;
         border-right: 1px solid var(--ep-line) !important;
-        background: color-mix(in srgb, var(--ep-bg) 82%, var(--ep-surface)) !important;
+        background: var(--ep-surface) !important;
     }
-    .nav-item { color: var(--ep-ink) !important; background: transparent !important; box-shadow: none !important; }
-    .nav-item:not(.active):hover { background: var(--ep-fill) !important; }
-    .nav-item.active { color: var(--ep-ink) !important; background: var(--ep-fill-strong) !important; }
+    /* Barre latérale : icônes grises sans tuile, entrée active en pastille lavande violette. */
+    .nav-item { color: var(--ep-ink-2) !important; background: transparent !important; box-shadow: none !important; }
+    .nav-item:not(.active):hover { color: var(--ep-ink) !important; background: var(--ep-fill) !important; }
+    .nav-item.active { color: var(--ep-accent-text) !important; background: var(--ep-accent-soft) !important; font-weight: 600 !important; }
     .nav-item i,
-    .nav-item.active i { color: #FFFFFF !important; }
-    .nav-item[data-tab="checklist"] i { color: #3A2A00 !important; }
-    .nav-brand .brand-mark { color: #FFFFFF !important; background: var(--ep-accent) !important; box-shadow: none !important; }
+    .nav-item[data-tab] i { color: inherit !important; background: transparent !important; box-shadow: none !important; }
+    .nav-brand .brand-mark { color: #FFFFFF !important; background: var(--ep-gradient) !important; box-shadow: none !important; }
     .nav-collapse-button { border: 0 !important; color: var(--ep-ink-3) !important; background: transparent !important; }
 }
 @media (max-width: 1079px) {
@@ -31,7 +31,7 @@
     }
     .nav-item,
     .nav-item:hover { color: var(--ep-ink-3) !important; background: transparent !important; box-shadow: none !important; }
-    .nav-item.active { color: var(--ep-accent) !important; background: transparent !important; }
+    .nav-item.active { color: var(--ep-accent-text) !important; background: transparent !important; }
     .nav-item i,
     .nav-item.active i { color: inherit !important; background: none !important; }
 }
@@ -141,22 +141,15 @@
 .page:not(#page-accueil) > .page-header h1::before { display: none !important; content: none !important; }
 .page:not(#page-accueil) > .page-header p,
 #page-checklist > .prep-page-header p { color: var(--ep-ink-2) !important; }
-.btn-add-float { color: var(--ep-accent-ink) !important; background: var(--ep-accent) !important; }
+.btn-add-float { color: #FFFFFF !important; background: var(--ep-gradient) !important; }
 
-/* Itinéraire : la ville et la journée sélectionnées n'ont plus de dégradé. */
-.itinerary-city-card,
-.itinerary-city-slide.is-active .itinerary-city-card {
-    border: 0 !important;
-    color: var(--ep-ink) !important;
-    background: var(--ep-surface) !important;
-}
-.itinerary-city-slide.is-active .itinerary-city-card { box-shadow: var(--ep-shadow), inset 0 0 0 2px var(--ep-accent) !important; }
-.itinerary-city-slide.is-active .itinerary-city-card strong { color: var(--ep-ink) !important; }
-.itinerary-city-slide.is-active .itinerary-city-card :is(.itinerary-city-kicker, .itinerary-city-dates, .itinerary-city-foot, .itinerary-city-foot span, i) { color: var(--ep-ink-2) !important; }
-.itinerary-city-slide.is-active .itinerary-city-index { color: var(--ep-accent-ink) !important; background: var(--ep-accent) !important; }
-.itinerary-date-card { border: 0 !important; background: var(--ep-surface) !important; }
-.itinerary-date-card.is-selected { color: var(--ep-accent-ink) !important; background: var(--ep-accent) !important; box-shadow: none !important; }
-.itinerary-date-card.is-selected :is(span, strong) { color: var(--ep-accent-ink) !important; }
+/* Itinéraire — identité violette : étape et journée choisies en dégradé violet → bleu. */
+.itinerary-city-card { border: 0 !important; color: var(--ep-ink) !important; background: transparent !important; box-shadow: none !important; }
+.itinerary-city-slide.is-active .itinerary-city-card { color: #FFFFFF !important; background: var(--ep-gradient) !important; box-shadow: 0 4px 12px rgba(99, 82, 224, .28) !important; }
+.itinerary-city-slide.is-active .itinerary-city-card :is(strong, .itinerary-city-dates) { color: #FFFFFF !important; }
+.itinerary-date-card { border: 1px solid var(--ep-line) !important; background: var(--ep-surface) !important; box-shadow: none !important; }
+.itinerary-date-card.is-selected { color: #FFFFFF !important; border-color: transparent !important; background: var(--ep-gradient) !important; box-shadow: 0 4px 12px rgba(99, 82, 224, .28) !important; }
+.itinerary-date-card.is-selected :is(span, strong) { color: #FFFFFF !important; }
 .itinerary-selected-place { width: auto !important; max-width: 100% !important; overflow: hidden !important; }
 .itinerary-place-map { position: static !important; margin: 0 !important; flex: none !important; }
 @media (max-width: 600px) {
@@ -181,19 +174,19 @@
 #page-checklist > .prep-page-header .prep-progress-bottom > span:last-child { color: var(--ep-ink-2) !important; }
 #page-checklist > .prep-page-header .prep-progress-top > strong { color: var(--ep-ink) !important; }
 #page-checklist > .prep-page-header .prep-progress-track { background: var(--ep-fill) !important; }
-#page-checklist > .prep-page-header .prep-progress-track > span { background: var(--ep-accent) !important; }
+#page-checklist > .prep-page-header .prep-progress-track > span { background: var(--ep-progress) !important; }
 #page-checklist > .prep-page-header .prep-eyebrow { color: var(--ep-ink-2) !important; }
-#page-checklist .prep-workspace .checklist-selector-btn { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-surface) !important; box-shadow: var(--ep-shadow) !important; }
+#page-checklist .prep-workspace .checklist-selector-btn { border: 1px solid var(--ep-line) !important; color: var(--ep-ink) !important; background: var(--ep-surface) !important; box-shadow: none !important; }
 #page-checklist .prep-workspace .checklist-selector-btn i { color: var(--ep-ink-3) !important; }
 #page-checklist .prep-workspace .checklist-selector-btn small { color: var(--ep-ink-2) !important; background: var(--ep-fill) !important; }
-#page-checklist .prep-workspace .checklist-selector-btn.active { color: var(--ep-accent-ink) !important; background: var(--ep-accent) !important; box-shadow: none !important; }
-#page-checklist .prep-workspace .checklist-selector-btn.active :is(i, small) { color: var(--ep-accent-ink) !important; }
+#page-checklist .prep-workspace .checklist-selector-btn.active { color: #FFFFFF !important; border-color: transparent !important; background: var(--ep-gradient) !important; box-shadow: 0 4px 12px rgba(99, 82, 224, .26) !important; }
+#page-checklist .prep-workspace .checklist-selector-btn.active :is(i, small) { color: #FFFFFF !important; }
 #page-checklist .prep-workspace .checklist-selector-btn.active small { background: rgba(255, 255, 255, .22) !important; }
-.prep-filter-btn { border: 0 !important; color: var(--ep-ink) !important; background: transparent !important; box-shadow: none !important; }
+/* Filtres des préparatifs = sélecteur segmenté : l'option choisie passe en violet. */
+.prep-filter-btn { border: 0 !important; color: var(--ep-ink-2) !important; background: transparent !important; box-shadow: none !important; }
 .prep-filter-btn b { color: var(--ep-ink-2) !important; background: none !important; border: 0 !important; }
-.prep-filter-btn.is-active { background: var(--ep-surface) !important; box-shadow: 0 1px 3px rgba(0, 0, 0, .12) !important; }
-:root[data-color-mode="dark"] .prep-filter-btn.is-active { background: var(--ep-surface-2) !important; }
-.prep-filter-btn.is-active b { color: var(--ep-accent-text) !important; }
+.prep-filter-btn.is-active { color: #FFFFFF !important; background: var(--ep-accent) !important; box-shadow: 0 2px 8px rgba(99, 82, 224, .3) !important; }
+.prep-filter-btn.is-active b { color: rgba(255, 255, 255, .85) !important; }
 .prep-category,
 .prep-day-category { border: 0 !important; background: var(--ep-surface) !important; }
 .prep-category-heading,
@@ -213,7 +206,7 @@
 .expense-paid-pill.paid { color: var(--ep-success) !important; background: color-mix(in srgb, var(--ep-success) 14%, transparent) !important; }
 .swap-currencies,
 html[data-theme] body[data-page="budget"] #page-budget .swap-currencies { color: var(--ep-ink) !important; background: var(--ep-fill) !important; }
-.currency-tool-heading > i { display: inline-grid !important; place-items: center !important; line-height: 1 !important; color: #FFFFFF !important; background: var(--ep-tile-coral) !important; }
+.currency-tool-heading > i { display: inline-grid !important; place-items: center !important; line-height: 1 !important; color: var(--ep-tile-fg) !important; background: var(--ep-tile-bg) !important; }
 
 /* Carnet : anciennes cartes (bordures, ombres, icônes roses). */
 #page-infos .card { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-surface) !important; box-shadow: var(--ep-shadow) !important; }
@@ -234,29 +227,31 @@ html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy h
 #page-settings .settings-hero-copy p,
 html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy p { color: var(--ep-ink-2) !important; font-size: 15px !important; }
 #page-settings .settings-panel,
-#page-settings .settings-backup-card,
-#page-settings .settings-reset-button { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-surface) !important; }
+#page-settings .settings-backup-card { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-surface) !important; }
+#page-settings .settings-reset-button { border: 0 !important; color: var(--ep-ink) !important; background: transparent !important; box-shadow: none !important; }
 #page-settings .settings-content :is(h2, h3, h4) { color: var(--ep-ink) !important; }
-#page-settings .settings-theme-choice,
 #page-settings .settings-color-mode button,
 #page-settings .settings-motion-options button { border: 0 !important; }
-#page-settings .settings-color-mode button[aria-pressed="true"] { color: var(--ep-ink) !important; }
+#page-settings .settings-color-mode button[aria-pressed="true"],
+#page-settings .settings-color-mode button[aria-pressed="true"] i { color: #FFFFFF !important; }
 #page-settings .settings-link-button { padding: 0 !important; border: 0 !important; color: var(--ep-accent-text) !important; background: none !important; box-shadow: none !important; }
-#page-settings .settings-auto-pill { color: #1D1D1F !important; background: rgba(255, 255, 255, .9) !important; }
-#page-settings .settings-auto-pill i { color: #1D1D1F !important; }
+:is(#page-settings, #modal-edit-trip) .settings-auto-pill { color: #1D1D1F !important; background: rgba(255, 255, 255, .9) !important; }
+:is(#page-settings, #modal-edit-trip) .settings-auto-pill i { color: #1D1D1F !important; }
 #page-settings .settings-motion-options button { background: transparent !important; box-shadow: none !important; }
 #page-settings .settings-motion-options button > i { width: 20px !important; height: auto !important; color: var(--ep-ink-2) !important; background: none !important; box-shadow: none !important; }
-#page-settings .settings-theme-choice { background: var(--ep-surface-2) !important; }
-#page-settings .settings-theme-choice[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--ep-accent) !important; }
 #page-settings :is(.settings-primary-column, .settings-side-column, .settings-panel) { width: auto !important; max-width: none !important; }
 
 /* Fenêtres et écran de connexion : anciennes bordures, couleurs et fonds. */
 .modal-content { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-surface) !important; }
-.btn-modal.save { color: var(--ep-accent-ink) !important; background: var(--ep-accent) !important; border: 0 !important; box-shadow: none !important; }
-.btn-modal.cancel { color: var(--ep-ink) !important; background: var(--ep-fill) !important; border: 0 !important; box-shadow: none !important; }
+.btn-modal.save { color: #FFFFFF !important; background: var(--ep-gradient) !important; border: 0 !important; box-shadow: 0 6px 16px rgba(99, 82, 224, .24) !important; }
+/* « Annuler » discret (texte sur fond très léger), l'action principale en dégradé. */
+.btn-modal.cancel { color: var(--ep-ink) !important; background: transparent !important; border: 0 !important; box-shadow: none !important; }
+.btn-modal.cancel:hover { background: var(--ep-fill) !important; }
 #modal-choose-type .modal-buttons:first-of-type .btn-modal,
 #modal-choose-info-type .modal-buttons:first-of-type .btn-modal { color: var(--ep-ink) !important; background: var(--ep-surface-2) !important; box-shadow: inset 0 0 0 1px var(--ep-line) !important; }
-.modal :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]), select, textarea) { border: 0 !important; color: var(--ep-ink) !important; background-color: var(--ep-fill) !important; }
+.modal :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]), select, textarea) { border: 1px solid var(--ep-line-strong) !important; color: var(--ep-ink) !important; background-color: var(--ep-surface) !important; }
+:root[data-color-mode="dark"] .modal :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]), select, textarea) { background-color: var(--ep-surface-2) !important; }
+.modal :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus { border-color: var(--ep-accent) !important; box-shadow: var(--ep-ring) !important; }
 .payeur-toggle-chip { border: 0 !important; color: var(--ep-ink) !important; background: var(--ep-fill) !important; }
 .payeur-toggle-chip.selected { color: var(--ep-accent-ink) !important; background: var(--ep-accent) !important; }
 .auth-gate { color: var(--ep-ink) !important; background: var(--ep-bg) !important; }
@@ -272,7 +267,7 @@ html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy p
 .info-source-link { color: var(--ep-accent-text) !important; }
 #page-accueil .dashboard-travel-details :is(p, .card-subtitle, .date-badge-month) { color: var(--ep-ink-2) !important; }
 #page-accueil .dashboard-calendar-weekdays span { color: var(--ep-ink-2) !important; }
-.notebook-directions { color: var(--ep-accent-ink) !important; background: var(--ep-accent) !important; }
+.notebook-directions { color: #FFFFFF !important; background: var(--ep-gradient) !important; }
 .budget-people-add-button { color: var(--ep-accent-text) !important; background: var(--ep-accent-soft) !important; }
 #page-accueil .dashboard-travel-details .date-badge { background: var(--ep-fill) !important; border: 0 !important; }
 #page-accueil .dashboard-travel-details .date-badge-day { color: var(--ep-ink) !important; }
@@ -286,3 +281,88 @@ html[data-theme] body[data-page="settings"] #page-settings .settings-hero-copy p
     :is(.hero-primary-cta, .checklist-selector-btn, [data-color-mode-choice], .trip-backup-button, #page-infos select) { min-height: 44px !important; }
     .settings-link-button { display: inline-block !important; padding-block: 12px !important; margin-block: -12px !important; }
 }
+
+/* Identité violette : en mode sombre, le violet plein est trop foncé pour du
+   texte ; les liens forcés par l'ancien CSS prennent le violet « texte ». */
+html .currency-note a,
+html[data-color-mode="dark"] .currency-note a { color: var(--ep-accent-text) !important; }
+
+/* ==========================================================================
+   Identité violette — tuiles d'icônes : violet sur lavande pâle, partout.
+   L'ancien CSS et les premières versions du design épuré donnaient une
+   couleur pleine par tuile ; une seule famille de couleurs désormais.
+   ========================================================================== */
+:is(.ep-tile, .stat-icon, .dashboard-priority-icon, .dashboard-upcoming-icon, .today-item-icon, .dashboard-travel-details-icon,
+    .prep-category-icon, .expense-row-icon, .notebook-row-icon, .card-icon, .settings-panel-icon, .trip-backup-icon,
+    .quick-add-icon, .first-trip-guide-icon, .demo-banner-icon, .auth-benefit-icon, .empty-state-icon, .prep-empty-icon,
+    .itinerary-empty-icon, .itinerary-editor-icon, .flight-lookup-icon) {
+    color: var(--ep-tile-fg) !important;
+    background: var(--ep-tile-bg) !important;
+    box-shadow: none !important;
+}
+:is(.ep-tile, .stat-icon, .dashboard-priority-icon, .dashboard-upcoming-icon, .today-item-icon, .dashboard-travel-details-icon,
+    .prep-category-icon, .expense-row-icon, .notebook-row-icon, .card-icon, .settings-panel-icon, .trip-backup-icon,
+    .quick-add-icon, .first-trip-guide-icon, .demo-banner-icon, .auth-benefit-icon, .empty-state-icon, .prep-empty-icon,
+    .itinerary-empty-icon, .itinerary-editor-icon, .flight-lookup-icon) i { color: inherit !important; background: none !important; }
+
+/* Fenêtre « vol » et sélecteur de séjour : l'ancien CSS fixait des verts
+   foncés illisibles en mode sombre ; on revient aux couleurs du thème. */
+#modal-vol :is(.flight-lookup-box, .flight-lookup-heading, #flight-lookup-title, label, h4) { color: var(--ep-ink) !important; }
+.trip-switcher-eyebrow { color: var(--ep-accent-text) !important; }
+#modal-vol :is(.flight-paste-details, .flight-lookup-box) { border-color: var(--ep-line) !important; background: var(--ep-surface-2) !important; }
+#modal-vol .flight-paste-details > summary { color: var(--ep-ink) !important; }
+#modal-vol .details-link { color: var(--ep-accent-text) !important; background: var(--ep-accent-soft) !important; border: 0 !important; }
+
+/* Accueil — chiffres clés réunis dans une seule carte : l'ancien CSS
+   arrondissait chaque case (!important) et Font Awesome (hors couches)
+   réaffichait les flèches. Progression de la carte du séjour en vert. */
+#page-accueil .dashboard-stat { border-radius: 0 !important; }
+#page-accueil .dashboard-stat :is(.stat-icon, .stat-arrow, .dashboard-stat-detail) { display: none !important; }
+#page-accueil .trip-progress-track > span { background: var(--ep-progress) !important; }
+#page-accueil .trip-preparation-progress { width: auto !important; max-width: none !important; }
+
+/* Budget — Prévu / Dépensé / Restant réunis dans une seule carte à filets. */
+#page-budget .budget-stat { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: var(--ep-surface) !important; }
+#page-budget .budget-stat.is-remaining .budget-stat-value { color: var(--ep-success) !important; }
+
+/* Carnet — vols et transports (déplacés de l'accueil) : pastille de date et
+   textes secondaires lisibles en clair comme en sombre. */
+#page-infos .notebook-travel :is(p, .card-subtitle, .date-badge-month, small) { color: var(--ep-ink-2) !important; }
+#page-infos .notebook-travel .date-badge { border: 0 !important; background: var(--ep-fill) !important; }
+#page-infos .notebook-travel .date-badge-day { color: var(--ep-ink) !important; }
+#page-infos .notebook-travel :is(.card-title, strong, h3, h4) { color: var(--ep-ink) !important; }
+#page-infos .notebook-travel .flight-icon-center { color: var(--ep-accent-text) !important; background: var(--ep-surface) !important; }
+#page-infos .notebook-travel :is(.delete-btn-round, .delete-btn) { color: var(--ep-ink-2) !important; background: var(--ep-fill) !important; border: 0 !important; box-shadow: none !important; }
+
+/* Réglages en mode sombre : l'ancien CSS imposait un vert-gris aux boutons
+   du mode d'affichage et aux vignettes de photo, et un blanc à « Réinitialiser ». */
+#page-settings .settings-color-mode button { background: transparent !important; box-shadow: none !important; }
+#page-settings .settings-color-mode button[aria-pressed="true"] { background: var(--ep-accent) !important; box-shadow: 0 2px 8px rgba(99, 82, 224, .3) !important; }
+:is(#page-settings, #modal-edit-trip) .settings-background-choice { background: var(--ep-surface-2) !important; }
+:is(#page-settings, #modal-edit-trip) .settings-background-choice.is-selected { background: var(--ep-accent-soft) !important; }
+#page-settings .settings-reset-button strong { color: var(--ep-danger) !important; }
+
+/* Connexion : la carte est centrée quand elle tient à l'écran, et part du
+   haut (défilable) quand elle est plus grande ; le centrage strict coupait
+   le haut de la carte sur un écran d'ordinateur de 900 px de haut. */
+.auth-gate { align-items: start !important; }
+.auth-gate-card { margin-block: auto !important; }
+
+/* Le « + » de la barre du haut fait le même travail partout : l'ancien
+   bouton rond flottant de chaque page faisait doublon (et masquait la carte). */
+.btn-add-float { display: none !important; }
+#modal-choose-type .modal-buttons:first-of-type .btn-modal i,
+#modal-choose-info-type .modal-buttons:first-of-type .btn-modal i { color: var(--ep-tile-fg) !important; background: var(--ep-tile-bg) !important; }
+/* Pied collant de la fenêtre « vol » : fond du thème (il restait blanc en mode sombre). */
+.modal-content .modal-buttons { border-color: var(--ep-line) !important; background-color: var(--ep-surface) !important; }
+
+/* Derniers restes de l'ancien bleu-vert : fond d'attente des cartes Google
+   et texte de la pastille de date des transports. */
+:is(.itinerary-day-map-preview, .notebook-map-frame) iframe { background-color: var(--ep-surface-2) !important; }
+#page-infos .notebook-travel .date-badge { color: var(--ep-ink) !important; }
+
+/* Compte et Partager le séjour : l'ancien CSS fixait des couleurs claires
+   illisibles en mode sombre (état de synchronisation, libellés). */
+:is(#firebase-account-panel, #firebase-share-panel) :is(label, .cloud-trip-label, .cloud-share-note, .cloud-members-status) { color: var(--ep-ink-2) !important; }
+:is(#firebase-account-panel, #firebase-share-panel) :is(h3, .cloud-account-email) { color: var(--ep-ink) !important; }
+#firebase-account-panel .cloud-sync-status { border-color: transparent !important; color: var(--ep-ink-2) !important; background: var(--ep-fill) !important; }
