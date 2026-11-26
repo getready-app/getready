@@ -3583,3 +3583,21 @@ body.reduce-motion * { transition: none; animation: none; }
 .auth-benefit-icon.is-teal { background: var(--ep-tile-teal); }
 .auth-benefit-icon.is-yellow { background: var(--ep-tile-yellow); color: #3A2A00; }
 .auth-benefit-icon.is-lavender { background: var(--ep-tile-lavender); }
+
+/* ==========================================================================
+   31. Écrans à encoche / Dynamic Island (appli installée sur iPhone)
+   Avec viewport-fit=cover et la barre d'état translucide, la page passe sous
+   l'heure et la Dynamic Island. La barre du haut réserve donc cette hauteur
+   (et les marges latérales en paysage), sinon ses boutons se retrouvent sous
+   la barre d'état, où iOS capte les touchers.
+   ========================================================================== */
+.app-topbar {
+    min-height: calc(56px + env(safe-area-inset-top, 0px));
+    padding-top: calc(8px + env(safe-area-inset-top, 0px));
+    padding-right: max(clamp(16px, 3vw, 32px), env(safe-area-inset-right, 0px));
+    padding-left: max(clamp(16px, 3vw, 32px), env(safe-area-inset-left, 0px));
+}
+@media (max-width: 600px) {
+    /* Les fenêtres en feuille ne remontent jamais sous la barre d'état. */
+    .modal-content { max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 12px); }
+}

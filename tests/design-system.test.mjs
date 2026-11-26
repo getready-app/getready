@@ -231,3 +231,8 @@ test('connexion : trois lignes expliquent à quoi sert GetReady', () => {
     assert.equal((gate.match(/<li><span class="auth-benefit-icon/g) || []).length, 3);
     assert.match(gate, /itinéraire jour par jour/);
 });
+
+test('sur iPhone, la barre du haut passe sous l’heure et la Dynamic Island, pas dessous', () => {
+    assert.match(html, /viewport-fit=cover/);
+    assert.match(epure, /\.app-topbar \{\s*min-height: calc\(56px \+ env\(safe-area-inset-top, 0px\)\);\s*padding-top: calc\(8px \+ env\(safe-area-inset-top, 0px\)\);/);
+});
