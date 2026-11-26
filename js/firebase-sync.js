@@ -130,6 +130,10 @@ function createAccountPanel() {
     const shareTools = panel.querySelector('#cloud-share-tools');
     if (shareTools) sharePanel.append(shareTools);
     panel.after(sharePanel);
+    // Les outils de partage vivent désormais dans leur propre section : on les
+    // cherche dans les deux panneaux, sinon le script s'arrêtait ici et la
+    // connexion ne démarrait jamais.
+    const inPanels = selector => panel.querySelector(selector) || sharePanel.querySelector(selector);
 
     const authForm = panel.querySelector('#cloud-auth-form');
     document.getElementById('auth-gate-form-slot')?.append(authForm);
@@ -144,10 +148,10 @@ function createAccountPanel() {
     panel.querySelector('#cloud-load-remote').addEventListener('click', loadRemoteData);
     panel.querySelector('#cloud-trip-select').addEventListener('change', changeActiveTrip);
     panel.querySelector('#cloud-create-trip').addEventListener('click', createPersonalTrip);
-    panel.querySelector('#cloud-create-invite').addEventListener('click', createInvite);
-    panel.querySelector('#cloud-copy-invite').addEventListener('click', copyInviteLink);
-    panel.querySelector('#cloud-members-refresh').addEventListener('click', () => loadTripMembers());
-    panel.querySelector('#cloud-members-list').addEventListener('click', event => {
+    inPanels('#cloud-create-invite').addEventListener('click', createInvite);
+    inPanels('#cloud-copy-invite').addEventListener('click', copyInviteLink);
+    inPanels('#cloud-members-refresh').addEventListener('click', () => loadTripMembers());
+    inPanels('#cloud-members-list').addEventListener('click', event => {
         const button = event.target.closest('button[data-member-uid]');
         if (button) removeTripMember(button.dataset.memberUid, button);
     });

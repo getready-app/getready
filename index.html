@@ -16,7 +16,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <link rel="stylesheet" href="css/app.css?v=27">
+    <link rel="stylesheet" href="css/app.css?v=28">
 </head>
 <body>
 
@@ -117,20 +117,23 @@
         <aside class="dashboard-side-column" aria-label="Calendrier et chronologie du séjour">
             <section class="dashboard-calendar-panel" aria-labelledby="dashboard-calendar-heading">
                 <div class="dashboard-calendar-heading">
-                    <div><span class="dashboard-overline">DATES DU SÉJOUR</span><h2 id="dashboard-calendar-heading">Calendrier</h2></div>
+                    <div><h2 id="dashboard-calendar-heading">Calendrier</h2><strong class="dashboard-calendar-range" id="dashboard-calendar-range">À choisir</strong></div>
                     <button type="button" class="dashboard-calendar-edit" data-action="openEditTripModal" aria-label="Modifier les dates du séjour"><i class="fa-solid fa-pen" aria-hidden="true"></i></button>
                 </div>
-                <div class="dashboard-calendar-month-view" id="dashboard-calendar-month-view">
-                <div class="dashboard-calendar-month" id="dashboard-mini-calendar-title">Mois du séjour</div>
-                <div class="dashboard-calendar-weekdays" aria-hidden="true"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
-                <div class="dashboard-mini-calendar" id="dashboard-mini-calendar" role="grid" aria-label="Calendrier des dates du séjour"></div>
+                <div class="dashboard-calendar-nav">
+                    <button type="button" class="dashboard-calendar-arrow" data-action="shiftDashboardCalendar" data-action-args="[-12]" aria-label="Année précédente"><i class="fa-solid fa-angles-left" aria-hidden="true"></i></button>
+                    <button type="button" class="dashboard-calendar-arrow" data-action="shiftDashboardCalendar" data-action-args="[-1]" aria-label="Mois précédent"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+                    <div class="dashboard-calendar-month" id="dashboard-mini-calendar-title" aria-live="polite">Mois du séjour</div>
+                    <button type="button" class="dashboard-calendar-arrow" data-action="shiftDashboardCalendar" data-action-args="[1]" aria-label="Mois suivant"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+                    <button type="button" class="dashboard-calendar-arrow" data-action="shiftDashboardCalendar" data-action-args="[12]" aria-label="Année suivante"><i class="fa-solid fa-angles-right" aria-hidden="true"></i></button>
                 </div>
-                <div class="dashboard-calendar-legend"><span class="dashboard-calendar-legend-mark" aria-hidden="true"></span><span>Dates du séjour</span><strong id="dashboard-calendar-range">Choisir tes dates</strong></div>
-                <button type="button" class="dashboard-calendar-toggle" data-action="toggleDashboardCalendar" data-action-target aria-expanded="false" aria-controls="dashboard-calendar-month-view">Voir le mois</button>
+                <div class="dashboard-calendar-weekdays" aria-hidden="true"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+                <div class="dashboard-mini-calendar" id="dashboard-mini-calendar" role="grid" aria-label="Calendrier : touche le départ puis le retour"></div>
+                <div class="dashboard-calendar-hint"><span id="dashboard-calendar-hint" role="status" aria-live="polite">Touche deux jours pour changer les dates.</span><button type="button" class="dashboard-calendar-cancel" id="dashboard-calendar-cancel" data-action="cancelCalendarPick" hidden>Annuler</button></div>
             </section>
 
             <section class="dashboard-upcoming" aria-labelledby="dashboard-upcoming-title">
-                <div class="dashboard-section-heading"><div><span class="dashboard-overline">À VENIR</span><h2 id="dashboard-upcoming-title">Chronologie</h2></div><div class="dashboard-upcoming-heading-actions"><span id="dashboard-upcoming-status" role="status" aria-live="polite"></span><button type="button" class="dashboard-upcoming-all" id="dashboard-upcoming-all" data-action="switchDashboardTab" data-action-args='["programme"]' aria-label="Voir tout l’itinéraire" hidden>Tout l’itinéraire <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button></div></div>
+                <div class="dashboard-section-heading"><div><span class="dashboard-overline">À VENIR</span><h2 id="dashboard-upcoming-title">À venir</h2></div><div class="dashboard-upcoming-heading-actions"><span id="dashboard-upcoming-status" role="status" aria-live="polite"></span><button type="button" class="dashboard-upcoming-all" id="dashboard-upcoming-all" data-action="switchDashboardTab" data-action-args='["programme"]' aria-label="Voir tout l’itinéraire" hidden>Tout l’itinéraire <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button></div></div>
                 <div id="today-card-container"></div>
                 <div class="dashboard-upcoming-list" id="dashboard-upcoming-list" aria-busy="false"></div>
             </section>
@@ -138,7 +141,7 @@
 
         <aside class="demo-banner" id="demo-banner" hidden>
             <span class="demo-banner-icon" aria-hidden="true">✨</span>
-            <div class="demo-banner-copy"><strong>Scénario de démonstration</strong><span>Groupe et budget fictifs · lieux sourcés au 16/11/2026 · itinéraire suggéré, aucune réservation effectuée.</span></div>
+            <div class="demo-banner-copy"><strong>Démo</strong><span>Données fictives, rien n’est réservé.</span></div>
             <button type="button" class="demo-reset-button" data-action="resetDemoScenario"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Restaurer la démo</button>
         </aside>
 
@@ -147,31 +150,35 @@
             <section class="first-trip-guide" id="first-trip-guide" aria-labelledby="first-trip-guide-title" hidden>
                 <div class="first-trip-guide-heading">
                     <span class="first-trip-guide-icon" aria-hidden="true"><i class="fa-solid fa-compass"></i></span>
-                    <div><span class="first-trip-kicker">POUR BIEN COMMENCER</span><h2 id="first-trip-guide-title">Ton séjour commence ici</h2><p>Deux repères suffisent pour prendre le départ. Tu pourras compléter le reste au fil de tes idées.</p></div>
+                    <div><h2 id="first-trip-guide-title">Pour bien démarrer</h2></div>
                 </div>
                 <span class="first-trip-progress" id="first-trip-progress" role="status" aria-live="polite">0 repère sur 2 prêt</span>
                 <ol class="first-trip-steps">
                     <li class="first-trip-step">
                         <span class="first-trip-step-number" aria-hidden="true">1</span>
-                        <div><strong>Donne un nom à ton séjour et choisis les dates</strong><span id="first-trip-details-status">À faire</span></div>
+                        <div><strong>Nom et dates du séjour</strong><span id="first-trip-details-status">À faire</span></div>
                         <button type="button" data-action="openEditTripModal">Définir le séjour</button>
                     </li>
                     <li class="first-trip-step">
                         <span class="first-trip-step-number" aria-hidden="true">2</span>
-                        <div><strong>Ajoute ta première destination</strong><span id="first-trip-destination-status">À faire</span></div>
+                        <div><strong>Première destination</strong><span id="first-trip-destination-status">À faire</span></div>
                         <button type="button" data-action="openItineraryEditor">Ajouter une destination</button>
                     </li>
                 </ol>
             </section>
             <div class="dashboard-stats">
-                <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["budget"]'><span class="stat-icon stat-green"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span><span class="stat-copy"><small>BUDGET PRÉVU</small><strong id="dashboard-budget">Chargement…</strong><small class="dashboard-stat-detail" id="dashboard-budget-detail"></small></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow" aria-hidden="true"></i></button>
+                <button type="button" class="dashboard-stat dashboard-stat-budget" data-action="switchDashboardTab" data-action-args='["budget"]'><span class="stat-icon stat-green"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span><span class="stat-copy"><small>BUDGET PRÉVU</small><strong id="dashboard-budget">Chargement…</strong><small class="dashboard-stat-detail" id="dashboard-budget-detail"></small></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow" aria-hidden="true"></i></button>
                 <button type="button" class="dashboard-stat" data-action="openDashboardReservations"><span class="stat-icon stat-violet"><i class="fa-solid fa-ticket" aria-hidden="true"></i></span><span class="stat-copy"><small>RÉSERVATIONS</small><strong id="dashboard-reservations">Chargement…</strong><small class="dashboard-stat-detail" id="dashboard-reservations-detail"></small></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow" aria-hidden="true"></i></button>
                 <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["checklist"]'><span class="stat-icon stat-amber"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span><span class="stat-copy"><small>À PRÉPARER</small><strong id="dashboard-checklist">Chargement…</strong><small class="dashboard-stat-detail" id="dashboard-prep-progress"></small></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow" aria-hidden="true"></i></button>
                 <button type="button" class="dashboard-stat" data-action="switchDashboardTab" data-action-args='["programme","day"]'><span class="stat-icon stat-blue"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i></span><span class="stat-copy"><small>ACTIVITÉS</small><strong id="dashboard-activities">—</strong><small class="dashboard-stat-detail" id="dashboard-activities-detail">Mise à jour du séjour</small></span><i class="fa-solid fa-arrow-up-right-from-square stat-arrow" aria-hidden="true"></i></button>
             </div>
+            <section class="dashboard-budget-card" aria-labelledby="dashboard-budget-title">
+                <div class="dashboard-section-heading"><h2 id="dashboard-budget-title">Budget</h2><button type="button" class="dashboard-upcoming-all" data-action="switchDashboardTab" data-action-args='["budget"]' aria-label="Ouvrir le budget">Détails <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button></div>
+                <div class="dashboard-budget-body" id="dashboard-budget-body"></div>
+            </section>
             <div class="dashboard-home-modules">
                 <section class="dashboard-priorities" aria-labelledby="dashboard-priorities-title">
-                    <div class="dashboard-section-heading"><div><span class="dashboard-overline">POUR LA SUITE</span><h2 id="dashboard-priorities-title">À faire en priorité</h2></div><span id="dashboard-priority-count" role="status" aria-live="polite"></span></div>
+                    <div class="dashboard-section-heading"><div><span class="dashboard-overline">POUR LA SUITE</span><h2 id="dashboard-priorities-title">À faire</h2></div><span id="dashboard-priority-count" role="status" aria-live="polite"></span></div>
                     <div class="dashboard-priority-list" id="dashboard-priority-list" aria-busy="false"></div>
                 </section>
             </div>
@@ -421,7 +428,7 @@
                     <section class="settings-panel" aria-labelledby="settings-theme-title">
                         <div class="settings-panel-heading"><span class="settings-panel-icon"><i class="fa-solid fa-palette" aria-hidden="true"></i></span><div><span class="settings-kicker">APPARENCE</span><h2 id="settings-theme-title">Affichage</h2><p>Clair, sombre ou automatique, et le rythme des animations.</p></div></div>
                         <div class="settings-rows">
-                            <div class="settings-row settings-row-stack"><span class="settings-row-label" aria-hidden="true">Mode d’affichage</span><div class="settings-color-mode" role="group" aria-label="Mode d’affichage"><span>Mode d’affichage</span><button type="button" data-color-mode-choice="auto" data-action="setColorMode" data-action-args='["auto"]' aria-pressed="false"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i> Automatique</button><button type="button" data-color-mode-choice="light" data-action="setColorMode" data-action-args='["light"]' aria-pressed="false"><i class="fa-solid fa-sun" aria-hidden="true"></i> Clair</button><button type="button" data-color-mode-choice="dark" data-action="setColorMode" data-action-args='["dark"]' aria-pressed="false"><i class="fa-solid fa-moon" aria-hidden="true"></i> Sombre</button></div></div>
+                            <div class="settings-row settings-row-stack"><span class="settings-row-label" aria-hidden="true">Mode d’affichage</span><div class="settings-color-mode" role="group" aria-label="Mode d’affichage"><span>Mode d’affichage</span><button type="button" data-color-mode-choice="auto" data-action="setColorMode" data-action-args='["auto"]' aria-pressed="false" aria-label="Automatique, comme ton appareil"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i> Auto</button><button type="button" data-color-mode-choice="light" data-action="setColorMode" data-action-args='["light"]' aria-pressed="false"><i class="fa-solid fa-sun" aria-hidden="true"></i> Clair</button><button type="button" data-color-mode-choice="dark" data-action="setColorMode" data-action-args='["dark"]' aria-pressed="false"><i class="fa-solid fa-moon" aria-hidden="true"></i> Sombre</button></div></div>
                             <div class="settings-row">
                                 <span class="settings-row-copy"><strong id="settings-motion-label">Animations</strong><small id="settings-motion-hint">Activées, elles suivent le réglage de ton appareil.</small></span>
                                 <label class="ep-switch"><input type="checkbox" role="switch" id="settings-motion-switch" aria-labelledby="settings-motion-label" aria-describedby="settings-motion-hint" data-action="toggleMotionPreference" data-action-event="change" data-action-target checked><span class="ep-switch-track" aria-hidden="true"></span></label>
@@ -1145,7 +1152,7 @@
     </div>
 
     <script src="js/flight-api-config.js"></script>
-    <script type="module" src="js/app.js?v=129"></script>
+    <script type="module" src="js/app.js?v=130"></script>
 
     <!-- ================= SERVICE WORKER (hors-ligne) ================= -->
     <script src="js/pwa.js"></script>

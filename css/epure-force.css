@@ -366,3 +366,8 @@ html[data-color-mode="dark"] .currency-note a { color: var(--ep-accent-text) !im
 :is(#firebase-account-panel, #firebase-share-panel) :is(label, .cloud-trip-label, .cloud-share-note, .cloud-members-status) { color: var(--ep-ink-2) !important; }
 :is(#firebase-account-panel, #firebase-share-panel) :is(h3, .cloud-account-email) { color: var(--ep-ink) !important; }
 #firebase-account-panel .cloud-sync-status { border-color: transparent !important; color: var(--ep-ink-2) !important; background: var(--ep-fill) !important; }
+
+/* Accueil v2 — carte Budget : l'ancien mode sombre forçait tous les <strong>
+   en blanc ; on garde la hiérarchie (pourcentages en gris, reste en vert). */
+#page-accueil .dashboard-budget-legend strong { color: var(--ep-ink-2) !important; }
+#page-accueil .dashboard-budget-paid-row span:last-child strong { color: var(--ep-success) !important; }

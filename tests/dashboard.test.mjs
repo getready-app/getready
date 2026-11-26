@@ -528,21 +528,74 @@ test('Nouveau séjour ouvre la vraie création de séjour et jamais l’ajout de
 });
 
 test('le mini-calendrier s’arrête au dimanche de la dernière semaine, sans ligne orpheline', () => {
-    const start = appSource.indexOf('function renderDashboardMiniCalendar(');
+    const start = appSource.indexOf("// --- CALENDRIER DE L'ACCUEIL ---");
     const end = appSource.indexOf('\nfunction renderDashboardTripShell(', start);
     const helper = appSource.slice(start, end);
+    const pickerValue = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     for (let month = 0; month < 24; month += 1) {
         const first = new Date(2026 + Math.floor(month / 12), month % 12, 10);
         const elements = { 'dashboard-mini-calendar': { innerHTML: '' }, 'dashboard-mini-calendar-title': {}, 'dashboard-calendar-range': {} };
         vm.runInNewContext(`${helper}\nrenderDashboardMiniCalendar();`, {
             appData: { tripStart: 'start', tripEnd: '' },
             parsePickerDate: value => value === 'start' ? first : null,
-            document: { getElementById: id => elements[id] }
+            dateToPickerValue: pickerValue,
+            document: { getElementById: id => elements[id], querySelector: () => null }
         });
         const cells = (elements['dashboard-mini-calendar'].innerHTML.match(/role="gridcell"/g) || []).length;
         assert.equal(cells % 7, 0, `mois ${month}: ${cells} cases`);
         assert.ok(cells <= 42 && cells >= 28, `mois ${month}: ${cells} cases`);
         const lastMonthDay = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
-        assert.ok(elements['dashboard-mini-calendar'].innerHTML.includes(`>${lastMonthDay}</span>`));
+        assert.ok(elements['dashboard-mini-calendar'].innerHTML.includes(`>${lastMonthDay}</button>`));
     }
+});
+
+test('calendrier de l’accueil : flèches mois/année et deux touchers pour changer les dates, avec Annuler', () => {
+    const start = appSource.indexOf("// --- CALENDRIER DE L'ACCUEIL ---");
+    const end = appSource.indexOf('\nfunction renderDashboardTripShell(', start);
+    const pickerValue = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const parse = value => {
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
+        return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : null;
+    };
+    const elements = { 'dashboard-mini-calendar': { innerHTML: '' }, 'dashboard-mini-calendar-title': {}, 'dashboard-calendar-range': {}, 'dashboard-calendar-hint': {}, 'dashboard-calendar-cancel': {} };
+    const calls = [];
+    let undo = null;
+    const context = {
+        appData: { tripStart: '2026-12-20', tripEnd: '2026-12-27' },
+        parsePickerDate: parse,
+        dateToPickerValue: pickerValue,
+        requireEditor: () => true,
+        saveToLocalStorage: () => calls.push('save'),
+        updateCountdown: () => calls.push('countdown'),
+        renderDashboardSummary: () => calls.push('summary'),
+        showUndoToast: (message, restore) => { calls.push(message); undo = restore; },
+        document: { getElementById: id => elements[id], querySelector: () => null }
+    };
+    vm.runInNewContext(`${appSource.slice(start, end)}
+        renderDashboardMiniCalendar();
+        globalThis.firstTitle = document.getElementById('dashboard-mini-calendar-title').textContent;
+        shiftDashboardCalendar(1);
+        globalThis.nextTitle = document.getElementById('dashboard-mini-calendar-title').textContent;
+        shiftDashboardCalendar(-12);
+        globalThis.yearTitle = document.getElementById('dashboard-mini-calendar-title').textContent;
+        pickCalendarDate('2027-01-12');
+        globalThis.pendingHidden = document.getElementById('dashboard-calendar-cancel').hidden;
+        globalThis.pendingHint = document.getElementById('dashboard-calendar-hint').textContent;
+        pickCalendarDate('2027-01-05');`, context);
+    assert.equal(context.firstTitle, 'décembre 2026');
+    assert.equal(context.nextTitle, 'janvier 2027');
+    assert.equal(context.yearTitle, 'janvier 2026');
+    assert.equal(context.pendingHidden, false);
+    assert.match(context.pendingHint, /^Départ le 12 janv\. · choisis le retour$/);
+    // Le retour touché avant le départ : les deux dates sont remises dans l'ordre.
+    assert.equal(context.appData.tripStart, '2027-01-05');
+    assert.equal(context.appData.tripEnd, '2027-01-12');
+    assert.deepEqual(calls.slice(0, 3), ['save', 'countdown', 'summary']);
+    assert.match(calls[3], /^Nouvelles dates : 5 janv\. – 12 janv\.$/);
+    undo();
+    assert.equal(context.appData.tripStart, '2026-12-20');
+    assert.equal(context.appData.tripEnd, '2026-12-27');
+    assert.match(htmlSource, /data-action="shiftDashboardCalendar" data-action-args="\[-12\]" aria-label="Année précédente"/);
+    assert.match(htmlSource, /data-action="shiftDashboardCalendar" data-action-args="\[1\]" aria-label="Mois suivant"/);
+    assert.match(htmlSource, /id="dashboard-calendar-cancel" data-action="cancelCalendarPick" hidden/);
 });

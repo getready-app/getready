@@ -7,14 +7,14 @@
 //    touche pas, laissé au réseau normal.
 // CACHE_VERSION doit être incrémenté à chaque modification de ce fichier pour
 // forcer le nettoyage de l'ancien cache.
-const CACHE_VERSION = 'v164';
+const CACHE_VERSION = 'v165';
 const CACHE_NAME = `cap-commun-cache-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
     './',
     './index.html',
     './manifest.json',
-    './css/app.css?v=27',
+    './css/app.css?v=28',
     './css/styles.css',
     './css/getready-shell.css',
     './css/epure.css',

@@ -700,3 +700,18 @@ test('un membre ne peut pas retirer d’autres membres depuis son propre context
 
     assert.deepEqual(h.__deletedMemberDocs, []);
 });
+
+test('les outils de partage déplacés dans « Partager le séjour » restent branchés sans bloquer la connexion', async () => {
+    const syncSource = await readFile(sourceUrl, 'utf8');
+    const start = syncSource.indexOf('function createAccountPanel() {');
+    const end = syncSource.indexOf('\nfunction setStatus(', start);
+    const body = syncSource.slice(start, end);
+    const moved = body.indexOf('sharePanel.append(shareTools)');
+    assert.ok(moved > 0, 'la section de partage reçoit les outils');
+    // Après le déplacement, ces boutons ne sont plus dans `panel` : les y chercher renvoyait null et
+    // arrêtait le script avant initializeFirebase().
+    for (const id of ['cloud-share-tools', 'cloud-create-invite', 'cloud-copy-invite', 'cloud-members-refresh', 'cloud-members-list', 'cloud-invite-email']) {
+        assert.doesNotMatch(body.slice(moved), new RegExp(`panel\\.querySelector\\('#${id}'\\)`), id);
+    }
+    assert.match(body, /inPanels\('#cloud-create-invite'\)\.addEventListener\('click', createInvite\)/);
+});

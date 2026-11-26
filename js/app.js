@@ -1409,7 +1409,7 @@ function renderDashboardSummary() {
     const mainPreparationLabel = document.getElementById('dashboard-main-progress-label');
     if (mainPreparationLabel) mainPreparationLabel.textContent = isLoading
         ? 'Mise à jour des préparatifs…'
-        : preparation.total ? `${preparation.completed} sur ${preparation.total} préparatifs terminés` : 'Listes à compléter';
+        : preparation.total ? 'Préparatifs' : 'Listes à compléter';
     const mainPreparationTrack = document.getElementById('dashboard-main-progress');
     if (mainPreparationTrack) {
         mainPreparationTrack.setAttribute('aria-valuenow', isLoading ? '0' : String(preparationPercent));
@@ -1423,6 +1423,7 @@ function renderDashboardSummary() {
     if (mainPreparationPercent) mainPreparationPercent.textContent = !isLoading && preparation.total ? `${preparationPercent} %` : '';
     const mainPreparationBar = document.getElementById('dashboard-main-progress-bar');
     if (mainPreparationBar) mainPreparationBar.style.width = isLoading ? '0%' : `${preparationPercent}%`;
+    renderDashboardBudgetCard(isLoading);
     renderDashboardPriorities();
     renderDashboardUpcomingActivities();
 
@@ -1442,13 +1443,133 @@ function renderDashboardSummary() {
     }
 }
 
-// Sur téléphone, les dates du séjour suffisent : le mois entier s'ouvre à la demande.
-function toggleDashboardCalendar(button) {
-    const panel = button?.closest?.('.dashboard-calendar-panel');
-    if (!panel) return;
-    const open = panel.classList.toggle('is-open');
-    button.setAttribute('aria-expanded', String(open));
-    button.textContent = open ? 'Masquer le mois' : 'Voir le mois';
+// --- CARTE BUDGET DE L'ACCUEIL ---
+// L'anneau des dépenses, les 3 plus grosses catégories et ce qui reste à
+// payer. Sans dépense : un seul bouton pour en ajouter une.
+function renderDashboardBudgetCard(isLoading) {
+    const body = document.getElementById('dashboard-budget-body');
+    if (!body) return;
+    if (isLoading) {
+        body.innerHTML = '<p class="dashboard-budget-empty-text">Chargement du budget…</p>';
+        return;
+    }
+    const baseCurrency = appData.budgetCurrency || 'EUR';
+    const totalsByCategory = {};
+    let total = 0;
+    let paid = 0;
+    let missingRate = false;
+    (appData.budget || []).forEach(expense => {
+        const converted = convertCurrency(Number(expense.amount ?? expense.eur) || 0, expense.currency || 'EUR', baseCurrency);
+        if (converted === null) {
+            missingRate = true;
+            return;
+        }
+        const category = budgetCategoryTiles[expense.categorie] ? expense.categorie : 'Autre';
+        totalsByCategory[category] = (totalsByCategory[category] || 0) + converted;
+        total += converted;
+        if (expense.paid) paid += converted;
+    });
+    const rows = budgetBreakdownRows(totalsByCategory, total);
+    if (!(total > 0 && rows.length)) {
+        body.innerHTML = `
+            <div class="dashboard-budget-empty">
+                <span class="dashboard-budget-empty-ring" aria-hidden="true"></span>
+                <div><strong>Aucune dépense</strong><p class="dashboard-budget-empty-text">Note un premier prix pour voir où part ton budget.</p>
+                <button type="button" class="ep-btn-tonal dashboard-budget-add" ${actionAttrs('quickAdd', ['depense'])}><i class="fa-solid fa-plus" aria-hidden="true"></i> Ajouter une dépense</button></div>
+            </div>`;
+        return;
+    }
+    const shown = rows.slice(0, 3);
+    const others = rows.slice(3).reduce((sum, row) => sum + row.value, 0);
+    const legend = shown.map(row => `<li><span class="budget-breakdown-dot" style="background:${row.color}" aria-hidden="true"></span><span>${esc(row.category)}</span><strong>${row.percent} %</strong></li>`);
+    if (others > 0) legend.push(`<li><span class="budget-breakdown-dot" style="background:${BUDGET_CHART_COLORS.Autre}" aria-hidden="true"></span><span>Autres</span><strong>${Math.round(others / total * 100)} %</strong></li>`);
+    const remaining = Math.max(total - paid, 0);
+    const paidPercent = Math.round(paid / total * 100);
+    // Sur l'accueil, des montants arrondis se lisent d'un coup d'œil.
+    const rounded = (value, currency) => {
+        try {
+            return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(value);
+        } catch {
+            return formatCurrency(value, currency);
+        }
+    };
+    body.innerHTML = `
+        <div class="dashboard-budget-chart">
+            ${budgetDonutMarkup(rows, total, baseCurrency, rounded)}
+            <ul class="dashboard-budget-legend">${legend.join('')}</ul>
+        </div>
+        <div class="dashboard-budget-paid">
+            <div class="dashboard-budget-paid-row"><span>Payé <strong>${esc(rounded(paid, baseCurrency))}</strong></span><span>Reste <strong>${esc(rounded(remaining, baseCurrency))}</strong></span></div>
+            <span class="ep-progress dashboard-budget-progress" role="progressbar" aria-label="Part du budget déjà payée" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${paidPercent}" aria-valuetext="${paidPercent} % payé"><span style="width:${paidPercent}%"></span></span>
+            ${missingRate ? '<small class="dashboard-budget-note">Certaines devises ne sont pas encore converties.</small>' : ''}
+        </div>`;
+}
+
+// --- CALENDRIER DE L'ACCUEIL ---
+// Toujours ouvert. Flèches : mois précédent / suivant (‹ ›) et année (« »).
+// Toucher deux jours change les dates du séjour (départ puis retour) ; un
+// bandeau « Annuler » permet de revenir aux dates d'avant.
+let dashboardCalendarMonth = null;
+let dashboardCalendarKey = '';
+let calendarPendingStart = null;
+
+// Le mois affiché suit les dates du séjour : si elles changent (autre séjour,
+// nouvelles dates), le calendrier revient sur le mois du départ.
+function dashboardCalendarAnchor() {
+    const key = `${appData.tripStart || ''}|${appData.tripEnd || ''}`;
+    if (key !== dashboardCalendarKey) {
+        dashboardCalendarKey = key;
+        dashboardCalendarMonth = null;
+        calendarPendingStart = null;
+    }
+    if (dashboardCalendarMonth) return dashboardCalendarMonth;
+    const base = parsePickerDate(appData.tripStart) || parsePickerDate(appData.tripEnd) || new Date();
+    return new Date(base.getFullYear(), base.getMonth(), 1);
+}
+
+function shiftDashboardCalendar(months) {
+    const anchor = dashboardCalendarAnchor();
+    dashboardCalendarMonth = new Date(anchor.getFullYear(), anchor.getMonth() + (Number(months) || 0), 1);
+    renderDashboardMiniCalendar();
+}
+
+function shortCalendarLabel(date) {
+    return date ? date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : '';
+}
+
+function pickCalendarDate(value) {
+    if (!requireEditor()) return;
+    const picked = parsePickerDate(value);
+    if (!picked) return;
+    if (!calendarPendingStart) {
+        calendarPendingStart = dateToPickerValue(picked);
+        renderDashboardMiniCalendar();
+        return;
+    }
+    let first = calendarPendingStart;
+    let last = dateToPickerValue(picked);
+    if (last < first) [first, last] = [last, first];
+    calendarPendingStart = null;
+    const previous = { tripStart: appData.tripStart, tripEnd: appData.tripEnd };
+    const refresh = () => {
+        saveToLocalStorage();
+        updateCountdown();
+        renderDashboardSummary();
+    };
+    appData.tripStart = first;
+    appData.tripEnd = last;
+    refresh();
+    const label = first === last ? shortCalendarLabel(parsePickerDate(first)) : `${shortCalendarLabel(parsePickerDate(first))} – ${shortCalendarLabel(parsePickerDate(last))}`;
+    showUndoToast(`Nouvelles dates : ${label}`, () => {
+        appData.tripStart = previous.tripStart;
+        appData.tripEnd = previous.tripEnd;
+        refresh();
+    });
+}
+
+function cancelCalendarPick() {
+    calendarPendingStart = null;
+    renderDashboardMiniCalendar();
 }
 
 function renderDashboardMiniCalendar() {
@@ -1457,12 +1578,12 @@ function renderDashboardMiniCalendar() {
     const rangeLabel = document.getElementById('dashboard-calendar-range');
     if (!calendar || !monthLabel || !rangeLabel) return;
 
+    const monthStart = dashboardCalendarAnchor();
     const start = parsePickerDate(appData.tripStart);
     const end = parsePickerDate(appData.tripEnd);
+    const pending = calendarPendingStart ? parsePickerDate(calendarPendingStart) : null;
     const today = new Date();
-    const monthDate = start || end || today;
-    const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
-    const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+    const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
     const gridStart = new Date(monthStart);
     gridStart.setDate(1 - ((monthStart.getDay() + 6) % 7));
     const gridEnd = new Date(monthEnd);
@@ -1474,15 +1595,19 @@ function renderDashboardMiniCalendar() {
 
     monthLabel.textContent = monthStart.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
     if (start && end) {
-        const dayMonth = { day: 'numeric', month: 'short' };
-        rangeLabel.textContent = `${start.toLocaleDateString('fr-FR', dayMonth)} – ${end.toLocaleDateString('fr-FR', dayMonth)}`;
+        rangeLabel.textContent = `${shortCalendarLabel(start)} – ${shortCalendarLabel(end)}`;
     } else if (start) {
-        rangeLabel.textContent = `À partir du ${start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+        rangeLabel.textContent = `À partir du ${shortCalendarLabel(start)}`;
     } else if (end) {
-        rangeLabel.textContent = `Jusqu’au ${end.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+        rangeLabel.textContent = `Jusqu’au ${shortCalendarLabel(end)}`;
     } else {
-        rangeLabel.textContent = 'Choisir tes dates';
+        rangeLabel.textContent = 'À choisir';
     }
+    const hint = document.getElementById('dashboard-calendar-hint');
+    const cancel = document.getElementById('dashboard-calendar-cancel');
+    if (hint) hint.textContent = pending ? `Départ le ${shortCalendarLabel(pending)} · choisis le retour` : (start || end ? 'Touche deux jours pour changer les dates.' : 'Touche le départ puis le retour.');
+    if (cancel) cancel.hidden = !pending;
+    document.querySelector('.dashboard-calendar-panel')?.classList.toggle('is-picking', Boolean(pending));
 
     const cells = [];
     for (const cursor = new Date(gridStart); cursor <= gridEnd; cursor.setDate(cursor.getDate() + 1)) {
@@ -1494,8 +1619,10 @@ function renderDashboardMiniCalendar() {
         if (sameDay(date, start)) classes.push('is-trip-start');
         if (sameDay(date, end)) classes.push('is-trip-end');
         if (sameDay(date, today)) classes.push('is-today');
+        if (sameDay(date, pending)) classes.push('is-pending');
         const label = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-        cells.push(`<span class="${classes.join(' ')}" role="gridcell" aria-label="${label}${inTrip(date) ? ', dates du séjour' : ''}"${sameDay(date, today) ? ' aria-current="date"' : ''}>${date.getDate()}</span>`);
+        const value = dateToPickerValue(date);
+        cells.push(`<button type="button" class="${classes.join(' ')}" role="gridcell" data-action="pickCalendarDate" data-action-args='["${value}"]' aria-label="${label}${inTrip(date) ? ', dates du séjour' : ''}"${sameDay(date, today) ? ' aria-current="date"' : ''}>${date.getDate()}</button>`);
     }
     calendar.innerHTML = cells.join('');
 }
@@ -1597,7 +1724,7 @@ function renderDashboardPriorities() {
     list.innerHTML = visible.map(item => `
         <button type="button" class="dashboard-priority-item" ${actionAttrs(item.action, item.args)}>
             <span class="dashboard-priority-icon"><i class="fa-solid ${item.icon}" aria-hidden="true"></i></span>
-            <span class="dashboard-priority-copy"><small>${esc(item.type)}</small><strong>${esc(item.title)}</strong><span>${esc(item.detail)}</span></span>
+            <span class="dashboard-priority-copy"><strong>${esc(item.title)}</strong><small>${esc(item.detail)}</small></span>
             <i class="fa-solid fa-arrow-right dashboard-priority-arrow" aria-hidden="true"></i>
         </button>
     `).join('');
@@ -1618,6 +1745,10 @@ function renderDashboardUpcomingActivities() {
     list.setAttribute('aria-busy', 'false');
     if (allButton) allButton.hidden = true;
     const todayCardDate = document.querySelector('.today-card')?.dataset.date || '';
+    // Avec la carte de la prochaine journée, la section porte son nom ; la
+    // suite du programme reste dans l'Itinéraire (bouton « Tout l'itinéraire »).
+    const upcomingTitle = document.getElementById('dashboard-upcoming-title');
+    if (upcomingTitle) upcomingTitle.textContent = todayCardDate ? 'Prochaine journée' : 'À venir';
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -4165,18 +4296,34 @@ const BUDGET_CHART_COLORS = {
 function renderBudgetBreakdown(totalsByCategory, total, baseCurrency) {
     const section = document.getElementById('budget-breakdown');
     if (!section) return;
-    const rows = Object.entries(totalsByCategory)
-        .filter(([, value]) => value > 0)
-        .sort((a, b) => b[1] - a[1])
-        .map(([category, value]) => ({ category, value, color: BUDGET_CHART_COLORS[category] || BUDGET_CHART_COLORS.Autre, percent: total > 0 ? Math.round((value / total) * 100) : 0 }));
+    const rows = budgetBreakdownRows(totalsByCategory, total);
     section.hidden = !(total > 0 && rows.length);
     if (section.hidden) {
         section.innerHTML = '';
         return;
     }
+    section.innerHTML = `
+        <h3 id="budget-breakdown-title">Où part le budget</h3>
+        <div class="budget-breakdown-body">
+            ${budgetDonutMarkup(rows, total, baseCurrency)}
+            <ul class="budget-breakdown-list">${rows.map(row => `<li><span class="budget-breakdown-dot" style="background:${row.color}" aria-hidden="true"></span><span class="budget-breakdown-name">${esc(row.category)}</span><strong>${esc(formatCurrency(row.value, baseCurrency))}</strong><small>${row.percent} %</small></li>`).join('')}</ul>
+        </div>
+    `;
+}
+
+// Catégories triées de la plus grosse à la plus petite, avec couleur et part.
+function budgetBreakdownRows(totalsByCategory, total) {
+    return Object.entries(totalsByCategory)
+        .filter(([, value]) => value > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([category, value]) => ({ category, value, color: BUDGET_CHART_COLORS[category] || BUDGET_CHART_COLORS.Autre, percent: total > 0 ? Math.round((value / total) * 100) : 0 }));
+}
+
+// Anneau : un arc par catégorie, de la plus grosse à la plus petite, en
+// partant du haut ; un petit espace sépare les arcs. Total prévu au centre.
+// Partagé par la page Budget et la carte Budget de l'accueil.
+function budgetDonutMarkup(rows, total, baseCurrency, format = formatCurrency) {
     const summary = rows.map(row => `${row.category} ${row.percent} %`).join(', ');
-    // Anneau : un arc par catégorie, de la plus grosse à la plus petite, en
-    // partant du haut ; un petit espace sépare les arcs. Total prévu au centre.
     const radius = 48;
     const circumference = 2 * Math.PI * radius;
     const gap = rows.length > 1 ? 2 : 0;
@@ -4187,16 +4334,10 @@ function renderBudgetBreakdown(totalsByCategory, total, baseCurrency) {
         offset += row.value / total * circumference;
         return arc;
     }).join('');
-    section.innerHTML = `
-        <h3 id="budget-breakdown-title">Où part le budget</h3>
-        <div class="budget-breakdown-body">
-            <div class="budget-donut" role="img" aria-label="${esc(`Répartition du budget : ${summary}`)}">
+    return `<div class="budget-donut" role="img" aria-label="${esc(`Répartition du budget : ${summary}`)}">
                 <svg viewBox="0 0 120 120" aria-hidden="true"><g transform="rotate(-90 60 60)"><circle cx="60" cy="60" r="${radius}" fill="none" class="budget-donut-track" stroke-width="16"></circle>${arcs}</g></svg>
-                <span class="budget-donut-center" aria-hidden="true"><strong>${esc(formatCurrency(total, baseCurrency))}</strong><small>Prévu</small></span>
-            </div>
-            <ul class="budget-breakdown-list">${rows.map(row => `<li><span class="budget-breakdown-dot" style="background:${row.color}" aria-hidden="true"></span><span class="budget-breakdown-name">${esc(row.category)}</span><strong>${esc(formatCurrency(row.value, baseCurrency))}</strong><small>${row.percent} %</small></li>`).join('')}</ul>
-        </div>
-    `;
+                <span class="budget-donut-center" aria-hidden="true"><strong>${esc(format(total, baseCurrency))}</strong><small>Prévu</small></span>
+            </div>`;
 }
 
 function budgetExpenseMatchesFilters(expense, filters, people) {
@@ -5224,8 +5365,8 @@ function initializeApp() {
         if (DEMO_SCENARIO === 'newyork') {
             const bannerTitle = document.querySelector('#demo-banner strong');
             const bannerCopy = document.querySelector('#demo-banner span:not(.demo-banner-icon)');
-            if (bannerTitle) bannerTitle.textContent = 'Noël à New York · scénario de démonstration';
-            if (bannerCopy) bannerCopy.textContent = 'Mohamed & Mélissa · enveloppe fictive de 5 000 € · horaires à revérifier · aucun vol, billet ou hébergement réservé.';
+            if (bannerTitle) bannerTitle.textContent = 'Démo · Noël à New York';
+            if (bannerCopy) bannerCopy.textContent = 'Données fictives, rien n’est réservé.';
         }
         renderDashboardTrips({
             trips: [{ ownerUid: 'demo-local', tripId: 'demo', title: appData.tripTitle, tripStart: appData.tripStart, tripEnd: appData.tripEnd, destination: appData.programme?.[0]?.ville || '', isOwner: true, demo: true }],
@@ -5430,7 +5571,9 @@ const ACTIONS = {
     chooseAddInfoType,
     quickAdd,
     editTripFromSwitcher,
-    toggleDashboardCalendar,
+    shiftDashboardCalendar,
+    pickCalendarDate,
+    cancelCalendarPick,
     deleteFromEditModal,
     toggleListFilters,
     undoLastDelete,

@@ -143,10 +143,10 @@ test('carnet : réservations et infos en lignes dépliables, filtres repliés', 
     assert.match(html, /id="budget-filter-options" hidden/);
 });
 
-test('accueil : « Mes séjours » n’apparaît qu’avec plusieurs séjours, le calendrier se replie sur téléphone', () => {
+test('accueil : « Mes séjours » n’apparaît qu’avec plusieurs séjours, le calendrier reste ouvert', () => {
     assert.match(appSource, /section\.hidden = loading \|\| \(complete && !signedOut && trips\.length === 1\)/);
-    assert.match(html, /class="dashboard-calendar-toggle" data-action="toggleDashboardCalendar" data-action-target aria-expanded="false" aria-controls="dashboard-calendar-month-view"/);
-    assert.match(epure, /\.dashboard-calendar-panel:not\(\.is-open\) \.dashboard-calendar-month-view \{ display: none; \}/);
+    assert.doesNotMatch(html, /dashboard-calendar-toggle/);
+    assert.doesNotMatch(epure, /\.dashboard-calendar-panel:not\(\.is-open\)/);
 });
 
 test('itinéraire : un seul bouton carte par activité, sans carte d’étape répétée', () => {
